@@ -104,7 +104,7 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
     ggplot2::geom_text(
       data = circle_labels,
       ggplot2::aes(x = x, y = y, label = label),
-      inherit.aes = FALSE, size = 3.5, colour = "black", family = "Arial"
+      inherit.aes = FALSE, size = 3.5, colour = "black", family = "sans"
     ) +
     ggplot2::geom_segment(
       x = 0, xend = 0, y = axis_begin, yend = axis_end, linewidth = 0.5
@@ -124,11 +124,11 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
     ) +
     ggplot2::geom_text(
       data = labels, ggplot2::aes(x = label, y = zero, label = label),
-      inherit.aes = FALSE, vjust = 1.5, size = 3.5, family = "Arial"
+      inherit.aes = FALSE, vjust = 1.5, size = 3.5, family = "sans"
     ) +
     ggplot2::geom_text(
       data = labels, ggplot2::aes(x = zero, y = label, label = label),
-      inherit.aes = FALSE, hjust = 1.5, size = 3.5, family = "Arial"
+      inherit.aes = FALSE, hjust = 1.5, size = 3.5, family = "sans"
     ) +
     ggplot2::geom_point(ggplot2::aes(fill = colvar), shape = 21, size = point_size) +
     ggplot2::ylab(latex2exp::TeX("$SDE^* \\cdot \\sign(\\sigma_d)")) +
@@ -141,7 +141,7 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
       axis.line.x = ggplot2::element_blank(), axis.text.x = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(), axis.line.y = ggplot2::element_blank(),
       axis.text.y = ggplot2::element_blank(), axis.ticks.y = ggplot2::element_blank(),
-      text = ggplot2::element_text(size = 12, family = "Arial"),
+      text = ggplot2::element_text(size = 12, family = "sans"),
       axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = -17, r = 0, b = 0, l = 0)),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(t = 0, r = -17, b = 0, l = 0)),
       legend.position = "right", legend.justification = "right",
@@ -154,7 +154,7 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
     p <- p + ggrepel::geom_label_repel(
       ggplot2::aes(label = model), box.padding = 0.35,
       point.padding = 0.5, segment.color = "grey50", size = label_size,
-      family = "Arial"
+      family = "sans"
     )
   }
   p
