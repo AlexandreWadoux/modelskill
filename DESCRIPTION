@@ -1,0 +1,18 @@
+Package: modelskill
+Type: Package
+Title: Quantitative Model Skill Diagrams and Indices
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Alexandre M. J.-C.", "Wadoux", role = "aut"),
+    person("Modelskill contributors", role = c("aut", "cre"))
+  )
+Description: Evaluates quantitative prediction models using map- and model-skill
+    indices together with Taylor, solar, and target diagrams. The implementation
+    follows Wadoux, Walvoort, and Brus (2022) <doi:10.1016/j.geoderma.2021.115332>.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
