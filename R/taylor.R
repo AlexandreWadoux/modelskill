@@ -3,8 +3,9 @@
 #' Creates a Taylor diagram comparing one or more quantitative prediction
 #' models with an observation vector. The radial coordinate is the model
 #' standard deviation divided by the observation standard deviation and the
-#' polar angle represents the Pearson correlation. The red dashed contours
-#' show centred root-mean-square distance from the reference point.
+#' polar angle represents the Pearson correlation. Optional centred
+#' root-mean-square distance (RMSD) contours are drawn around the observation
+#' reference point.
 #'
 #' The geometry and default styling follow Wadoux, Walvoort, and Brus (2022)
 #' and the original implementation in the accompanying repository.
@@ -19,9 +20,14 @@
 #'
 #' Model names can be displayed either directly on the diagram with
 #' `label = TRUE` or through a colour legend with `legend = TRUE`.
-#' When a legend is requested, models are assigned the standard discrete
-#' ggplot2 colour palette. Because the returned object is a regular ggplot2
-#' object, users can replace this palette with any ggplot2 colour scale.
+#'
+#' With `legend = TRUE`, model points use the standard ggplot2 discrete colour
+#' palette. Because the returned object is a regular ggplot2 object, the model
+#' colour scale, legend, theme, titles, fonts, and other graphical elements can
+#' subsequently be customised with ordinary ggplot2 layers.
+#'
+#' RMSD contours can be removed with `rmsd = FALSE`, recoloured with
+#' `rmsd_colour`, or placed at user-defined values with `rmsd_breaks`.
 #'
 #' @param label Logical; draw model names directly on the diagram using
 #'   `ggrepel`?
@@ -32,6 +38,11 @@
 #' @param half Logical; if `TRUE`, draw only the positive-correlation portion
 #'   of the Taylor diagram (`r = 0` to `1`). If `FALSE`, draw the full Taylor
 #'   diagram (`r = -1` to `1`).
+#' @param rmsd Logical; show centred RMSD contours and their labels?
+#' @param rmsd_colour Character string giving the colour of the RMSD contours
+#'   and labels.
+#' @param rmsd_breaks Optional numeric vector giving the RMSD contour values.
+#'   If `NULL`, contours are drawn every 0.5 units.
 #'
 #' @return A `ggplot2` plot object. It can be extended with ordinary ggplot2
 #'   layers, scales, labels, and themes.
@@ -54,15 +65,34 @@
 #' # Model names directly on the diagram
 #' gg_taylor(mods, obs, label = TRUE)
 #'
-#' # Positive-correlation diagram
+#' # Positive-correlation Taylor diagram
 #' gg_taylor(mods, obs, label = TRUE, half = TRUE)
 #'
-#' # Coloured model points with legend
+#' # Coloured points and legend
 #' gg_taylor(mods, obs, legend = TRUE, half = TRUE)
 #'
-#' # Replace the default discrete palette if desired
+#' # Remove RMSD contours completely
+#' gg_taylor(mods, obs, legend = TRUE, half = TRUE, rmsd = FALSE)
+#'
+#' # Change RMSD colour
+#' gg_taylor(
+#'   mods, obs,
+#'   legend = TRUE,
+#'   half = TRUE,
+#'   rmsd_colour = "steelblue"
+#' )
+#'
+#' # Define custom RMSD contours
+#' gg_taylor(
+#'   mods, obs,
+#'   half = TRUE,
+#'   rmsd_breaks = c(0.25, 0.5, 1, 1.5, 2)
+#' )
+#'
+#' # Ordinary ggplot2 customisation remains available
 #' gg_taylor(mods, obs, legend = TRUE, half = TRUE) +
-#'   ggplot2::scale_colour_brewer(palette = "Dark2")
+#'   ggplot2::scale_colour_brewer(palette = "Dark2") +
+#'   ggplot2::theme(legend.position = "bottom")
 #'
 #' @export
 gg_taylor <- function(mods, obs,
@@ -71,13 +101,20 @@ gg_taylor <- function(mods, obs,
                       point_size = 6,
                       label_size = 4,
                       na.rm = TRUE,
-                      half = FALSE) {
+                      half = FALSE,
+                      rmsd = TRUE,
+                      rmsd_colour = "red3",
+                      rmsd_breaks = NULL) {
 
   validate_plot_sizes(
     label,
     point_size,
     label_size
   )
+
+  # ----------------------------------------------------------
+  # Validate arguments
+  # ----------------------------------------------------------
 
   if (!is.logical(legend) ||
       length(legend) != 1L ||
@@ -97,12 +134,54 @@ gg_taylor <- function(mods, obs,
     )
   }
 
+  if (!is.logical(rmsd) ||
+      length(rmsd) != 1L ||
+      is.na(rmsd)) {
+    stop(
+      "`rmsd` must be TRUE or FALSE.",
+      call. = FALSE
+    )
+  }
+
+  if (!is.character(rmsd_colour) ||
+      length(rmsd_colour) != 1L ||
+      is.na(rmsd_colour) ||
+      !nzchar(rmsd_colour)) {
+    stop(
+      "`rmsd_colour` must be a single colour name or colour code.",
+      call. = FALSE
+    )
+  }
+
+  if (!is.null(rmsd_breaks)) {
+
+    if (!is.numeric(rmsd_breaks) ||
+        length(rmsd_breaks) == 0L ||
+        anyNA(rmsd_breaks) ||
+        any(!is.finite(rmsd_breaks)) ||
+        any(rmsd_breaks <= 0)) {
+      stop(
+        "`rmsd_breaks` must be NULL or a numeric vector of positive values.",
+        call. = FALSE
+      )
+    }
+
+    rmsd_breaks <- sort(
+      unique(rmsd_breaks)
+    )
+  }
+
   if (isTRUE(label) && isTRUE(legend)) {
     stop(
       "Use either `label = TRUE` or `legend = TRUE`, not both.",
       call. = FALSE
     )
   }
+
+
+  # ----------------------------------------------------------
+  # Model statistics
+  # ----------------------------------------------------------
 
   statistics <- diagram_stats(
     mods,
@@ -117,7 +196,8 @@ gg_taylor <- function(mods, obs,
     stringsAsFactors = FALSE
   )
 
-  # A constant model is at the origin; its angular correlation is undefined.
+  # A constant model is placed at the origin because its
+  # angular correlation is undefined.
   geometry_cor <- ifelse(
     is.na(model_points$Cor),
     0,
@@ -125,7 +205,8 @@ gg_taylor <- function(mods, obs,
   )
 
   model_points$x <-
-    model_points$Std * geometry_cor
+    model_points$Std *
+    geometry_cor
 
   model_points$y <-
     model_points$Std *
@@ -136,7 +217,11 @@ gg_taylor <- function(mods, obs,
       )
     )
 
-  # In the positive-correlation layout, omit negatively correlated models.
+
+  # ----------------------------------------------------------
+  # Positive-correlation layout
+  # ----------------------------------------------------------
+
   if (isTRUE(half)) {
 
     model_points <- model_points[
@@ -146,6 +231,11 @@ gg_taylor <- function(mods, obs,
       drop = FALSE
     ]
   }
+
+
+  # ----------------------------------------------------------
+  # Diagram range
+  # ----------------------------------------------------------
 
   obs_std <- 1
 
@@ -180,9 +270,9 @@ gg_taylor <- function(mods, obs,
   }
 
 
-  # ==========================================================
+  # ----------------------------------------------------------
   # Standard-deviation arcs
-  # ==========================================================
+  # ----------------------------------------------------------
 
   semicircle <- do.call(
     rbind,
@@ -206,9 +296,9 @@ gg_taylor <- function(mods, obs,
   )
 
 
-  # ==========================================================
-  # Correlation rays
-  # ==========================================================
+  # ----------------------------------------------------------
+  # Correlation grid
+  # ----------------------------------------------------------
 
   if (isTRUE(half)) {
 
@@ -244,19 +334,28 @@ gg_taylor <- function(mods, obs,
         angle <- acos(correlation)
 
         data.frame(
-          xend = std_max * cos(angle),
-          yend = std_max * sin(angle),
-          angle = angle,
-          label = correlation
+          xend =
+            std_max *
+            cos(angle),
+
+          yend =
+            std_max *
+            sin(angle),
+
+          angle =
+            angle,
+
+          label =
+            correlation
         )
       }
     )
   )
 
 
-  # ==========================================================
+  # ----------------------------------------------------------
   # Correlation labels
-  # ==========================================================
+  # ----------------------------------------------------------
 
   correlation_label_radius <-
     1.055 * std_max
@@ -271,7 +370,6 @@ gg_taylor <- function(mods, obs,
 
   if (isTRUE(half)) {
 
-    # Small endpoint adjustments.
     rays$label_x[
       rays$label == 0
     ] <- 0.025 * std_max
@@ -290,165 +388,9 @@ gg_taylor <- function(mods, obs,
   }
 
 
-  # ==========================================================
-  # Centred RMSD contours
-  # ==========================================================
-
-  # RMSD contours every 0.5.
-  rmsd_values <- seq(
-    0.5,
-    max(
-      2,
-      1.5 * std_max
-    ),
-    by = 0.5
-  )
-
-  theta_rmsd <- seq(
-    0,
-    pi,
-    length.out = 1501
-  )
-
-  circle_data <- do.call(
-    rbind,
-    lapply(
-      rmsd_values,
-      function(radius) {
-
-        data.frame(
-          xcircle =
-            1 +
-            radius * cos(theta_rmsd),
-
-          ycircle =
-            radius * sin(theta_rmsd),
-
-          labelc =
-            radius
-        )
-      }
-    )
-  )
-
-
-  # ==========================================================
-  # Clip RMSD contours to Taylor domain
-  # ==========================================================
-
-  distance_origin <- sqrt(
-    circle_data$xcircle^2 +
-      circle_data$ycircle^2
-  )
-
-  outside <-
-    distance_origin > std_max
-
-  if (isTRUE(half)) {
-
-    outside <-
-      outside |
-      circle_data$xcircle < 0
-  }
-
-  circle_data[
-    outside,
-    c(
-      "xcircle",
-      "ycircle"
-    )
-  ] <- NA_real_
-
-
-  # ==========================================================
-  # RMSD label positions
-  #
-  # half = TRUE:
-  #   align labels from reference point (1, 0) toward r = 0.1
-  #
-  # half = FALSE:
-  #   align labels from reference point (1, 0) toward r = -0.6
-  # ==========================================================
-
-  target_cor <- if (isTRUE(half)) {
-    0.1
-  } else {
-    -0.6
-  }
-
-  target_angle <-
-    acos(target_cor)
-
-  target_x <-
-    std_max *
-    cos(target_angle)
-
-  target_y <-
-    std_max *
-    sin(target_angle)
-
-  dx <- target_x - 1
-  dy <- target_y
-
-  direction_length <- sqrt(
-    dx^2 +
-      dy^2
-  )
-
-  ux <-
-    dx /
-    direction_length
-
-  uy <-
-    dy /
-    direction_length
-
-  circle_labels <- data.frame(
-    xcircle =
-      1 +
-      rmsd_values * ux,
-
-    ycircle =
-      rmsd_values * uy,
-
-    labelc =
-      rmsd_values
-  )
-
-  label_distance_origin <- sqrt(
-    circle_labels$xcircle^2 +
-      circle_labels$ycircle^2
-  )
-
-  keep_labels <-
-    circle_labels$ycircle >= 0 &
-    label_distance_origin <= std_max
-
-  if (isTRUE(half)) {
-
-    keep_labels <-
-      keep_labels &
-      circle_labels$xcircle >= 0
-  }
-
-  circle_labels <-
-    circle_labels[
-      keep_labels,
-      ,
-      drop = FALSE
-    ]
-
-  circle_labels$label_text <-
-    format(
-      circle_labels$labelc,
-      trim = TRUE,
-      scientific = FALSE
-    )
-
-
-  # ==========================================================
-  # Base plot
-  # ==========================================================
+  # ----------------------------------------------------------
+  # Base Taylor diagram
+  # ----------------------------------------------------------
 
   p <- ggplot2::ggplot(
     model_points
@@ -458,7 +400,7 @@ gg_taylor <- function(mods, obs,
       clip = "off"
     ) +
 
-    # Standard-deviation arcs.
+    # Standard-deviation arcs
     ggplot2::geom_line(
       data = semicircle,
       ggplot2::aes(
@@ -471,7 +413,7 @@ gg_taylor <- function(mods, obs,
       linewidth = 0.6
     ) +
 
-    # Correlation rays.
+    # Correlation rays
     ggplot2::geom_segment(
       data = rays,
       ggplot2::aes(
@@ -485,7 +427,7 @@ gg_taylor <- function(mods, obs,
       linewidth = 0.35
     ) +
 
-    # Horizontal boundary.
+    # Horizontal boundary
     ggplot2::annotate(
       "segment",
       x = if (isTRUE(half)) {
@@ -501,9 +443,9 @@ gg_taylor <- function(mods, obs,
     )
 
 
-  # ==========================================================
-  # Vertical boundary for positive-correlation diagram
-  # ==========================================================
+  # ----------------------------------------------------------
+  # Vertical boundary for half diagram
+  # ----------------------------------------------------------
 
   if (isTRUE(half)) {
 
@@ -520,51 +462,226 @@ gg_taylor <- function(mods, obs,
   }
 
 
-  # ==========================================================
-  # RMSD contours, RMSD labels and correlation labels
-  # ==========================================================
+  # ----------------------------------------------------------
+  # RMSD contours
+  # ----------------------------------------------------------
+
+  if (isTRUE(rmsd)) {
+
+    if (is.null(rmsd_breaks)) {
+
+      rmsd_values <- seq(
+        0.5,
+        max(
+          2,
+          1.5 * std_max
+        ),
+        by = 0.5
+      )
+
+    } else {
+
+      rmsd_values <- rmsd_breaks
+    }
+
+
+    theta_rmsd <- seq(
+      0,
+      pi,
+      length.out = 1501
+    )
+
+
+    circle_data <- do.call(
+      rbind,
+      lapply(
+        rmsd_values,
+        function(radius) {
+
+          data.frame(
+            xcircle =
+              1 +
+              radius *
+              cos(theta_rmsd),
+
+            ycircle =
+              radius *
+              sin(theta_rmsd),
+
+            labelc =
+              radius
+          )
+        }
+      )
+    )
+
+
+    # Clip RMSD contours to the displayed Taylor domain.
+    distance_origin <- sqrt(
+      circle_data$xcircle^2 +
+        circle_data$ycircle^2
+    )
+
+    outside <-
+      distance_origin >
+      std_max
+
+    if (isTRUE(half)) {
+
+      outside <-
+        outside |
+        circle_data$xcircle < 0
+    }
+
+    circle_data[
+      outside,
+      c(
+        "xcircle",
+        "ycircle"
+      )
+    ] <- NA_real_
+
+
+    # --------------------------------------------------------
+    # RMSD label alignment
+    #
+    # half = TRUE:
+    # reference point -> correlation r = 0.1
+    #
+    # half = FALSE:
+    # reference point -> correlation r = -0.6
+    # --------------------------------------------------------
+
+    target_cor <- if (isTRUE(half)) {
+      0.1
+    } else {
+      -0.6
+    }
+
+    target_angle <-
+      acos(target_cor)
+
+    target_x <-
+      std_max *
+      cos(target_angle)
+
+    target_y <-
+      std_max *
+      sin(target_angle)
+
+    dx <- target_x - 1
+    dy <- target_y
+
+    direction_length <- sqrt(
+      dx^2 +
+        dy^2
+    )
+
+    ux <-
+      dx /
+      direction_length
+
+    uy <-
+      dy /
+      direction_length
+
+
+    circle_labels <- data.frame(
+      xcircle =
+        1 +
+        rmsd_values * ux,
+
+      ycircle =
+        rmsd_values * uy,
+
+      labelc =
+        rmsd_values
+    )
+
+
+    label_distance_origin <- sqrt(
+      circle_labels$xcircle^2 +
+        circle_labels$ycircle^2
+    )
+
+    keep_labels <-
+      circle_labels$ycircle >= 0 &
+      label_distance_origin <= std_max
+
+    if (isTRUE(half)) {
+
+      keep_labels <-
+        keep_labels &
+        circle_labels$xcircle >= 0
+    }
+
+    circle_labels <-
+      circle_labels[
+        keep_labels,
+        ,
+        drop = FALSE
+      ]
+
+
+    circle_labels$label_text <-
+      format(
+        circle_labels$labelc,
+        trim = TRUE,
+        scientific = FALSE
+      )
+
+
+    # Add RMSD contours.
+    p <- p +
+
+      ggplot2::geom_line(
+        data = circle_data,
+        ggplot2::aes(
+          x = xcircle,
+          y = ycircle,
+          group = labelc
+        ),
+        linetype = "dashed",
+        colour = rmsd_colour,
+        linewidth = 0.6,
+        na.rm = TRUE
+      ) +
+
+      # RMSD labels
+      ggplot2::geom_label(
+        data = circle_labels,
+        ggplot2::aes(
+          x = xcircle,
+          y = ycircle,
+          label = label_text
+        ),
+        colour = rmsd_colour,
+        fill = "white",
+        linewidth = 0,
+        size = 3.3,
+        family = "sans",
+        label.padding =
+          grid::unit(
+            0.045,
+            "lines"
+          ),
+        label.r =
+          grid::unit(
+            0,
+            "lines"
+          ),
+        hjust = 0.5,
+        vjust = 0.5,
+        na.rm = TRUE
+      )
+  }
+
+
+  # ----------------------------------------------------------
+  # Correlation labels
+  # ----------------------------------------------------------
 
   p <- p +
-
-    ggplot2::geom_line(
-      data = circle_data,
-      ggplot2::aes(
-        x = xcircle,
-        y = ycircle,
-        group = labelc
-      ),
-      linetype = "dashed",
-      colour = "red3",
-      linewidth = 0.6,
-      na.rm = TRUE
-    ) +
-
-    ggplot2::geom_label(
-      data = circle_labels,
-      ggplot2::aes(
-        x = xcircle,
-        y = ycircle,
-        label = label_text
-      ),
-      colour = "red3",
-      fill = "white",
-      linewidth = 0,
-      size = 3.3,
-      family = "sans",
-      label.padding =
-        grid::unit(
-          0.045,
-          "lines"
-        ),
-      label.r =
-        grid::unit(
-          0,
-          "lines"
-        ),
-      hjust = 0.5,
-      vjust = 0.5,
-      na.rm = TRUE
-    ) +
 
     ggplot2::geom_text(
       data = rays,
@@ -587,14 +704,18 @@ gg_taylor <- function(mods, obs,
     )
 
 
-  # ==========================================================
+  # ----------------------------------------------------------
   # Correlation title
-  # ==========================================================
+  # ----------------------------------------------------------
 
   if (isTRUE(half)) {
 
-    title_angle <- pi / 4
-    title_radius <- 1.27 * std_max
+    title_angle <-
+      pi / 4
+
+    title_radius <-
+      1.27 *
+      std_max
 
     p <- p +
       ggplot2::annotate(
@@ -638,14 +759,14 @@ gg_taylor <- function(mods, obs,
   }
 
 
-  # ==========================================================
+  # ----------------------------------------------------------
   # Model points
-  # ==========================================================
+  # ----------------------------------------------------------
 
   if (isTRUE(legend)) {
 
-    # Mapping colour to Model creates a standard ggplot2
-    # categorical legend and uses ggplot2's default discrete palette.
+    # Model is mapped to colour so ggplot2 automatically supplies
+    # its normal discrete categorical colour palette.
     p <- p +
       ggplot2::geom_point(
         data = model_points,
@@ -657,8 +778,8 @@ gg_taylor <- function(mods, obs,
         size = point_size
       ) +
 
-      ggplot2::scale_colour_hue(
-        name = "Model"
+      ggplot2::labs(
+        colour = "Model"
       )
 
   } else {
@@ -687,9 +808,9 @@ gg_taylor <- function(mods, obs,
     )
 
 
-  # ==========================================================
+  # ----------------------------------------------------------
   # Direct model labels
-  # ==========================================================
+  # ----------------------------------------------------------
 
   if (isTRUE(label)) {
 
@@ -711,9 +832,9 @@ gg_taylor <- function(mods, obs,
   }
 
 
-  # ==========================================================
+  # ----------------------------------------------------------
   # Plot limits
-  # ==========================================================
+  # ----------------------------------------------------------
 
   if (isTRUE(half)) {
 
@@ -771,9 +892,9 @@ gg_taylor <- function(mods, obs,
   }
 
 
-  # ==========================================================
+  # ----------------------------------------------------------
   # Final theme
-  # ==========================================================
+  # ----------------------------------------------------------
 
   p +
     ggplot2::theme(
@@ -804,13 +925,6 @@ gg_taylor <- function(mods, obs,
           family = "sans"
         ),
 
-      legend.position =
-        if (isTRUE(legend)) {
-          "right"
-        } else {
-          "none"
-        },
-
       plot.margin =
         ggplot2::margin(
           t = 35,
@@ -825,19 +939,36 @@ gg_taylor <- function(mods, obs,
 theme_taylor <- function(base_size = 11) {
 
   ggplot2::`%+replace%`(
-    ggplot2::theme_bw(base_size = base_size),
+    ggplot2::theme_bw(
+      base_size = base_size
+    ),
     ggplot2::theme(
-      axis.ticks.y = ggplot2::element_blank(),
-      axis.text.y = ggplot2::element_blank(),
-      axis.title.y = ggplot2::element_blank(),
-      panel.background = ggplot2::element_blank(),
-      text = ggplot2::element_text(
-        size = 12,
-        family = "sans"
-      ),
-      panel.border = ggplot2::element_blank(),
-      axis.line.x = ggplot2::element_blank(),
-      panel.grid = ggplot2::element_blank()
+      axis.ticks.y =
+        ggplot2::element_blank(),
+
+      axis.text.y =
+        ggplot2::element_blank(),
+
+      axis.title.y =
+        ggplot2::element_blank(),
+
+      panel.background =
+        ggplot2::element_blank(),
+
+      text =
+        ggplot2::element_text(
+          size = 12,
+          family = "sans"
+        ),
+
+      panel.border =
+        ggplot2::element_blank(),
+
+      axis.line.x =
+        ggplot2::element_blank(),
+
+      panel.grid =
+        ggplot2::element_blank()
     )
   )
 }
