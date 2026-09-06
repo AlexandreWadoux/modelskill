@@ -2,3 +2,4 @@
 export(model_metrics)
 export(gg_taylor)
 export(gg_solar)
+export(gg_target)
