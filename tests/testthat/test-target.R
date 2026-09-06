@@ -19,6 +19,19 @@ test_that("gg_target builds with labels off and custom continuous colours", {
   expect_true(any(vapply(p$layers, function(x) inherits(x$geom, "GeomPoint"), logical(1))))
 })
 
+test_that("gg_target supports legend and reference controls", {
+  p <- gg_target(1:5, 1:5, legend = FALSE, reference = FALSE)
+  has_reference_data <- any(vapply(p$layers, function(layer) {
+    is.data.frame(layer$data) && "r" %in% names(layer$data) &&
+      "x" %in% names(layer$data)
+  }, logical(1)))
+
+  expect_false(has_reference_data)
+  expect_warning(ggplot2::ggplotGrob(p), NA)
+  expect_error(gg_target(1:5, 1:5, legend = NA), "legend")
+  expect_error(gg_target(1:5, 1:5, reference = "yes"), "reference")
+})
+
 test_that("gg_target rejects constant observations", {
   expect_error(gg_target(1:3, c(2, 2, 2)), "non-zero standard deviation")
 })

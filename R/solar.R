@@ -10,9 +10,8 @@
 #' implementation in the accompanying repository.
 #'
 #' @inheritParams diagram_stats
-#' @seealso [diagram_stats()], [model_metrics()], [gg_taylor()], [gg_solar()],
-#'   [gg_target()]
-#' @details Missing pairs are removed separately per model when na.rm = TRUE.
+#' @seealso [diagram_stats()], [model_metrics()], [gg_taylor()], [gg_target()]
+#' @details Missing pairs are removed separately per model when `na.rm = TRUE`.
 #'   Two complete pairs with non-zero observation SD are required. All plotted
 #'   statistics can be retrieved with diagram_stats(). Sample SD normalization
 #'   and the original constant-prediction convention are documented there.
@@ -28,6 +27,10 @@
 #' @param label Logical; draw model labels with `ggrepel`?
 #' @param point_size Numeric point size.
 #' @param label_size Numeric text size for model labels.
+#' @param legend Logical; show the continuous point-colour legend and the
+#'   correlation-region key? Defaults to `TRUE` to preserve the original plot.
+#' @param reference Logical; draw the original correlation regions and their
+#'   outer reference circle? Defaults to `TRUE`.
 #'
 #' @section Coordinates and labels:
 #'   The horizontal coordinate is nME and the vertical coordinate is sde.
@@ -49,12 +52,18 @@
 #' mods <- list(perfect = obs, biased = obs + 1)
 #' gg_solar(mods, obs, label = TRUE, x.axis_begin = -1,
 #'          x.axis_end = 1, y.axis_end = 2, by = 0.2)
+#'
+#' # Hide legends or the reference geometry when preparing a custom plot.
+#' gg_solar(mods, obs, legend = FALSE, reference = FALSE)
 #' @export
 gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
                      x.axis_begin = -1, x.axis_end = 1, y.axis_end = 2,
                      by = 0.1, label = FALSE, point_size = 7,
-                     label_size = 4, na.rm = TRUE) {
+                     label_size = 4, na.rm = TRUE, legend = TRUE,
+                     reference = TRUE) {
   validate_plot_sizes(label, point_size, label_size)
+  check_flag(legend, "legend")
+  check_flag(reference, "reference")
   data <- diagram_stats(mods, obs, na.rm = na.rm)
   validate_diagram_arguments(colorval, colorval.name, x.axis_begin, x.axis_end,
                              y.axis_end, by, label, nrow(data))
@@ -84,24 +93,31 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
   y_labs <- data.frame(lab = c(0, y.axis_end), zero = 0)
   tick_size <- (x.axis_end - x.axis_begin) / 128
 
-  p <- ggplot2::ggplot(data, ggplot2::aes(x = nME, y = uRMSDnorm_sigmaD)) +
-    ggplot2::geom_polygon(
+  p <- ggplot2::ggplot(data, ggplot2::aes(x = nME, y = uRMSDnorm_sigmaD))
+
+  # Preserve the original pale-yellow correlation regions by default.
+  if (isTRUE(reference)) {
+    p <- p +
+      ggplot2::geom_polygon(
       data = circ_pol,
       ggplot2::aes(x = x, y = y, fill = lab),
       inherit.aes = FALSE
-    ) +
-    ggplot2::scale_fill_manual(
+      ) +
+      ggplot2::scale_fill_manual(
       values = c("r>0" = "#FEECA4", "r>0.7" = "#FEF4B6",
                  "r>0.9" = "#FFFCD7", "r>0.95" = "#FFFFE5"),
       name = "",
       labels = c(expression(italic(r) > 0), expression(italic(r) > 0.7),
                  expression(italic(r) > 0.9), expression(italic(r) > 0.95))
-    ) +
-    ggplot2::geom_path(
+      ) +
+      ggplot2::geom_path(
       data = circle2,
       ggplot2::aes(x = x, y = y, group = label),
       inherit.aes = FALSE, colour = "black", linewidth = 0.8
-    ) +
+      )
+  }
+
+  p <- p +
     ggplot2::annotate(
       "segment", x = 0, xend = 0, y = 0, yend = y.axis_end,
       linewidth = 0.5
@@ -156,6 +172,10 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
     ggplot2::labs(colour = colorval.name) +
     viridis::scale_color_viridis(option = "A", na.value = "grey50") +
     ggplot2::guides(colour = ggplot2::guide_colourbar(order = 1))
+
+  if (!isTRUE(legend)) {
+    p <- p + ggplot2::guides(colour = "none", fill = "none")
+  }
 
   if (isTRUE(label)) {
     p <- p + ggrepel::geom_label_repel(

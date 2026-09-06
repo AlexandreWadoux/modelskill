@@ -16,7 +16,9 @@ gg_solar(
   label = FALSE,
   point_size = 7,
   label_size = 4,
-  na.rm = TRUE
+  na.rm = TRUE,
+  legend = TRUE,
+  reference = TRUE
 )
 }
 \arguments{
@@ -50,6 +52,12 @@ To zoom, add \code{\link[ggplot2:coord_cartesian]{ggplot2::coord_cartesian()}}.}
 \item{na.rm}{Logical; remove incomplete pairs separately for each model?
 If FALSE, missing pairs cause an error because coordinates cannot be
 plotted. The default is TRUE.}
+
+\item{legend}{Logical; show the continuous point-colour legend and the
+correlation-region key? Defaults to \code{TRUE} to preserve the original plot.}
+
+\item{reference}{Logical; draw the original correlation regions and their
+outer reference circle? Defaults to \code{TRUE}.}
 }
 \value{
 A \code{ggplot2} plot object that can be extended with ordinary ggplot2
@@ -66,7 +74,7 @@ The default geometry, pale-yellow correlation regions, and \code{viridis}
 colour scale follow Wadoux, Walvoort, and Brus (2022) and the original
 implementation in the accompanying repository.
 
-Missing pairs are removed separately per model when na.rm = TRUE.
+Missing pairs are removed separately per model when \code{na.rm = TRUE}.
 Two complete pairs with non-zero observation SD are required. All plotted
 statistics can be retrieved with diagram_stats(). Sample SD normalization
 and the original constant-prediction convention are documented there.
@@ -85,6 +93,9 @@ obs <- c(1, 2, 3, 4, 5)
 mods <- list(perfect = obs, biased = obs + 1)
 gg_solar(mods, obs, label = TRUE, x.axis_begin = -1,
          x.axis_end = 1, y.axis_end = 2, by = 0.2)
+
+# Hide legends or the reference geometry when preparing a custom plot.
+gg_solar(mods, obs, legend = FALSE, reference = FALSE)
 }
 \references{
 Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
@@ -93,6 +104,5 @@ Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{https://doi.org/10.1016/j.geoderma.2021.115332}
 }
 \seealso{
-\code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}},
-\code{\link[=gg_target]{gg_target()}}
+\code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_target]{gg_target()}}
 }

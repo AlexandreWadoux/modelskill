@@ -20,6 +20,19 @@ test_that("gg_solar builds with labels off and custom continuous colours", {
   expect_true(any(vapply(p$layers, function(x) inherits(x$geom, "GeomPoint"), logical(1))))
 })
 
+test_that("gg_solar supports legend and reference controls", {
+  p <- gg_solar(1:5, 1:5, legend = FALSE, reference = FALSE)
+  has_reference_data <- any(vapply(p$layers, function(layer) {
+    is.data.frame(layer$data) && "label" %in% names(layer$data) &&
+      "x" %in% names(layer$data)
+  }, logical(1)))
+
+  expect_false(has_reference_data)
+  expect_warning(ggplot2::ggplotGrob(p), NA)
+  expect_error(gg_solar(1:5, 1:5, legend = NA), "legend")
+  expect_error(gg_solar(1:5, 1:5, reference = "yes"), "reference")
+})
+
 test_that("gg_solar rejects constant observations", {
   expect_error(gg_solar(1:3, c(2, 2, 2)), "non-zero standard deviation")
 })

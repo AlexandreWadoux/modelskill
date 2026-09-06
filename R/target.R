@@ -11,9 +11,8 @@
 #' accompanying repository.
 #'
 #' @inheritParams diagram_stats
-#' @seealso [diagram_stats()], [model_metrics()], [gg_taylor()], [gg_solar()],
-#'   [gg_target()]
-#' @details Missing pairs are removed separately per model when na.rm = TRUE.
+#' @seealso [diagram_stats()], [model_metrics()], [gg_taylor()], [gg_solar()]
+#' @details Missing pairs are removed separately per model when `na.rm = TRUE`.
 #'   Two complete pairs with non-zero observation SD are required. All plotted
 #'   statistics can be retrieved with diagram_stats(). Sample SD normalization
 #'   and the original constant-prediction convention are documented there.
@@ -26,6 +25,10 @@
 #' @param label Logical; draw model labels with `ggrepel`?
 #' @param point_size Numeric point size.
 #' @param label_size Numeric text size for model labels.
+#' @param legend Logical; show the continuous point-colour legend? Defaults to
+#'   `TRUE` to preserve the original plot.
+#' @param reference Logical; draw the original RMSD reference circles and their
+#'   labels? Defaults to `TRUE`.
 #'
 #' @section Coordinates and labels:
 #'   The horizontal coordinate is signed_sde and the vertical coordinate is nME.
@@ -47,11 +50,17 @@
 #' mods <- list(perfect = obs, biased = obs + 1)
 #' gg_target(mods, obs, label = TRUE, axis_begin = -2,
 #'           axis_end = 2, by = 0.5)
+#'
+#' # Hide the legend or reference circles when preparing a custom plot.
+#' gg_target(mods, obs, legend = FALSE, reference = FALSE)
 #' @export
 gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
                       axis_begin = -2, axis_end = 2, by = 0.1,
-                      label = FALSE, point_size = 7, label_size = 4, na.rm = TRUE) {
+                      label = FALSE, point_size = 7, label_size = 4,
+                      na.rm = TRUE, legend = TRUE, reference = TRUE) {
   validate_plot_sizes(label, point_size, label_size)
+  check_flag(legend, "legend")
+  check_flag(reference, "reference")
   data <- diagram_stats(mods, obs, na.rm = na.rm)
   validate_diagram_arguments(colorval, colorval.name, axis_begin, axis_end,
                              axis_end, by, label, nrow(data))
@@ -80,22 +89,29 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
   labels <- subset(data.frame(label = c(axis_begin, axis_end), zero = 0), label != 0)
   tick_size <- (axis_end - axis_begin) / 128
 
-  p <- ggplot2::ggplot(data, ggplot2::aes(x = uRMSDnorm_sigmaD, y = nME)) +
-    ggplot2::geom_path(
+  p <- ggplot2::ggplot(data, ggplot2::aes(x = uRMSDnorm_sigmaD, y = nME))
+
+  # Preserve the original RMSD reference circles by default.
+  if (isTRUE(reference)) {
+    p <- p +
+      ggplot2::geom_path(
       data = circle_data,
       ggplot2::aes(x = x, y = y, group = r),
       inherit.aes = FALSE, colour = "black", linetype = 2
-    ) +
-    ggplot2::geom_path(
+      ) +
+      ggplot2::geom_path(
       data = circle_reference,
       ggplot2::aes(x = x, y = y),
       inherit.aes = FALSE, colour = "black", linewidth = 0.8
-    ) +
-    ggplot2::geom_text(
+      ) +
+      ggplot2::geom_text(
       data = circle_labels,
       ggplot2::aes(x = x, y = y, label = label),
       inherit.aes = FALSE, size = 3.5, colour = "black", family = "sans"
-    ) +
+      )
+  }
+
+  p <- p +
     ggplot2::annotate(
       "segment", x = 0, xend = 0, y = axis_begin, yend = axis_end, linewidth = 0.5
     ) +
@@ -140,12 +156,19 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
       legend.text = ggplot2::element_text(hjust = 1), legend.title = ggplot2::element_text(vjust = 3)
     )
 
+  if (!isTRUE(legend)) {
+    p <- p + ggplot2::guides(fill = "none")
+  }
+
   if (isTRUE(label)) {
-    label_data <- rbind(
-      data[, c("uRMSDnorm_sigmaD", "nME", "model")],
-      data.frame(uRMSDnorm_sigmaD = circle_labels$x,
-                 nME = circle_labels$y, model = "")
-    )
+    label_data <- data[, c("uRMSDnorm_sigmaD", "nME", "model")]
+    if (isTRUE(reference)) {
+      label_data <- rbind(
+        label_data,
+        data.frame(uRMSDnorm_sigmaD = circle_labels$x,
+                   nME = circle_labels$y, model = "")
+      )
+    }
     p <- p + ggrepel::geom_label_repel(
       data = label_data,
       ggplot2::aes(label = model), box.padding = 0.35,
