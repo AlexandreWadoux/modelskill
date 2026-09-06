@@ -7,6 +7,19 @@ object or external dataset is required.
 
 This package is under development and has not yet been submitted to CRAN.
 
+## Get started
+
+A full introduction, including interpretation of the indices and examples of the
+Taylor, solar and target diagrams, is available in the package vignette:
+
+**[Evaluating quantitative models with modelskill](vignettes/modelskill-introduction.Rmd)**
+
+After installing the package, the vignette can also be opened in R with:
+
+```r
+vignette("modelskill-introduction", package = "modelskill")
+```
+
 ## Install the development version
 
 ```r
