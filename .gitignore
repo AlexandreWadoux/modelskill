@@ -3,3 +3,4 @@
 *.Rproj
 inst/doc/
 Rplots.pdf
+review/*.rds
