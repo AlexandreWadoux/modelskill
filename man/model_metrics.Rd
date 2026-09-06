@@ -7,8 +7,9 @@
 model_metrics(mods, obs, na.rm = TRUE, digits = NULL)
 }
 \arguments{
-\item{mods}{A numeric prediction vector, or a named list of numeric
-prediction vectors.}
+\item{mods}{Numeric vector, list of numeric vectors, or numeric matrix/data
+frame with one model per column. Rows match \code{obs} in order. Supplied model
+names must be unique; missing names are generated.}
 
 \item{obs}{A numeric observation vector.}
 
@@ -17,7 +18,7 @@ be removed. The default is \code{TRUE}. If \code{FALSE}, incomplete pairs result
 missing statistics rather than being silently removed.}
 
 \item{digits}{Integer or \code{NULL}. If supplied, round numeric results to this
-many digits. \code{NULL} (the default) retains full numerical precision.}
+many digits (0 to 22). \code{NULL} retains full numerical precision.}
 }
 \value{
 A data frame with one row per model and columns \code{ME}, \code{MAE}, \code{RMSE},
@@ -34,6 +35,20 @@ The definitions follow Wadoux, Walvoort, and Brus (2022), including mean
 error (ME), mean absolute error (MAE), root mean square error (RMSE),
 Pearson correlation (\code{r}), modelling efficiency coefficient (\code{NSE}), and
 Lin's concordance correlation components (\code{rhoC} and \code{Cb}).
+
+Errors are observation minus prediction: negative ME indicates
+overprediction. ME, MAE and RMSE have the input units. NSE is one minus the
+ratio of squared error to the observation sum of squares about its mean.
+Zero is the observation-mean benchmark and negative values are worse.
+Concordance uses population variances (divisor n); rhoC = r * Cb.
+Missing pairs are removed separately for each model, so comparisons may use
+different subsets. NA and NaN are missing; infinite values are rejected.
+Repeated observations are retained with equal weight.
+With fewer than two pairs, correlation, efficiency and concordance are NA.
+Constant inputs use the original r = 0 convention, with a warning that
+Pearson correlation is undefined. Constant observations give NA efficiency
+and concordance. Constant predictions with varying observations give zero
+Cb and rhoC (the continuous limiting value). All-missing models return NA.
 }
 \examples{
 obs <- c(1, 2, 3, 4, 5)
@@ -46,4 +61,7 @@ Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
 integrated approach for the evaluation of quantitative soil maps through
 Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{https://doi.org/10.1016/j.geoderma.2021.115332}
+}
+\seealso{
+\code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}}, \code{\link[=gg_target]{gg_target()}}
 }

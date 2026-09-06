@@ -9,9 +9,13 @@
 #' The geometry and default styling follow Wadoux, Walvoort, and Brus (2022)
 #' and the original implementation in the accompanying repository.
 #'
-#' @param mods A numeric prediction vector, or a named list of numeric
-#'   prediction vectors.
-#' @param obs A numeric observation vector.
+#' @inheritParams diagram_stats
+#' @seealso [diagram_stats()], [model_metrics()], [gg_taylor()], [gg_solar()],
+#'   [gg_target()]
+#' @details Missing pairs are removed separately per model when na.rm = TRUE.
+#'   Two complete pairs with non-zero observation SD are required. All plotted
+#'   statistics can be retrieved with diagram_stats(). Sample SD normalization
+#'   and the original constant-prediction convention are documented there.
 #' @param label Logical; draw model labels with `ggrepel`?
 #' @param point_size Numeric size of model points.
 #' @param label_size Numeric text size for model labels.
@@ -31,37 +35,20 @@
 #' gg_taylor(mods, obs, label = TRUE)
 #' @export
 gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
-                      label_size = 4) {
-  validate_metrics_inputs(mods, obs, TRUE, NULL)
-  if (!isTRUE(stats::sd(obs) > 0)) {
-    stop("`obs` must have non-zero standard deviation for a Taylor diagram.", call. = FALSE)
-  }
-  if (!is.numeric(mods)) {
-    if (is.null(names(mods)) || any(names(mods) == "")) {
-      names(mods) <- paste0("Model ", seq_along(mods))
-    }
-  } else {
-    mods <- list(Model = mods)
-  }
-  if (length(label) != 1L || is.na(label)) {
-    stop("`label` must be TRUE or FALSE.", call. = FALSE)
-  }
-
-  stats <- lapply(mods, function(pred) {
-    keep <- stats::complete.cases(pred, obs)
-    pred <- pred[keep]
-    obs_use <- obs[keep]
-    correlation <- suppressWarnings(stats::cor(pred, obs_use))
-    if (is.na(correlation)) correlation <- 0
-    data.frame(Cor = correlation, Std = stats::sd(pred) / stats::sd(obs_use))
-  })
-  model_points <- do.call(rbind, stats)
-  model_points$Model <- names(mods)
-  model_points$x <- model_points$Std * cos(acos(model_points$Cor))
-  model_points$y <- model_points$Std * sin(acos(model_points$Cor))
+                      label_size = 4, na.rm = TRUE) {
+  validate_plot_sizes(label, point_size, label_size)
+  statistics <- diagram_stats(mods, obs, na.rm = na.rm)
+  model_points <- data.frame(
+    Cor = statistics$r, Std = statistics$sd_ratio, Model = statistics$model)
+  model_points$x <- model_points$Std * model_points$Cor
+  model_points$y <- model_points$Std *
+    sqrt(pmax(0, (1 - model_points$Cor) * (1 + model_points$Cor)))
 
   obs_std <- 1
   std_max <- ceiling(max(c(obs_std, model_points$Std, 2), na.rm = TRUE))
+  if (std_max > .Machine$double.xmax / 6) {
+    stop("Standard deviation ratio is too large to draw Taylor contours.", call. = FALSE)
+  }
   std_major <- seq(0, std_max, length.out = 5)
   semicircle <- do.call(rbind, lapply(std_major, function(radius) {
     data.frame(
@@ -102,9 +89,8 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
   }))
   circle_labels <- circle_labels[stats::complete.cases(circle_labels[, c("xcircle", "ycircle")]), ]
 
-  p <- ggplot2::ggplot() +
+  p <- ggplot2::ggplot(model_points) +
     ggplot2::coord_equal() +
-    ggthemes::theme_base() +
     ggplot2::geom_line(
       data = semicircle,
       ggplot2::aes(x = x, y = y, group = label),
@@ -150,14 +136,14 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
       data = model_points,
       ggplot2::aes(x = x, y = y), size = point_size
     ) +
-    ggplot2::geom_point(ggplot2::aes(x = 1, y = 0), size = 3, colour = "red3")
+    ggplot2::annotate("point", x = 1, y = 0, size = 3, colour = "red3")
 
   if (isTRUE(label)) {
     p <- p + ggrepel::geom_label_repel(
       data = model_points,
       ggplot2::aes(x = x, y = y, label = Model),
       box.padding = 0.35, point.padding = 0.8,
-      segment.color = "grey50", size = label_size, family = "sans"
+      segment.color = "grey50", size = label_size, family = "sans", seed = 0
     )
   }
   p + ggplot2::theme(

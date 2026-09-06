@@ -4,11 +4,19 @@
 \alias{gg_taylor}
 \title{Create a Taylor diagram}
 \usage{
-gg_taylor(mods, obs, label = FALSE, point_size = 6, label_size = 4)
+gg_taylor(
+  mods,
+  obs,
+  label = FALSE,
+  point_size = 6,
+  label_size = 4,
+  na.rm = TRUE
+)
 }
 \arguments{
-\item{mods}{A numeric prediction vector, or a named list of numeric
-prediction vectors.}
+\item{mods}{Numeric vector, list of numeric vectors, or numeric matrix/data
+frame with one model per column. Rows match \code{obs} in order. Supplied model
+names must be unique; missing names are generated.}
 
 \item{obs}{A numeric observation vector.}
 
@@ -17,6 +25,10 @@ prediction vectors.}
 \item{point_size}{Numeric size of model points.}
 
 \item{label_size}{Numeric text size for model labels.}
+
+\item{na.rm}{Logical; remove incomplete pairs separately for each model?
+If FALSE, missing pairs cause an error because coordinates cannot be
+plotted. The default is TRUE.}
 }
 \value{
 A \code{ggplot2} plot object. It can be extended with ordinary ggplot2
@@ -32,6 +44,11 @@ show centred root-mean-square distance from the reference point.
 \details{
 The geometry and default styling follow Wadoux, Walvoort, and Brus (2022)
 and the original implementation in the accompanying repository.
+
+Missing pairs are removed separately per model when na.rm = TRUE.
+Two complete pairs with non-zero observation SD are required. All plotted
+statistics can be retrieved with diagram_stats(). Sample SD normalization
+and the original constant-prediction convention are documented there.
 }
 \examples{
 obs <- c(1, 2, 3, 4, 5)
@@ -43,4 +60,8 @@ Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
 integrated approach for the evaluation of quantitative soil maps through
 Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{https://doi.org/10.1016/j.geoderma.2021.115332}
+}
+\seealso{
+\code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}},
+\code{\link[=gg_target]{gg_target()}}
 }

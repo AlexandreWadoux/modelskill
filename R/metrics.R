@@ -10,15 +10,30 @@
 #' Pearson correlation (`r`), modelling efficiency coefficient (`NSE`), and
 #' Lin's concordance correlation components (`rhoC` and `Cb`).
 #'
-#' @param mods A numeric prediction vector, or a named list of numeric
-#'   prediction vectors.
+#' @param mods Numeric vector, list of numeric vectors, or numeric matrix/data
+#'   frame with one model per column. Rows match `obs` in order. Supplied model
+#'   names must be unique; missing names are generated.
 #' @param obs A numeric observation vector.
 #' @param na.rm Logical; whether incomplete observation-prediction pairs should
 #'   be removed. The default is `TRUE`. If `FALSE`, incomplete pairs result in
 #'   missing statistics rather than being silently removed.
 #' @param digits Integer or `NULL`. If supplied, round numeric results to this
-#'   many digits. `NULL` (the default) retains full numerical precision.
+#'   many digits (0 to 22). `NULL` retains full numerical precision.
 #'
+#' @details Errors are observation minus prediction: negative ME indicates
+#' overprediction. ME, MAE and RMSE have the input units. NSE is one minus the
+#' ratio of squared error to the observation sum of squares about its mean.
+#' Zero is the observation-mean benchmark and negative values are worse.
+#' Concordance uses population variances (divisor n); rhoC = r * Cb.
+#' Missing pairs are removed separately for each model, so comparisons may use
+#' different subsets. NA and NaN are missing; infinite values are rejected.
+#' Repeated observations are retained with equal weight.
+#' With fewer than two pairs, correlation, efficiency and concordance are NA.
+#' Constant inputs use the original r = 0 convention, with a warning that
+#' Pearson correlation is undefined. Constant observations give NA efficiency
+#' and concordance. Constant predictions with varying observations give zero
+#' Cb and rhoC (the continuous limiting value). All-missing models return NA.
+#' @seealso [diagram_stats()], [gg_taylor()], [gg_solar()], [gg_target()]
 #' @return A data frame with one row per model and columns `ME`, `MAE`, `RMSE`,
 #'   `r`, `r2`, `NSE`, `rhoC`, and `Cb`.
 #'
@@ -35,84 +50,49 @@
 #' model_metrics(preds, obs)
 #' @export
 model_metrics <- function(mods, obs, na.rm = TRUE, digits = NULL) {
-  validate_metrics_inputs(mods, obs, na.rm, digits)
-  if (is.numeric(mods)) {
-    mods <- list(Model = mods)
+  mods <- prepare_models(mods, obs, na.rm)
+  if (!is.null(digits)) {
+    check_number(digits, "digits")
+    if (digits < 0 || digits != floor(digits) || digits > 22) {
+      stop("`digits` must be NULL or one non-negative integer from 0 to 22.", call. = FALSE)
+    }
   }
-  if (is.null(names(mods)) || any(names(mods) == "")) {
-    names(mods) <- paste0("Model ", seq_along(mods))
-  }
-
   result <- do.call(rbind, lapply(mods, metric_row, obs = obs, na.rm = na.rm))
   rownames(result) <- names(mods)
+  if (any(is.infinite(as.matrix(result)))) {
+    warning("Some metrics exceed numeric precision; consider rescaling the input units.", call. = FALSE)
+  }
   if (!is.null(digits)) result[] <- lapply(result, round, digits = digits)
   result
 }
 
 metric_row <- function(pred, obs, na.rm) {
-  if (na.rm) {
-    keep <- stats::complete.cases(pred, obs)
-    pred <- pred[keep]
-    obs <- obs[keep]
+  pair <- paired_values(pred, obs, na.rm)
+  pred <- pair$pred
+  obs <- pair$obs
+  result <- as.data.frame(as.list(stats::setNames(rep(NA_real_, 8),
+    c("ME", "MAE", "RMSE", "r", "r2", "NSE", "rhoC", "Cb"))))
+  if (!length(pred) || anyNA(c(pred, obs))) return(result)
+  m <- pair_moments(pred, obs)
+  error <- m$o - m$p
+  result$ME <- mean(error) * m$scale
+  result$MAE <- mean(abs(error)) * m$scale
+  result$RMSE <- root_mean_square(error) * m$scale
+  if (length(pred) < 2L) return(result)
+  if (m$sp == 0 || m$so == 0) {
+    warning("Pearson correlation is undefined for constant inputs; using the original r = 0 convention.", call. = FALSE)
   }
-  if (!na.rm && anyNA(c(pred, obs))) {
-    return(as.data.frame(as.list(stats::setNames(rep(NA_real_, 8),
-                                          c("ME", "MAE", "RMSE", "r", "r2",
-                                            "NSE", "rhoC", "Cb")))))
+  result$r <- m$r
+  result$r2 <- m$r^2
+  if (m$so > 0) {
+    result$NSE <- 1 - (root_mean_square(error) / m$so)^2
+    # Lin's expression, including its continuous limit for constant predictions.
+    shift <- mean(m$p) - mean(m$o)
+    denom_scale <- max(m$sp, m$so, abs(shift))
+    sp <- m$sp / denom_scale
+    so <- m$so / denom_scale
+    result$Cb <- 2 * sp * so / (sp^2 + so^2 + (shift / denom_scale)^2)
+    result$rhoC <- m$r * result$Cb
   }
-  if (!length(pred)) {
-    return(as.data.frame(as.list(stats::setNames(rep(NA_real_, 8),
-                                          c("ME", "MAE", "RMSE", "r", "r2",
-                                            "NSE", "rhoC", "Cb")))))
-  }
-
-  error <- obs - pred
-  r <- suppressWarnings(stats::cor(pred, obs, method = "pearson"))
-  if (is.na(r)) r <- 0
-  sdx <- stats::sd(pred)
-  sdy <- stats::sd(obs)
-  sse <- sum(error^2)
-  sst <- sum((obs - mean(obs))^2)
-
-  if (isTRUE(sdy > 0)) {
-    sx2 <- stats::var(pred) * (length(pred) - 1) / length(pred)
-    sy2 <- stats::var(obs) * (length(obs) - 1) / length(obs)
-    v <- sdx / sdy
-    u <- (mean(pred) - mean(obs)) / ((sx2 * sy2)^0.25)
-    cb <- ((v + 1 / v + u^2) / 2)^-1
-    rho_c <- r * cb
-    nse <- 1 - sse / sst
-  } else {
-    cb <- rho_c <- nse <- NA_real_
-  }
-
-  data.frame(
-    ME = mean(error), MAE = mean(abs(error)), RMSE = sqrt(mean(error^2)),
-    r = r, r2 = r^2, NSE = nse, rhoC = rho_c, Cb = cb,
-    check.names = FALSE
-  )
-}
-
-validate_metrics_inputs <- function(mods, obs, na.rm, digits) {
-  if (!is.numeric(obs)) stop("`obs` must be a numeric vector.", call. = FALSE)
-  if (!(is.numeric(mods) || is.list(mods))) {
-    stop("`mods` must be a numeric vector or a list of numeric vectors.", call. = FALSE)
-  }
-  if (is.list(mods) && !all(vapply(mods, is.numeric, logical(1)))) {
-    stop("Every element of `mods` must be numeric.", call. = FALSE)
-  }
-  if (length(mods) == 0L) {
-    stop("`mods` must contain at least one prediction vector.", call. = FALSE)
-  }
-  if (is.numeric(mods) && length(mods) != length(obs)) {
-    stop("A prediction vector and `obs` must have the same length.", call. = FALSE)
-  }
-  if (is.list(mods) && any(vapply(mods, length, integer(1)) != length(obs))) {
-    stop("Every prediction vector in `mods` must have the same length as `obs`.", call. = FALSE)
-  }
-  if (length(na.rm) != 1L || is.na(na.rm)) stop("`na.rm` must be TRUE or FALSE.", call. = FALSE)
-  if (!is.null(digits) && (length(digits) != 1L || is.na(digits) || digits < 0 || digits != as.integer(digits))) {
-    stop("`digits` must be NULL or one non-negative integer.", call. = FALSE)
-  }
-  invisible(NULL)
+  result
 }

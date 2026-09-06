@@ -9,20 +9,32 @@
 #' colour scale follow Wadoux, Walvoort, and Brus (2022) and the original
 #' implementation in the accompanying repository.
 #'
-#' @param mods A numeric prediction vector, or a named list of numeric
-#'   prediction vectors.
-#' @param obs A numeric observation vector.
-#' @param colorval Optional numeric values used to colour model points. If
-#'   `NULL`, Pearson correlation is used.
+#' @inheritParams diagram_stats
+#' @seealso [diagram_stats()], [model_metrics()], [gg_taylor()], [gg_solar()],
+#'   [gg_target()]
+#' @details Missing pairs are removed separately per model when na.rm = TRUE.
+#'   Two complete pairs with non-zero observation SD are required. All plotted
+#'   statistics can be retrieved with diagram_stats(). Sample SD normalization
+#'   and the original constant-prediction convention are documented there.
+#' @param colorval Optional finite numeric vector with one value per model,
+#'   in model order (names do not reorder values). If NULL, correlation is used.
 #' @param colorval.name Optional colour-legend title.
-#' @param x.axis_begin Lower x-axis limit.
-#' @param x.axis_end Upper x-axis limit.
-#' @param y.axis_end Upper y-axis limit.
+#' @param x.axis_begin Lower endpoint of the manually drawn horizontal axis.
+#'   Axis arguments set reference-axis extents, not clipping limits; use
+#'   ggplot2::coord_cartesian() to zoom.
+#' @param x.axis_end Upper endpoint of the manually drawn horizontal axis.
+#' @param y.axis_end Upper endpoint of the manually drawn vertical axis.
 #' @param by Spacing between manually drawn axis ticks.
 #' @param label Logical; draw model labels with `ggrepel`?
 #' @param point_size Numeric point size.
 #' @param label_size Numeric text size for model labels.
 #'
+#' @section Coordinates and labels:
+#'   The horizontal coordinate is nME and the vertical coordinate is sde.
+#'   Axis-title placement follows the original diagram, where titles are placed
+#'   near axis ends rather than in ordinary Cartesian positions. Use labs()
+#'   to override titles. The reference regions retain the original rounded radii;
+#'   their interpretation requires the normalization assumptions in diagram_stats().
 #' @return A `ggplot2` plot object that can be extended with ordinary ggplot2
 #'   layers, scales, labels, and themes.
 #'
@@ -41,34 +53,16 @@
 gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
                      x.axis_begin = -1, x.axis_end = 1, y.axis_end = 2,
                      by = 0.1, label = FALSE, point_size = 7,
-                     label_size = 4) {
-  validate_metrics_inputs(mods, obs, TRUE, NULL)
-  if (!isTRUE(stats::sd(obs) > 0)) {
-    stop("`obs` must have non-zero standard deviation for a solar diagram.", call. = FALSE)
-  }
-  mods <- as_model_list(mods)
+                     label_size = 4, na.rm = TRUE) {
+  validate_plot_sizes(label, point_size, label_size)
+  data <- diagram_stats(mods, obs, na.rm = na.rm)
   validate_diagram_arguments(colorval, colorval.name, x.axis_begin, x.axis_end,
-                             y.axis_end, by, label, length(mods))
-
-  model_stats <- lapply(mods, function(pred) {
-    keep <- stats::complete.cases(pred, obs)
-    pred <- pred[keep]
-    obs_use <- obs[keep]
-    sigma_ast <- stats::sd(pred) / stats::sd(obs_use)
-    r <- suppressWarnings(stats::cor(pred, obs_use))
-    if (is.na(r)) r <- 0
-    data.frame(
-      nME = (mean(obs_use) - mean(pred)) / stats::sd(obs_use),
-      uRMSDnorm = sqrt(1 + sigma_ast^2 - 2 * sigma_ast * r),
-      r = r
-    )
-  })
-  data <- do.call(rbind, model_stats)
-  data$model <- names(mods)
+                             y.axis_end, by, label, nrow(data))
   if (is.null(colorval)) colorval <- data$r
   if (is.null(colorval.name)) colorval.name <- "Correlation"
   data$colvar <- colorval
-  data$uRMSDnorm_sigmaD <- data$uRMSDnorm
+  data$uRMSDnorm_sigmaD <- data$sde
+  data$uRMSDnorm <- data$sde
 
   circle <- function(radius) {
     data.frame(
@@ -108,12 +102,12 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
       ggplot2::aes(x = x, y = y, group = label),
       inherit.aes = FALSE, colour = "black", linewidth = 0.8
     ) +
-    ggplot2::geom_segment(
-      x = 0, xend = 0, y = 0, yend = y.axis_end,
+    ggplot2::annotate(
+      "segment", x = 0, xend = 0, y = 0, yend = y.axis_end,
       linewidth = 0.5
     ) +
-    ggplot2::geom_segment(
-      x = x.axis_begin, xend = x.axis_end, y = 0, yend = 0,
+    ggplot2::annotate(
+      "segment", x = x.axis_begin, xend = x.axis_end, y = 0, yend = 0,
       linewidth = 0.5
     ) +
     ggplot2::geom_segment(
@@ -143,10 +137,10 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
       axis.ticks.x = ggplot2::element_blank(),
       axis.ticks.length.x = grid::unit(-0.2, "cm"),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(t = 0, r = -25, b = 0, l = 0), hjust = 0.02),
-      legend.position = c(1, 0.5), legend.justification = "right",
+      legend.position = "inside", legend.position.inside = c(1, 0.5), legend.justification = "right",
       legend.margin = ggplot2::margin(0, 0, 0, 0),
       legend.box.margin = ggplot2::margin(-10, -10, -10, -20),
-      legend.text.align = 0, legend.title = ggplot2::element_text(vjust = 3)
+      legend.text = ggplot2::element_text(hjust = 0), legend.title = ggplot2::element_text(vjust = 3)
     ) +
     ggplot2::geom_text(
       data = x_labs, ggplot2::aes(x = lab, y = zero, label = lab),
@@ -166,38 +160,8 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
   if (isTRUE(label)) {
     p <- p + ggrepel::geom_label_repel(
       ggplot2::aes(label = model), box.padding = 0.35,
-      point.padding = 0.5, segment.color = "grey50", size = label_size
+      point.padding = 0.5, segment.color = "grey50", size = label_size, seed = 0
     )
   }
   p
-}
-
-as_model_list <- function(mods) {
-  if (is.numeric(mods)) mods <- list(Model = mods)
-  if (is.null(names(mods)) || any(names(mods) == "")) {
-    names(mods) <- paste0("Model ", seq_along(mods))
-  }
-  mods
-}
-
-validate_diagram_arguments <- function(colorval, colorval.name, x.axis_begin,
-                                        x.axis_end, y.axis_end, by, label,
-                                        n_models) {
-  if (!is.null(colorval) && (!is.numeric(colorval) || length(colorval) != n_models)) {
-    stop("`colorval` must be numeric and have one value per model.", call. = FALSE)
-  }
-  if (!is.null(colorval.name) && length(colorval.name) != 1L) {
-    stop("`colorval.name` must have length one.", call. = FALSE)
-  }
-  if (length(x.axis_begin) != 1L || length(x.axis_end) != 1L ||
-      length(y.axis_end) != 1L || !is.finite(x.axis_begin) ||
-      !is.finite(x.axis_end) || !is.finite(y.axis_end) ||
-      x.axis_begin >= x.axis_end || y.axis_end <= 0) {
-    stop("Axis limits must be finite, with x.axis_begin < x.axis_end and y.axis_end > 0.", call. = FALSE)
-  }
-  if (length(by) != 1L || !is.finite(by) || by <= 0) {
-    stop("`by` must be one positive finite number.", call. = FALSE)
-  }
-  if (length(label) != 1L || is.na(label)) stop("`label` must be TRUE or FALSE.", call. = FALSE)
-  invisible(NULL)
 }

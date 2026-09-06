@@ -14,17 +14,19 @@ gg_target(
   by = 0.1,
   label = FALSE,
   point_size = 7,
-  label_size = 4
+  label_size = 4,
+  na.rm = TRUE
 )
 }
 \arguments{
-\item{mods}{A numeric prediction vector, or a named list of numeric
-prediction vectors.}
+\item{mods}{Numeric vector, list of numeric vectors, or numeric matrix/data
+frame with one model per column. Rows match \code{obs} in order. Supplied model
+names must be unique; missing names are generated.}
 
 \item{obs}{A numeric observation vector.}
 
-\item{colorval}{Optional numeric values used to colour model points. If
-\code{NULL}, Pearson correlation is used.}
+\item{colorval}{Optional finite numeric vector with one value per model,
+in model order (names do not reorder values). If NULL, correlation is used.}
 
 \item{colorval.name}{Optional colour-legend title.}
 
@@ -39,6 +41,10 @@ prediction vectors.}
 \item{point_size}{Numeric point size.}
 
 \item{label_size}{Numeric text size for model labels.}
+
+\item{na.rm}{Logical; remove incomplete pairs separately for each model?
+If FALSE, missing pairs cause an error because coordinates cannot be
+plotted. The default is TRUE.}
 }
 \value{
 A \code{ggplot2} plot object that can be extended with ordinary ggplot2
@@ -55,7 +61,21 @@ RMSD thresholds associated with correlation levels.
 The default geometry and continuous \code{viridis} colour scale follow Wadoux,
 Walvoort, and Brus (2022) and the original implementation in the
 accompanying repository.
+
+Missing pairs are removed separately per model when na.rm = TRUE.
+Two complete pairs with non-zero observation SD are required. All plotted
+statistics can be retrieved with diagram_stats(). Sample SD normalization
+and the original constant-prediction convention are documented there.
 }
+\section{Coordinates and labels}{
+
+The horizontal coordinate is signed_sde and the vertical coordinate is nME.
+Axis-title placement follows the original diagram, where titles are placed
+near axis ends rather than in ordinary Cartesian positions. Use labs()
+to override titles. The reference regions retain the original rounded radii;
+their interpretation requires the normalization assumptions in diagram_stats().
+}
+
 \examples{
 obs <- c(1, 2, 3, 4, 5)
 mods <- list(perfect = obs, biased = obs + 1)
@@ -67,4 +87,8 @@ Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
 integrated approach for the evaluation of quantitative soil maps through
 Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{https://doi.org/10.1016/j.geoderma.2021.115332}
+}
+\seealso{
+\code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}},
+\code{\link[=gg_target]{gg_target()}}
 }

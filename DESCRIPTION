@@ -20,9 +20,8 @@ Suggests:
     knitr,
     rmarkdown
 Imports:
-    ggplot2,
+    ggplot2 (>= 3.5.0),
     ggrepel,
-    ggthemes,
     latex2exp,
     viridis
 Config/testthat/edition: 3
