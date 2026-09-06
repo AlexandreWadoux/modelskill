@@ -31,7 +31,7 @@
 #' gg_taylor(mods, obs, label = TRUE)
 #' @export
 gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
-                      label_size = 5) {
+                      label_size = 4) {
   validate_metrics_inputs(mods, obs, TRUE, NULL)
   if (!is.numeric(mods)) {
     if (is.null(names(mods)) || any(names(mods) == "")) {
@@ -95,8 +95,9 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
   circle_data[outside, c("xcircle", "ycircle")] <- NA_real_
   circle_labels <- do.call(rbind, lapply(unique(circle_data$labelc), function(radius) {
     subset <- circle_data[circle_data$labelc == radius, ]
-    subset[10, ]
+      subset[10, ]
   }))
+  circle_labels <- circle_labels[stats::complete.cases(circle_labels[, c("xcircle", "ycircle")]), ]
 
   p <- ggplot2::ggplot() +
     ggplot2::coord_equal() +
@@ -113,31 +114,32 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
       ggplot2::aes(x = 0, y = 0, xend = xend, yend = yend),
       linetype = "dashed", colour = "black"
     ) +
-    ggplot2::geom_segment(
-      data = rays,
-      ggplot2::aes(x = min(xend), y = 0, xend = max(xend), yend = 0),
-      colour = "black"
+    ggplot2::annotate(
+      "segment", x = min(rays$xend), y = 0,
+      xend = max(rays$xend), yend = 0, colour = "black"
     ) +
     ggplot2::geom_line(
       data = circle_data,
       ggplot2::aes(x = xcircle, y = ycircle, group = labelc),
-      linetype = "dashed", colour = "red3", linewidth = 0.6
+      linetype = "dashed", colour = "red3", linewidth = 0.6,
+      na.rm = TRUE
     ) +
     ggplot2::geom_label(
       data = circle_labels,
       ggplot2::aes(x = xcircle, y = ycircle, label = labelc),
-      label.size = NA, fill = "white", vjust = 0, size = 5, colour = "red3"
+      label.size = NA, fill = "white", vjust = 0, size = 4, colour = "red3",
+      na.rm = TRUE
     ) +
     ggplot2::geom_text(
       data = rays,
       ggplot2::aes(x = 1.07 * xend, y = 1.035 * yend, label = label),
-      vjust = 0, size = 5, colour = "black"
+      vjust = 0, size = 4, colour = "black"
     ) +
     theme_taylor() +
     ggplot2::xlab(latex2exp::TeX("Standardized standard deviation $\\sigma^*$")) +
     ggplot2::annotate(
       "text", x = 0, y = std_max + 0.25,
-      label = latex2exp::TeX("Correlation \\textit{r}"), size = 5
+      label = latex2exp::TeX("Correlation \\textit{r}"), size = 4
     ) +
     ggplot2::geom_point(
       data = model_points,
@@ -153,7 +155,16 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
       segment.color = "grey50", size = label_size
     )
   }
-  p
+  p + ggplot2::theme(
+    axis.ticks.y = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_blank(),
+    axis.title.y = ggplot2::element_blank(),
+    panel.background = ggplot2::element_blank(),
+    panel.grid = ggplot2::element_blank(),
+    text = ggplot2::element_text(size = 12, family = "Palatino"),
+    panel.border = ggplot2::element_blank(),
+    axis.line.x = ggplot2::element_blank()
+  )
 }
 
 theme_taylor <- function(base_size = 11) {
@@ -164,7 +175,7 @@ theme_taylor <- function(base_size = 11) {
       axis.text.y = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_blank(),
       panel.background = ggplot2::element_blank(),
-      text = ggplot2::element_text(size = 16, family = "Palatino"),
+      text = ggplot2::element_text(size = 12, family = "Palatino"),
       panel.border = ggplot2::element_blank(),
       axis.line.x = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank()
