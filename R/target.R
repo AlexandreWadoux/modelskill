@@ -123,7 +123,7 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
     ggplot2::geom_point(ggplot2::aes(fill = colvar), shape = 21, size = point_size) +
     ggplot2::ylab(latex2exp::TeX("$SDE^* \\cdot \\sign(\\sigma_d)")) +
     ggplot2::xlab(latex2exp::TeX("ME^*")) +
-    viridis::scale_fill_viridis(option = "A") +
+    viridis::scale_fill_viridis(option = "A", na.value = "grey50") +
     ggplot2::labs(fill = colorval.name) +
     ggplot2::theme_classic() +
     ggplot2::theme(
@@ -132,16 +132,22 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
       axis.ticks.x = ggplot2::element_blank(), axis.line.y = ggplot2::element_blank(),
       axis.text.y = ggplot2::element_blank(), axis.ticks.y = ggplot2::element_blank(),
       text = ggplot2::element_text(size = 12, family = "sans"),
-      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = -17, r = 0, b = 0, l = 0)),
-      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(t = 0, r = -17, b = 0, l = 0)),
+      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 8)),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 8)),
       legend.position = "right", legend.justification = "right",
       legend.margin = ggplot2::margin(0, 0, 0, 0),
-      legend.box.margin = ggplot2::margin(-10, -10, -10, -20),
+      legend.box.margin = ggplot2::margin(0, 0, 0, 8),
       legend.text = ggplot2::element_text(hjust = 1), legend.title = ggplot2::element_text(vjust = 3)
     )
 
   if (isTRUE(label)) {
+    label_data <- rbind(
+      data[, c("uRMSDnorm_sigmaD", "nME", "model")],
+      data.frame(uRMSDnorm_sigmaD = circle_labels$x,
+                 nME = circle_labels$y, model = "")
+    )
     p <- p + ggrepel::geom_label_repel(
+      data = label_data,
       ggplot2::aes(label = model), box.padding = 0.35,
       point.padding = 0.5, segment.color = "grey50", size = label_size,
       family = "sans", seed = 0

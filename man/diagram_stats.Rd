@@ -32,8 +32,9 @@ diagrams without constructing a plot.
 \details{
 At least two complete pairs and non-zero observation standard
 deviation are required for every model. Inputs are paired by position.
-Constant predictions retain r = 0 with a warning; this is a plotting
-convention, not a defined Pearson correlation.
+Constant predictions have r = NA. Their SD ratio is zero and sde is one.
+Plot functions can therefore draw them without reporting a defined
+correlation. Correlation-coloured points are grey when r is NA.
 
 Sample SDs use divisor n - 1, preserving the research code. Thus sde equals
 sd(obs - pred) / sd(obs), and also the square root of

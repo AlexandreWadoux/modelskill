@@ -1,5 +1,16 @@
 # modelskill 0.0.0.9000
 
+## Author decisions
+
+* Preserve the original sample-SD normalization.
+* Constant inputs now return NA for r and r2. Constant-model coordinates remain
+  usable; undefined correlations use grey in default colour scales.
+* Alexandre M.J.-C. Wadoux is sole author, maintainer and copyright holder;
+  the maintainer email is alexandre.wadoux@yahoo.fr. MIT grant confirmed.
+* Author selected the current graphical defaults (A). Retain those conventions,
+  with exterior legends, safer title margins, and reference-label obstacles
+  for model-label repulsion to reduce overlap.
+
 * Add exported diagram_stats() for independent access to diagram statistics.
 * Accept numeric matrices and data frames (one model per column) consistently.
 * Share pair filtering and numerical calculations across diagrams.

@@ -29,8 +29,8 @@
 #' different subsets. NA and NaN are missing; infinite values are rejected.
 #' Repeated observations are retained with equal weight.
 #' With fewer than two pairs, correlation, efficiency and concordance are NA.
-#' Constant inputs use the original r = 0 convention, with a warning that
-#' Pearson correlation is undefined. Constant observations give NA efficiency
+#' Constant inputs return NA for r and r2 because Pearson correlation is
+#' undefined. Constant observations give NA efficiency
 #' and concordance. Constant predictions with varying observations give zero
 #' Cb and rhoC (the continuous limiting value). All-missing models return NA.
 #' @seealso [diagram_stats()], [gg_taylor()], [gg_solar()], [gg_target()]
@@ -79,11 +79,10 @@ metric_row <- function(pred, obs, na.rm) {
   result$MAE <- mean(abs(error)) * m$scale
   result$RMSE <- root_mean_square(error) * m$scale
   if (length(pred) < 2L) return(result)
-  if (m$sp == 0 || m$so == 0) {
-    warning("Pearson correlation is undefined for constant inputs; using the original r = 0 convention.", call. = FALSE)
+  if (m$sp > 0 && m$so > 0) {
+    result$r <- m$r
+    result$r2 <- m$r^2
   }
-  result$r <- m$r
-  result$r2 <- m$r^2
   if (m$so > 0) {
     result$NSE <- 1 - (root_mean_square(error) / m$so)^2
     # Lin's expression, including its continuous limit for constant predictions.

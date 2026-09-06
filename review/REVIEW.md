@@ -1,5 +1,21 @@
 # Professional function review
 
+## Subsequent author decisions
+
+The author confirmed preservation of original sample-SD normalization.
+Alexandre M.J.-C. Wadoux is sole author, maintainer and copyright holder;
+public email alexandre.wadoux@yahoo.fr. MIT redistribution is confirmed.
+Undefined correlations now return NA. Constant-model coordinates remain
+available, with grey representing NA in default correlation colour scales.
+This supersedes the review's earlier recommendation to retain reported r = 0.
+Graphical alternatives are provided in solar-options.png, target-options.png
+and taylor-options.png. The author selected A (current defaults), with overlap
+prevention: legends outside panels, title spacing, reference-label obstacles.
+Selected figures are saved as solar-approved.png, target-approved.png and
+taylor-approved.png.
+The public AlexandreWadoux/modelskill repository and issue tracker have been
+created. The sections below record the review before these author decisions.
+
 Scope: all original exports, helpers, tests, man pages, examples, metadata,
 namespace and package configuration. Vignette content was left unchanged.
 Work branch: codex/professional-review. Baseline: 43 passing assertions.

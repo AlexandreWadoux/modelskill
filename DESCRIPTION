@@ -2,11 +2,9 @@ Package: modelskill
 Type: Package
 Title: Quantitative Model Skill Diagrams and Indices
 Version: 0.0.0.9000
-Authors@R: c(
-    person("Alexandre M. J.-C.", "Wadoux", email = "alexandre.wadoux@sydney.edu.au",
-           role = c("aut", "cre")),
-    person("Modelskill contributors", role = "ctb")
-  )
+Authors@R: person("Alexandre M.J.-C.", "Wadoux",
+    email = "alexandre.wadoux@yahoo.fr",
+    role = c("aut", "cre", "cph"))
 Description: Evaluates quantitative prediction models using map- and model-skill
     indices together with Taylor, solar, and target diagrams. The implementation
     follows Wadoux, Walvoort, and Brus (2022) <doi:10.1016/j.geoderma.2021.115332>.

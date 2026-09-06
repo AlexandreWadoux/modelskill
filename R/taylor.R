@@ -40,9 +40,11 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
   statistics <- diagram_stats(mods, obs, na.rm = na.rm)
   model_points <- data.frame(
     Cor = statistics$r, Std = statistics$sd_ratio, Model = statistics$model)
-  model_points$x <- model_points$Std * model_points$Cor
+  # A constant model is at the origin; its angular correlation is undefined.
+  geometry_cor <- ifelse(is.na(model_points$Cor), 0, model_points$Cor)
+  model_points$x <- model_points$Std * geometry_cor
   model_points$y <- model_points$Std *
-    sqrt(pmax(0, (1 - model_points$Cor) * (1 + model_points$Cor)))
+    sqrt(pmax(0, (1 - geometry_cor) * (1 + geometry_cor)))
 
   obs_std <- 1
   std_max <- ceiling(max(c(obs_std, model_points$Std, 2), na.rm = TRUE))
@@ -139,8 +141,13 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
     ggplot2::annotate("point", x = 1, y = 0, size = 3, colour = "red3")
 
   if (isTRUE(label)) {
+    label_data <- rbind(
+      model_points[, c("x", "y", "Model")],
+      data.frame(x = circle_labels$xcircle, y = circle_labels$ycircle,
+                 Model = "")
+    )
     p <- p + ggrepel::geom_label_repel(
-      data = model_points,
+      data = label_data,
       ggplot2::aes(x = x, y = y, label = Model),
       box.padding = 0.35, point.padding = 0.8,
       segment.color = "grey50", size = label_size, family = "sans", seed = 0

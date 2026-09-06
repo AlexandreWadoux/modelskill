@@ -45,8 +45,8 @@ Missing pairs are removed separately for each model, so comparisons may use
 different subsets. NA and NaN are missing; infinite values are rejected.
 Repeated observations are retained with equal weight.
 With fewer than two pairs, correlation, efficiency and concordance are NA.
-Constant inputs use the original r = 0 convention, with a warning that
-Pearson correlation is undefined. Constant observations give NA efficiency
+Constant inputs return NA for r and r2 because Pearson correlation is
+undefined. Constant observations give NA efficiency
 and concordance. Constant predictions with varying observations give zero
 Cb and rhoC (the continuous limiting value). All-missing models return NA.
 }

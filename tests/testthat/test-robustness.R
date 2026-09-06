@@ -70,11 +70,14 @@ test_that("missing values use each model's complete pairs consistently", {
 })
 
 test_that("constant predictions have an explicit finite convention", {
-  expect_warning(m <- model_metrics(rep(3, 5), 1:5), "constant")
+  m <- model_metrics(rep(3, 5), 1:5)
+  expect_true(is.na(m$r))
+  expect_true(is.na(m$r2))
   expect_equal(m$NSE, 0)
   expect_equal(m$Cb, 0)
   expect_equal(m$rhoC, 0)
-  expect_warning(d <- diagram_stats(rep(3, 5), 1:5), "constant")
+  d <- diagram_stats(rep(3, 5), 1:5)
+  expect_true(is.na(d$r))
   expect_equal(d$sde, 1)
   expect_equal(d$signed_sde, -1)
 })

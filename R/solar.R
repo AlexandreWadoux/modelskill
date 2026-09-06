@@ -136,10 +136,10 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
       text = ggplot2::element_text(size = 12),
       axis.ticks.x = ggplot2::element_blank(),
       axis.ticks.length.x = grid::unit(-0.2, "cm"),
-      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(t = 0, r = -25, b = 0, l = 0), hjust = 0.02),
-      legend.position = "inside", legend.position.inside = c(1, 0.5), legend.justification = "right",
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 8), hjust = 0.02),
+      legend.position = "right", legend.justification = "center",
       legend.margin = ggplot2::margin(0, 0, 0, 0),
-      legend.box.margin = ggplot2::margin(-10, -10, -10, -20),
+      legend.box.margin = ggplot2::margin(0, 0, 0, 8),
       legend.text = ggplot2::element_text(hjust = 0), legend.title = ggplot2::element_text(vjust = 3)
     ) +
     ggplot2::geom_text(
@@ -154,7 +154,7 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
     ggplot2::geom_point(ggplot2::aes(colour = colvar), shape = 19, size = point_size) +
     ggplot2::geom_point(ggplot2::aes(colour = colvar), colour = "black", shape = 21, size = point_size) +
     ggplot2::labs(colour = colorval.name) +
-    viridis::scale_color_viridis(option = "A") +
+    viridis::scale_color_viridis(option = "A", na.value = "grey50") +
     ggplot2::guides(colour = ggplot2::guide_colourbar(order = 1))
 
   if (isTRUE(label)) {

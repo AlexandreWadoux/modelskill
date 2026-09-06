@@ -14,8 +14,9 @@
 #'   `signed_sde` (sde times the sign of the SD difference).
 #' @details At least two complete pairs and non-zero observation standard
 #' deviation are required for every model. Inputs are paired by position.
-#' Constant predictions retain r = 0 with a warning; this is a plotting
-#' convention, not a defined Pearson correlation.
+#' Constant predictions have r = NA. Their SD ratio is zero and sde is one.
+#' Plot functions can therefore draw them without reporting a defined
+#' correlation. Correlation-coloured points are grey when r is NA.
 #'
 #' Sample SDs use divisor n - 1, preserving the research code. Thus sde equals
 #' sd(obs - pred) / sd(obs), and also the square root of
@@ -52,20 +53,18 @@ diagram_stats <- function(mods, obs, na.rm = TRUE) {
     if (m$so == 0) {
       stop(sprintf("Model '%s': paired obs must have non-zero standard deviation.", name), call. = FALSE)
     }
-    if (m$sp == 0) {
-      warning(sprintf("Model '%s': constant predictions; using the original r = 0 convention.", name), call. = FALSE)
-    }
     difference <- m$o - m$p
     centred <- difference - mean(difference)
     sde <- root_mean_square(centred) / m$so
     sign_sd <- if (m$sp < m$so) -1 else 1
-    data.frame(model = name, n = n, r = m$r,
+    data.frame(model = name, n = n, r = if (m$sp == 0) NA_real_ else m$r,
       sd_ratio = m$sp / m$so, mean_error = mean(difference) * m$scale,
       nME = mean(difference) / m$so * sqrt((n - 1) / n),
       sde = sde, signed_sde = sign_sd * sde)
   })
   result <- do.call(rbind, rows)
-  if (any(!is.finite(as.matrix(result[, -1])))) {
+  coordinates <- result[, !names(result) %in% c("model", "r")]
+  if (any(!is.finite(as.matrix(coordinates)))) {
     stop("Diagram statistics exceed numeric precision; rescale the input units.", call. = FALSE)
   }
   result

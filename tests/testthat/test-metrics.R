@@ -54,6 +54,6 @@ test_that("empty model collections are rejected", {
 })
 
 test_that("constant observations are handled explicitly", {
-  expect_warning(got <- model_metrics(1:3, c(2, 2, 2)), "constant")
+  got <- model_metrics(1:3, c(2, 2, 2))
   expect_true(is.na(got$NSE))
 })

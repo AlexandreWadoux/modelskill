@@ -20,16 +20,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Alexandre M. J.-C. Wadoux \email{alexandre.wadoux@sydney.edu.au}
+\strong{Maintainer}: Alexandre M.J.-C. Wadoux \email{alexandre.wadoux@yahoo.fr} [copyright holder]
 
 Authors:
 \itemize{
-  \item Alexandre M. J.-C. Wadoux \email{alexandre.wadoux@sydney.edu.au}
-}
-
-Other contributors:
-\itemize{
-  \item Modelskill contributors [contributor]
+  \item Alexandre M.J.-C. Wadoux \email{alexandre.wadoux@yahoo.fr} [copyright holder]
 }
 
 }
