@@ -131,18 +131,20 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
       data = circle_labels,
       ggplot2::aes(x = xcircle, y = ycircle, label = labelc),
       linewidth = 0, fill = "white", vjust = 0, size = 4, colour = "red3",
+      family = "Arial",
       na.rm = TRUE
     ) +
     ggplot2::geom_text(
       data = rays,
       ggplot2::aes(x = 1.07 * xend, y = 1.035 * yend, label = label),
-      vjust = 0, size = 4, colour = "black"
+      vjust = 0, size = 4, colour = "black", family = "Arial"
     ) +
     theme_taylor() +
     ggplot2::xlab(latex2exp::TeX("Standardized standard deviation $\\sigma^*$")) +
     ggplot2::annotate(
       "text", x = 0, y = std_max + 0.25,
-      label = latex2exp::TeX("Correlation \\textit{r}"), size = 4
+      label = latex2exp::TeX("Correlation \\textit{r}"), size = 4,
+      family = "Arial"
     ) +
     ggplot2::geom_point(
       data = model_points,
@@ -155,7 +157,7 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
       data = model_points,
       ggplot2::aes(x = x, y = y, label = Model),
       box.padding = 0.35, point.padding = 0.8,
-      segment.color = "grey50", size = label_size
+      segment.color = "grey50", size = label_size, family = "Arial"
     )
   }
   p + ggplot2::theme(
@@ -164,7 +166,7 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
     axis.title.y = ggplot2::element_blank(),
     panel.background = ggplot2::element_blank(),
     panel.grid = ggplot2::element_blank(),
-    text = ggplot2::element_text(size = 12, family = "sans"),
+    text = ggplot2::element_text(size = 12, family = "Arial"),
     panel.border = ggplot2::element_blank(),
     axis.line.x = ggplot2::element_blank()
   )
@@ -178,7 +180,7 @@ theme_taylor <- function(base_size = 11) {
       axis.text.y = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_blank(),
       panel.background = ggplot2::element_blank(),
-      text = ggplot2::element_text(size = 12, family = "sans"),
+      text = ggplot2::element_text(size = 12, family = "Arial"),
       panel.border = ggplot2::element_blank(),
       axis.line.x = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank()
