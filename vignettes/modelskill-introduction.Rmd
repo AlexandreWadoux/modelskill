@@ -1,0 +1,104 @@
+---
+title: "Evaluating quantitative models with modelskill"
+author: "modelskill contributors"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Evaluating quantitative models with modelskill}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      fig.width = 7, fig.height = 6)
+```
+
+## Why use several diagnostics?
+
+A single statistic rarely describes every important aspect of a quantitative
+model. A model may have a strong correlation but still be biased, or it may
+have a small average error while failing to reproduce the observed variation.
+`modelskill` combines several complementary indices and diagrams so that these
+behaviours can be inspected together.
+
+The approach follows Wadoux, Walvoort, and Brus (2022), who introduced the use
+of Taylor and solar diagrams for integrated evaluation of quantitative maps.
+The same tools are useful more generally for quantitative prediction models.
+
+## Reproducible example
+
+Here we create a small observation vector and three predictions: a perfect
+prediction, a biased prediction, and a noisy prediction.
+
+```{r data}
+library(modelskill)
+
+set.seed(123)
+obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
+mods <- list(
+  Good = obs + rnorm(100, sd = 0.5),
+  Biased = obs + 1,
+  Noisy = obs + rnorm(100, sd = 2)
+)
+```
+
+## Indices
+
+```{r metrics}
+metrics <- model_metrics(mods, obs)
+metrics
+```
+
+ME describes average signed error, while MAE and RMSE summarize error size.
+Correlation describes association, NSE compares performance with a mean-value
+benchmark, and `rhoC` combines correlation with location and scale agreement.
+
+## Taylor diagram
+
+The Taylor diagram displays correlation through the polar angle and the
+standard-deviation ratio through the radial distance. The reference point is
+the red point at correlation 1 and standardized standard deviation 1.
+
+```{r taylor}
+gg_taylor(mods, obs, label = TRUE)
+```
+
+## Solar diagram
+
+The solar diagram combines normalized mean error and standardized unbiased
+RMSD. The point colour can display any model-level statistic, such as NSE.
+
+```{r solar}
+gg_solar(mods, obs, colorval = metrics$NSE, colorval.name = "NSE",
+         label = TRUE, x.axis_begin = -1.5, x.axis_end = 1.5,
+         y.axis_end = 2, by = 0.25)
+```
+
+## Target diagram
+
+The target diagram separates signed error components while retaining RMSD
+contours. Models closer to the origin generally have smaller combined error,
+with the sign of the horizontal coordinate indicating the direction of the
+standard-deviation difference.
+
+```{r target}
+gg_target(mods, obs, colorval = metrics$NSE, colorval.name = "NSE",
+          label = TRUE, axis_begin = -2, axis_end = 2, by = 0.5)
+```
+
+## Standard ggplot2 customisation
+
+Each diagram is an ordinary `ggplot2` object, so standard layers can be added.
+
+```{r customise}
+gg_taylor(mods, obs) +
+  ggplot2::labs(title = "Model comparison") +
+  ggplot2::theme_minimal()
+```
+
+## References
+
+Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
+integrated approach for the evaluation of quantitative soil maps through
+Taylor and solar diagrams. *Geoderma*, 405, 115332.
+<https://doi.org/10.1016/j.geoderma.2021.115332>

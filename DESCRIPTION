@@ -16,7 +16,9 @@ BugReports: https://github.com/AlexandreWadoux/modelskill/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
 Imports:
     ggplot2,
     ggrepel,
@@ -25,3 +27,4 @@ Imports:
     viridis
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0
+VignetteBuilder: knitr
