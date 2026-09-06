@@ -32,6 +32,14 @@ test_that("gg_target supports legend and reference controls", {
   expect_error(gg_target(1:5, 1:5, reference = "yes"), "reference")
 })
 
+test_that("gg_target retains the authoritative axis mapping and titles", {
+  p <- gg_target(1:5, 1:5)
+  expect_equal(all.vars(p$mapping$x), "uRMSDnorm_sigmaD")
+  expect_equal(all.vars(p$mapping$y), "nME")
+  expect_identical(p$labels$x, expression(ME^"*"))
+  expect_identical(p$labels$y, expression(SDE^"*" %.% sign(sigma[d])))
+})
+
 test_that("gg_target rejects constant observations", {
   expect_error(gg_target(1:3, c(2, 2, 2)), "non-zero standard deviation")
 })

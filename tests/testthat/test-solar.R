@@ -33,6 +33,14 @@ test_that("gg_solar supports legend and reference controls", {
   expect_error(gg_solar(1:5, 1:5, reference = "yes"), "reference")
 })
 
+test_that("gg_solar retains the authoritative axis mapping and titles", {
+  p <- gg_solar(1:5, 1:5)
+  expect_equal(all.vars(p$mapping$x), "nME")
+  expect_equal(all.vars(p$mapping$y), "uRMSDnorm_sigmaD")
+  expect_identical(p$labels$x, expression(SDE^"*"))
+  expect_identical(p$labels$y, expression(ME^"*"))
+})
+
 test_that("gg_solar rejects constant observations", {
   expect_error(gg_solar(1:3, c(2, 2, 2)), "non-zero standard deviation")
 })
