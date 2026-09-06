@@ -1,3 +1,4 @@
 # Generated manually for the initial checkpoint; roxygen2 will regenerate it.
 export(model_metrics)
 export(gg_taylor)
+export(gg_solar)
