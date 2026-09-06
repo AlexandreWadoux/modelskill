@@ -8,9 +8,14 @@ gg_taylor(
   mods,
   obs,
   label = FALSE,
+  legend = FALSE,
   point_size = 6,
   label_size = 4,
-  na.rm = TRUE
+  na.rm = TRUE,
+  half = FALSE,
+  rmsd = TRUE,
+  rmsd_colour = "red3",
+  rmsd_breaks = NULL
 )
 }
 \arguments{
@@ -20,7 +25,11 @@ names must be unique; missing names are generated.}
 
 \item{obs}{A numeric observation vector.}
 
-\item{label}{Logical; draw model labels with \code{ggrepel}?}
+\item{label}{Logical; draw model names directly on the diagram using
+\code{ggrepel}?}
+
+\item{legend}{Logical; colour model points by model and display a legend?
+The standard ggplot2 discrete colour palette is used by default.}
 
 \item{point_size}{Numeric size of model points.}
 
@@ -29,6 +38,18 @@ names must be unique; missing names are generated.}
 \item{na.rm}{Logical; remove incomplete pairs separately for each model?
 If FALSE, missing pairs cause an error because coordinates cannot be
 plotted. The default is TRUE.}
+
+\item{half}{Logical; if \code{TRUE}, draw only the positive-correlation portion
+of the Taylor diagram (r = 0 to r = 1). If \code{FALSE}, draw the full Taylor
+diagram (r = -1 to r = 1).}
+
+\item{rmsd}{Logical; show centred RMSD contours and their labels?}
+
+\item{rmsd_colour}{Character string giving the colour of the RMSD contours
+and labels.}
+
+\item{rmsd_breaks}{Optional numeric vector giving the RMSD contour values.
+If \code{NULL}, contours are drawn every 0.5 units.}
 }
 \value{
 A \code{ggplot2} plot object. It can be extended with ordinary ggplot2
@@ -38,30 +59,77 @@ layers, scales, labels, and themes.
 Creates a Taylor diagram comparing one or more quantitative prediction
 models with an observation vector. The radial coordinate is the model
 standard deviation divided by the observation standard deviation and the
-polar angle represents the Pearson correlation. The red dashed contours
-show centred root-mean-square distance from the reference point.
+polar angle represents the Pearson correlation. Optional centred
+root-mean-square distance (RMSD) contours are drawn around the observation
+reference point.
 }
 \details{
 The geometry and default styling follow Wadoux, Walvoort, and Brus (2022)
 and the original implementation in the accompanying repository.
 
-Missing pairs are removed separately per model when na.rm = TRUE.
+Missing pairs are removed separately per model when \code{na.rm = TRUE}.
 Two complete pairs with non-zero observation SD are required. All plotted
-statistics can be retrieved with diagram_stats(). Sample SD normalization
-and the original constant-prediction convention are documented there.
+statistics can be retrieved with \code{\link[=diagram_stats]{diagram_stats()}}.
+
+Model names can be displayed either directly on the diagram with
+\code{label = TRUE} or through a colour legend with \code{legend = TRUE}.
+
+With \code{legend = TRUE}, model points use the standard ggplot2 discrete colour
+palette. Because the returned object is a regular ggplot2 object, the model
+colour scale, legend, theme, titles, fonts, and other graphical elements can
+subsequently be customised with ordinary ggplot2 layers.
+
+RMSD contours can be removed with \code{rmsd = FALSE}, recoloured with
+\code{rmsd_colour}, or placed at user-defined values with \code{rmsd_breaks}.
 }
 \examples{
 obs <- c(1, 2, 3, 4, 5)
-mods <- list(perfect = obs, biased = obs + 1, smooth = c(2, 2, 3, 4, 4))
+
+mods <- list(
+  perfect = obs,
+  biased = obs + 1,
+  smooth = c(2, 2, 3, 4, 4)
+)
+
+# Model names directly on the diagram
 gg_taylor(mods, obs, label = TRUE)
+
+# Positive-correlation Taylor diagram
+gg_taylor(mods, obs, label = TRUE, half = TRUE)
+
+# Coloured points and legend
+gg_taylor(mods, obs, legend = TRUE, half = TRUE)
+
+# Remove RMSD contours completely
+gg_taylor(mods, obs, legend = TRUE, half = TRUE, rmsd = FALSE)
+
+# Change RMSD colour
+gg_taylor(
+  mods, obs,
+  legend = TRUE,
+  half = TRUE,
+  rmsd_colour = "steelblue"
+)
+
+# Define custom RMSD contours
+gg_taylor(
+  mods, obs,
+  half = TRUE,
+  rmsd_breaks = c(0.25, 0.5, 1, 1.5, 2)
+)
+
+# Ordinary ggplot2 customisation remains available
+gg_taylor(mods, obs, legend = TRUE, half = TRUE) +
+  ggplot2::scale_colour_brewer(palette = "Dark2") +
+  ggplot2::theme(legend.position = "bottom")
+
 }
 \references{
-Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
-integrated approach for the evaluation of quantitative soil maps through
-Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
+Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022).
+An integrated approach for the evaluation of quantitative soil maps
+through Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{https://doi.org/10.1016/j.geoderma.2021.115332}
 }
 \seealso{
-\code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}},
-\code{\link[=gg_target]{gg_target()}}
+\code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_solar]{gg_solar()}}, \code{\link[=gg_target]{gg_target()}}
 }

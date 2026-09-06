@@ -3,7 +3,7 @@
 
 # Install these once if necessary:
 # install.packages(c("devtools", "ggplot2", "ggrepel", "ggthemes",
-#                    "latex2exp", "viridis", "testthat"))
+#                    "viridis", "testthat"))
 
 devtools::load_all()
 
