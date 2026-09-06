@@ -27,8 +27,9 @@ The same tools are useful more generally for quantitative prediction models.
 
 ## Reproducible example
 
-Here we create a small observation vector and three predictions: a perfect
-prediction, a biased prediction, and a noisy prediction.
+Here we create a small, reproducible reference series and three deliberately
+different prediction models. The models are simple on purpose: they make the
+meaning of the diagrams easy to see.
 
 ```{r data}
 library(modelskill)
@@ -36,11 +37,21 @@ library(modelskill)
 set.seed(123)
 obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
 mods <- list(
+  # Follows the observations closely, with only small random errors.
   Good = obs + rnorm(100, sd = 0.5),
+  # Has exactly the same pattern, but is systematically one unit too high.
   Biased = obs + 1,
+  # Has larger random errors and therefore reproduces the pattern less well.
   Noisy = obs + rnorm(100, sd = 2)
 )
 ```
+
+In a real application, `obs` would be measured values at validation
+locations, and each element of `mods` would be predictions at those same
+locations. The `Good` model should be closest to the ideal reference. The
+`Biased` model illustrates why correlation alone is insufficient: it can have
+correlation near one while still having a substantial mean error. The `Noisy`
+model illustrates loss of pattern agreement and larger prediction errors.
 
 ## Indices
 
@@ -49,9 +60,19 @@ metrics <- model_metrics(mods, obs)
 metrics
 ```
 
-ME describes average signed error, while MAE and RMSE summarize error size.
-Correlation describes association, NSE compares performance with a mean-value
-benchmark, and `rhoC` combines correlation with location and scale agreement.
+The columns have complementary meanings:
+
+* `ME` is the signed average error; its sign indicates systematic
+  overprediction or underprediction.
+* `MAE` and `RMSE` measure error magnitude, with RMSE giving more weight to
+  large errors.
+* `r` measures agreement in pattern or ordering, not agreement in level.
+* `NSE` compares the predictions with a mean-value benchmark; values closer to
+  one indicate better performance relative to that benchmark.
+* `rhoC` combines correlation with location and scale agreement.
+
+The diagrams show these complementary properties together rather than asking
+the reader to rank models from one statistic alone.
 
 ## Taylor diagram
 

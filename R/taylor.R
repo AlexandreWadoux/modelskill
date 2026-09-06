@@ -164,7 +164,7 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
     axis.title.y = ggplot2::element_blank(),
     panel.background = ggplot2::element_blank(),
     panel.grid = ggplot2::element_blank(),
-    text = ggplot2::element_text(size = 12, family = "Palatino"),
+    text = ggplot2::element_text(size = 12, family = "sans"),
     panel.border = ggplot2::element_blank(),
     axis.line.x = ggplot2::element_blank()
   )
@@ -178,7 +178,7 @@ theme_taylor <- function(base_size = 11) {
       axis.text.y = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_blank(),
       panel.background = ggplot2::element_blank(),
-      text = ggplot2::element_text(size = 12, family = "Palatino"),
+      text = ggplot2::element_text(size = 12, family = "sans"),
       panel.border = ggplot2::element_blank(),
       axis.line.x = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank()
