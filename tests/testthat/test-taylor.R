@@ -21,6 +21,13 @@ test_that("gg_taylor builds without labels and supports point size", {
   expect_true(any(vapply(p$layers, function(x) inherits(x$geom, "GeomPoint"), logical(1))))
 })
 
+test_that("gg_taylor uses portable plotmath annotations", {
+  p <- gg_taylor(1:5, 1:5)
+  expect_true(is.language(p$labels$x))
+  expect_false(inherits(p$labels$x, "latexexpression"))
+  expect_warning(ggplot2::ggplotGrob(p), NA)
+})
+
 test_that("gg_taylor rejects constant observations", {
   expect_error(gg_taylor(1:3, c(2, 2, 2)), "non-zero standard deviation")
 })

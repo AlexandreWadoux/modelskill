@@ -45,6 +45,17 @@ Undefined correlations for constant predictions are reported as NA; constant
 models remain drawable and use grey when coloured by correlation.
 See `?diagram_stats` for interpretation and finite-sample conventions.
 
+## Diagram defaults
+
+The original palette and diagram conventions are retained, with space reserved
+for legends and labels. These examples use NSE as the solar/target point colour.
+
+![Taylor diagram](review/taylor-approved.png)
+
+![Solar diagram](review/solar-approved.png)
+
+![Target diagram](review/target-approved.png)
+
 ## Scientific reference
 
 Wadoux, A.M.J.-C., Walvoort, D.J.J. and Brus, D.J. (2022).

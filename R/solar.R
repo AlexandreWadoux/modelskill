@@ -20,8 +20,8 @@
 #'   in model order (names do not reorder values). If NULL, correlation is used.
 #' @param colorval.name Optional colour-legend title.
 #' @param x.axis_begin Lower endpoint of the manually drawn horizontal axis.
-#'   Axis arguments set reference-axis extents, not clipping limits; use
-#'   ggplot2::coord_cartesian() to zoom.
+#'   Axis arguments set reference-axis extents, not clipping limits.
+#'   To zoom, add [ggplot2::coord_cartesian()].
 #' @param x.axis_end Upper endpoint of the manually drawn horizontal axis.
 #' @param y.axis_end Upper endpoint of the manually drawn vertical axis.
 #' @param by Spacing between manually drawn axis ticks.
@@ -121,9 +121,9 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
                    y = ticks, yend = ticks),
       inherit.aes = FALSE
     ) +
-    ggplot2::xlab(latex2exp::TeX("$SDE^*")) +
+    ggplot2::xlab(expression(SDE^"*")) +
     ggplot2::scale_x_continuous(position = "top") +
-    ggplot2::ylab(latex2exp::TeX("ME^*")) +
+    ggplot2::ylab(expression(ME^"*")) +
     ggplot2::theme_classic() +
     ggplot2::labs(fill = NULL) +
     ggplot2::theme(

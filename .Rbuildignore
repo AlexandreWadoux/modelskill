@@ -4,3 +4,7 @@
 ^\.github$
 ^Rplots\.pdf$
 ^LICENSE\.md$
+^output$
+^tmp$
+^doc$
+^Meta$

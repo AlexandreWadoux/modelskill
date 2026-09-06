@@ -128,10 +128,10 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
       vjust = 0, size = 4, colour = "black", family = "sans"
     ) +
     theme_taylor() +
-    ggplot2::xlab(latex2exp::TeX("Standardized standard deviation $\\sigma^*$")) +
+    ggplot2::xlab(expression("Standardized standard deviation " * sigma^"*")) +
     ggplot2::annotate(
       "text", x = 0, y = std_max + 0.25,
-      label = latex2exp::TeX("Correlation \\textit{r}"), size = 4,
+      label = expression("Correlation " * italic(r)), size = 4,
       family = "sans"
     ) +
     ggplot2::geom_point(

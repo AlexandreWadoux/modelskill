@@ -32,8 +32,8 @@ in model order (names do not reorder values). If NULL, correlation is used.}
 \item{colorval.name}{Optional colour-legend title.}
 
 \item{x.axis_begin}{Lower endpoint of the manually drawn horizontal axis.
-Axis arguments set reference-axis extents, not clipping limits; use
-ggplot2::coord_cartesian() to zoom.}
+Axis arguments set reference-axis extents, not clipping limits.
+To zoom, add \code{\link[ggplot2:coord_cartesian]{ggplot2::coord_cartesian()}}.}
 
 \item{x.axis_end}{Upper endpoint of the manually drawn horizontal axis.}
 

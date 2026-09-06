@@ -20,7 +20,6 @@ Suggests:
 Imports:
     ggplot2 (>= 3.5.0),
     ggrepel,
-    latex2exp,
     viridis
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0

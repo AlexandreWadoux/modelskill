@@ -121,8 +121,8 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
       inherit.aes = FALSE, hjust = 1.5, size = 3.5, family = "sans"
     ) +
     ggplot2::geom_point(ggplot2::aes(fill = colvar), shape = 21, size = point_size) +
-    ggplot2::ylab(latex2exp::TeX("$SDE^* \\cdot \\sign(\\sigma_d)")) +
-    ggplot2::xlab(latex2exp::TeX("ME^*")) +
+    ggplot2::ylab(expression(SDE^"*" %.% sign(sigma[d]))) +
+    ggplot2::xlab(expression(ME^"*")) +
     viridis::scale_fill_viridis(option = "A", na.value = "grey50") +
     ggplot2::labs(fill = colorval.name) +
     ggplot2::theme_classic() +

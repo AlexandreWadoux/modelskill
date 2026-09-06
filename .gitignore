@@ -4,3 +4,6 @@
 inst/doc/
 Rplots.pdf
 review/*.rds
+tmp/
+/doc/
+/Meta/
