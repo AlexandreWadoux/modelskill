@@ -43,6 +43,9 @@ gg_solar <- function(mods, obs, colorval = NULL, colorval.name = NULL,
                      by = 0.1, label = FALSE, point_size = 7,
                      label_size = 4) {
   validate_metrics_inputs(mods, obs, TRUE, NULL)
+  if (!isTRUE(stats::sd(obs) > 0)) {
+    stop("`obs` must have non-zero standard deviation for a solar diagram.", call. = FALSE)
+  }
   mods <- as_model_list(mods)
   validate_diagram_arguments(colorval, colorval.name, x.axis_begin, x.axis_end,
                              y.axis_end, by, label, length(mods))

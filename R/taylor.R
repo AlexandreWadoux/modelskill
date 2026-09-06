@@ -33,6 +33,9 @@
 gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
                       label_size = 4) {
   validate_metrics_inputs(mods, obs, TRUE, NULL)
+  if (!isTRUE(stats::sd(obs) > 0)) {
+    stop("`obs` must have non-zero standard deviation for a Taylor diagram.", call. = FALSE)
+  }
   if (!is.numeric(mods)) {
     if (is.null(names(mods)) || any(names(mods) == "")) {
       names(mods) <- paste0("Model ", seq_along(mods))
@@ -127,7 +130,7 @@ gg_taylor <- function(mods, obs, label = FALSE, point_size = 6,
     ggplot2::geom_label(
       data = circle_labels,
       ggplot2::aes(x = xcircle, y = ycircle, label = labelc),
-      label.size = NA, fill = "white", vjust = 0, size = 4, colour = "red3",
+      linewidth = 0, fill = "white", vjust = 0, size = 4, colour = "red3",
       na.rm = TRUE
     ) +
     ggplot2::geom_text(

@@ -42,6 +42,9 @@ gg_target <- function(mods, obs, colorval = NULL, colorval.name = NULL,
                       axis_begin = -2, axis_end = 2, by = 0.1,
                       label = FALSE, point_size = 7, label_size = 4) {
   validate_metrics_inputs(mods, obs, TRUE, NULL)
+  if (!isTRUE(stats::sd(obs) > 0)) {
+    stop("`obs` must have non-zero standard deviation for a target diagram.", call. = FALSE)
+  }
   mods <- as_model_list(mods)
   validate_diagram_arguments(colorval, colorval.name, axis_begin, axis_end,
                              axis_end, by, label, length(mods))

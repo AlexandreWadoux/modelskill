@@ -37,3 +37,23 @@ test_that("rounding is optional", {
   expect_false(identical(full$RMSE, rounded$RMSE))
   expect_equal(rounded$RMSE, round(full$RMSE, 2))
 })
+
+test_that("single unnamed vectors receive a model name", {
+  got <- model_metrics(1:5, 1:5)
+  expect_equal(rownames(got), "Model")
+  expect_equal(got$r, 1)
+})
+
+test_that("na.rm FALSE reports missing statistics", {
+  got <- model_metrics(c(1, NA, 3), c(1, 2, 4), na.rm = FALSE)
+  expect_true(all(is.na(got[1, ])))
+})
+
+test_that("empty model collections are rejected", {
+  expect_error(model_metrics(list(), numeric()), "at least one")
+})
+
+test_that("constant observations are handled explicitly", {
+  got <- model_metrics(1:3, c(2, 2, 2))
+  expect_true(is.na(got$NSE))
+})

@@ -11,3 +11,15 @@ test_that("gg_solar validates colour and axis inputs", {
   expect_error(gg_solar(1:3, 1:3, x.axis_begin = 1, x.axis_end = 1), "x.axis_begin")
   expect_error(gg_solar(1:3, 1:3, by = 0), "positive")
 })
+
+test_that("gg_solar builds with labels off and custom continuous colours", {
+  obs <- 1:10
+  p <- gg_solar(list(a = obs, b = obs + 1), obs,
+                colorval = c(-1, 1), label = FALSE)
+  expect_s3_class(ggplot2::ggplot_build(p), "ggplot_built")
+  expect_true(any(vapply(p$layers, function(x) inherits(x$geom, "GeomPoint"), logical(1))))
+})
+
+test_that("gg_solar rejects constant observations", {
+  expect_error(gg_solar(1:3, c(2, 2, 2)), "non-zero standard deviation")
+})

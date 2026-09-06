@@ -56,12 +56,12 @@ metric_row <- function(pred, obs, na.rm) {
     obs <- obs[keep]
   }
   if (!na.rm && anyNA(c(pred, obs))) {
-    return(as.data.frame(as.list(setNames(rep(NA_real_, 8),
+    return(as.data.frame(as.list(stats::setNames(rep(NA_real_, 8),
                                           c("ME", "MAE", "RMSE", "r", "r2",
                                             "NSE", "rhoC", "Cb")))))
   }
   if (!length(pred)) {
-    return(as.data.frame(as.list(setNames(rep(NA_real_, 8),
+    return(as.data.frame(as.list(stats::setNames(rep(NA_real_, 8),
                                           c("ME", "MAE", "RMSE", "r", "r2",
                                             "NSE", "rhoC", "Cb")))))
   }
@@ -100,6 +100,9 @@ validate_metrics_inputs <- function(mods, obs, na.rm, digits) {
   }
   if (is.list(mods) && !all(vapply(mods, is.numeric, logical(1)))) {
     stop("Every element of `mods` must be numeric.", call. = FALSE)
+  }
+  if (length(mods) == 0L) {
+    stop("`mods` must contain at least one prediction vector.", call. = FALSE)
   }
   if (is.numeric(mods) && length(mods) != length(obs)) {
     stop("A prediction vector and `obs` must have the same length.", call. = FALSE)

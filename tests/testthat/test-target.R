@@ -10,3 +10,15 @@ test_that("gg_target validates colour and axis inputs", {
   expect_error(gg_target(list(a = 1:3, b = 1:3), 1:3, colorval = 1), "one value per model")
   expect_error(gg_target(1:3, 1:3, axis_begin = 1, axis_end = 1), "axis_begin")
 })
+
+test_that("gg_target builds with labels off and custom continuous colours", {
+  obs <- 1:10
+  p <- gg_target(list(a = obs, b = obs + 1), obs,
+                 colorval = c(-1, 1), label = FALSE)
+  expect_s3_class(ggplot2::ggplot_build(p), "ggplot_built")
+  expect_true(any(vapply(p$layers, function(x) inherits(x$geom, "GeomPoint"), logical(1))))
+})
+
+test_that("gg_target rejects constant observations", {
+  expect_error(gg_target(1:3, c(2, 2, 2)), "non-zero standard deviation")
+})
