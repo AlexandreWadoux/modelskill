@@ -4,7 +4,9 @@
 
 ### Assessing and Visualising Predictive Model and Map Quality
 
-`modelskill` provides a compact set of tools to evaluate quantitative predictions using complementary validation indices together with Taylor, solar and target diagrams.
+`modelskill` provides common validation statistics, predictive-uncertainty
+validation, and graphical summary diagnostics including Taylor, solar and
+target diagrams.
 
 All plotting functions return standard `ggplot2` objects, so figures can be modified using the usual `ggplot2` syntax. Numeric vectors, lists, matrices and data frames are supported; no spatial object or external dataset is required.
 
@@ -47,6 +49,16 @@ gg_solar(models, obs, colorval = indices$NSE,
 gg_target(models, obs, colorval = indices$NSE,
           colorval.name = "NSE", label = TRUE)
 
+# Uncertainty calibration and sharpness for a 95% prediction interval
+lower95 <- models$Accurate - 1.96
+upper95 <- models$Accurate + 1.96
+uncertainty_metrics(obs, lower = lower95, upper = upper95, level = .95)
+
+gg_coverage(obs,
+  lower = list(`0.80` = models$Accurate - 1.282, `0.95` = lower95),
+  upper = list(`0.80` = models$Accurate + 1.282, `0.95` = upper95)
+)
+
 p <- gg_taylor(models, obs)
 p + ggplot2::labs(title = "Model comparison") +
   ggplot2::theme_minimal()
@@ -57,6 +69,10 @@ retained. Missing values are paired separately for each model by default.
 Undefined correlations for constant predictions are reported as NA; constant
 models remain drawable and use grey when coloured by correlation.
 See `?diagram_stats` for interpretation and finite-sample conventions.
+
+Prediction intervals should be assessed for both calibration and sharpness.
+Use `uncertainty_metrics()` for interval or predictive-standard-deviation
+validation, and `gg_coverage()` to compare nominal and empirical coverage.
 
 ## Diagram defaults
 

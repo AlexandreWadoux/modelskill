@@ -15,7 +15,11 @@ test_that("multiple models and names are returned in rows", {
   obs <- 1:5
   got <- model_metrics(list(first = obs, second = obs + 1), obs)
   expect_s3_class(got, "data.frame")
-  expect_equal(dim(got), c(2L, 8L))
+  expect_equal(nrow(got), 2L)
+  expect_true(all(c("model", "bias", "mae", "mse", "rmse", "nrmse",
+                    "crmse", "correlation", "r2", "nse", "sd_ratio", "ccc") %in%
+                  names(got)))
+  expect_equal(got$model, c("first", "second"))
   expect_equal(rownames(got), c("first", "second"))
   expect_equal(got$r, c(1, 1))
 })
@@ -46,7 +50,7 @@ test_that("single unnamed vectors receive a model name", {
 
 test_that("na.rm FALSE reports missing statistics", {
   got <- model_metrics(c(1, NA, 3), c(1, 2, 4), na.rm = FALSE)
-  expect_true(all(is.na(got[1, ])))
+  expect_true(all(is.na(got[1, vapply(got, is.numeric, logical(1))])))
 })
 
 test_that("empty model collections are rejected", {

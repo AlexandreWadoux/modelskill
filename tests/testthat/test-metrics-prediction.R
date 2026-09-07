@@ -1,0 +1,44 @@
+test_that("individual prediction metrics have known values", {
+  obs <- 1:3
+  pred <- c(1, 3, 2)
+  expect_equal(bias(obs, pred), 0)
+  expect_equal(mae(obs, pred), 2 / 3)
+  expect_equal(mse(obs, pred), 2 / 3)
+  expect_equal(rmse(obs, pred), sqrt(2 / 3))
+  expect_equal(nrmse(obs, pred), sqrt(2 / 3) / sd(obs))
+  expect_equal(crmse(obs, pred), sqrt(2 / 3))
+  expect_equal(correlation(obs, pred), 0.5)
+  expect_equal(r2(obs, pred), 0.25)
+  expect_equal(nse(obs, pred), 0)
+  expect_equal(sd_ratio(obs, pred), 1)
+  expect_equal(ccc(obs, pred), 0.5)
+})
+
+test_that("prediction metrics handle perfect, biased and missing predictions", {
+  obs <- 1:4
+  expect_equal(bias(obs, obs), 0)
+  expect_equal(rmse(obs, obs), 0)
+  expect_equal(nse(obs, obs), 1)
+  expect_equal(ccc(obs, obs), 1)
+  expect_equal(bias(obs, obs + 2), -2)
+  expect_equal(mae(obs, obs + 2), 2)
+  expect_equal(rmse(c(1, NA, 3), c(1, 2, 2)), rmse(c(1, 3), c(1, 2)))
+  expect_true(is.na(rmse(c(1, NA, 3), c(1, 2, 2), na.rm = FALSE)))
+})
+
+test_that("prediction metric validation and edge cases are explicit", {
+  expect_error(rmse(1:2, 1:3), "same length")
+  expect_error(rmse(1:3, c(1, Inf, 3)), "infinite")
+  expect_true(is.na(correlation(1:3, rep(2, 3))))
+  expect_true(is.na(nrmse(rep(1, 3), 1:3)))
+  expect_true(is.na(nse(rep(1, 3), 1:3)))
+})
+
+test_that("model_metrics exposes canonical and legacy columns", {
+  got <- model_metrics(list(a = 1:3, b = c(1, 3, 2)), 1:3)
+  expect_equal(got$model, c("a", "b"))
+  expect_equal(got$rmse, c(0, sqrt(2 / 3)))
+  expect_equal(got$RMSE, got$rmse)
+  expect_equal(got$NSE, got$nse)
+  expect_equal(got$rhoC, got$ccc)
+})

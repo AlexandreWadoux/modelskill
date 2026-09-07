@@ -18,8 +18,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
 A single statistic rarely describes every important aspect of a quantitative
 model. A model may have a strong correlation but still be biased, or it may
 have a small average error while failing to reproduce the observed variation.
-`modelskill` combines several complementary indices and diagrams so that these
-behaviours can be inspected together.
+`modelskill` combines point-prediction statistics, predictive-uncertainty
+diagnostics, and graphical summaries so that these behaviours can be inspected
+together.
 
 The approach follows Wadoux, Walvoort, and Brus (2022), who introduced the use
 of Taylor and solar diagrams for integrated evaluation of quantitative maps.
@@ -73,6 +74,54 @@ The columns have complementary meanings:
 
 The diagrams show these complementary properties together rather than asking
 the reader to rank models from one statistic alone.
+
+The same calculations are available individually when a single, clearly named
+statistic is needed.
+
+```{r individual-metric}
+rmse(obs, mods$Good)
+ccc(obs, mods$Good)
+```
+
+## Predictive uncertainty
+
+Good point predictions do not automatically imply good uncertainty estimates.
+Uncertainty validation should assess **calibration** (whether stated intervals
+contain observations as often as intended) and **sharpness** (whether intervals
+are usefully narrow). Here we create simple 80% and 95% intervals around the
+`Good` predictions for illustration.
+
+```{r uncertainty-data}
+predictive_sd <- rep(0.8, length(obs))
+lower80 <- mods$Good - 1.282 * predictive_sd
+upper80 <- mods$Good + 1.282 * predictive_sd
+lower95 <- mods$Good - 1.96 * predictive_sd
+upper95 <- mods$Good + 1.96 * predictive_sd
+```
+
+Interval validation returns empirical coverage, departure from nominal
+coverage, average width, and the proper interval score (lower is better).
+
+```{r interval-metrics}
+uncertainty_metrics(obs, lower = lower95, upper = upper95, level = .95)
+```
+
+When uncertainty is expressed as a predictive mean and a predictive standard
+deviation, standardized errors assess whether that spread is calibrated.
+
+```{r predictive-sd-metrics}
+uncertainty_metrics(obs, pred = mods$Good, predictive_sd = predictive_sd)
+```
+
+The calibration curve compares multiple nominal levels with empirical coverage.
+
+```{r coverage}
+gg_coverage(
+  obs,
+  lower = list(`0.80` = lower80, `0.95` = lower95),
+  upper = list(`0.80` = upper80, `0.95` = upper95)
+)
+```
 
 ## Taylor diagram
 

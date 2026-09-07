@@ -6,10 +6,12 @@
 \alias{modelskill-package}
 \title{Quantitative model skill indices and diagrams}
 \description{
-Compare numeric predictions against paired observations using
-\code{\link[=model_metrics]{model_metrics()}} and \code{\link[=diagram_stats]{diagram_stats()}}. Visualize complementary aspects
-of performance with \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}} and \code{\link[=gg_target]{gg_target()}}.
-All plots return ordinary ggplot objects. No spatial data class is required.
+Compare numeric predictions against paired observations with
+\code{\link[=model_metrics]{model_metrics()}} and individual metrics such as \code{\link[=rmse]{rmse()}} and \code{\link[=ccc]{ccc()}}.
+Validate predictive uncertainty using \code{\link[=uncertainty_metrics]{uncertainty_metrics()}} and visualize
+interval calibration with \code{\link[=gg_coverage]{gg_coverage()}}. Complementary graphical
+diagnostics include \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}} and \code{\link[=gg_target]{gg_target()}}. All plots
+return ordinary ggplot objects. No spatial data class is required.
 }
 \seealso{
 Useful links:

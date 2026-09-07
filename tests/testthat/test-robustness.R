@@ -1,7 +1,8 @@
 test_that("metrics agree with analytical bias and anticorrelation cases", {
   obs <- 1:5
   bias <- model_metrics(obs + 1, obs)
-  expect_equal(unname(unlist(bias)), c(-1, 1, 1, 1, 1, 0.5, 0.8, 0.8))
+  expect_equal(unname(unlist(bias[c("ME", "MAE", "RMSE", "r", "r2", "NSE", "rhoC", "Cb")])),
+               c(-1, 1, 1, 1, 1, 0.5, 0.8, 0.8))
   reverse <- model_metrics(6 - obs, obs)
   expect_equal(reverse$r, -1)
   expect_equal(reverse$r2, 1)
@@ -63,7 +64,8 @@ test_that("missing values use each model's complete pairs consistently", {
     expect_error(fn(c(NA, NA, 2), 1:3), "two complete pairs")
     expect_error(fn(c(1, 2, NA), c(3, 3, 4)), "non-zero")
   }
-  expect_true(all(is.na(model_metrics(rep(NA_real_, 3), 1:3))))
+  missing_metrics <- model_metrics(rep(NA_real_, 3), 1:3)
+  expect_true(all(is.na(missing_metrics[vapply(missing_metrics, is.numeric, logical(1))])))
   one <- model_metrics(2, 1)
   expect_equal(one$ME, -1)
   expect_true(is.na(one$r))

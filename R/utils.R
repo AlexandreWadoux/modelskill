@@ -119,3 +119,65 @@ pair_moments <- function(pred, obs) {
   list(scale = scale, p = p, o = o, sp = sp, so = so,
        r = max(-1, min(1, r)))
 }
+
+# Prepare equally sized numeric vectors and, by default, remove incomplete
+# observations as complete pairs. `NULL` denotes incomplete data with
+# na.rm = FALSE, for which scalar metrics are undefined.
+prepare_metric_vectors <- function(..., na.rm = TRUE) {
+  values <- list(...)
+  check_flag(na.rm, "na.rm")
+  if (!length(values) || !all(vapply(values, is_numeric_vector, logical(1)))) {
+    stop("All inputs must be numeric vectors.", call. = FALSE)
+  }
+  lengths <- vapply(values, length, integer(1))
+  if (!lengths[1L] || any(lengths != lengths[1L])) {
+    stop("All inputs must be non-empty numeric vectors of the same length.",
+         call. = FALSE)
+  }
+  if (any(vapply(values, function(x) any(is.infinite(x)), logical(1)))) {
+    stop("Inputs must not contain infinite values.", call. = FALSE)
+  }
+  keep <- stats::complete.cases(values)
+  if (!na.rm && any(!keep)) return(NULL)
+  if (na.rm) values <- lapply(values, `[`, keep)
+  values
+}
+
+check_probability <- function(x, name) {
+  if (!is_numeric_vector(x) || length(x) != 1L || !is.finite(x) ||
+      x <= 0 || x >= 1) {
+    stop(sprintf("`%s` must be one finite number strictly between 0 and 1.", name),
+         call. = FALSE)
+  }
+}
+
+check_positive_vector <- function(x, name) {
+  if (any(!is.finite(x)) || any(x <= 0)) {
+    stop(sprintf("`%s` must contain finite, strictly positive values.", name),
+         call. = FALSE)
+  }
+}
+
+prepare_interval_vectors <- function(obs, lower, upper, na.rm = TRUE) {
+  values <- prepare_metric_vectors(obs = obs, lower = lower, upper = upper,
+                                   na.rm = na.rm)
+  if (is.null(values)) return(NULL)
+  if (any(values$lower > values$upper)) {
+    stop("`lower` must be less than or equal to `upper` for every complete pair.",
+         call. = FALSE)
+  }
+  values
+}
+
+prepare_predictive_sd_vectors <- function(obs, pred, predictive_sd,
+                                          na.rm = TRUE) {
+  if (!is_numeric_vector(predictive_sd)) {
+    stop("`predictive_sd` must be a numeric vector.", call. = FALSE)
+  }
+  if (any(!is.na(predictive_sd) & (!is.finite(predictive_sd) | predictive_sd <= 0))) {
+    stop("`predictive_sd` must contain finite, strictly positive values.",
+         call. = FALSE)
+  }
+  prepare_metric_vectors(obs = obs, pred = pred, predictive_sd = predictive_sd,
+                         na.rm = na.rm)
+}

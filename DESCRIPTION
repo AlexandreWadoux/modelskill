@@ -1,13 +1,14 @@
 Package: modelskill
 Type: Package
-Title: Quantitative Model Skill Diagrams and Indices
+Title: Assessing and Visualising Predictive Model and Map Quality
 Version: 0.0.0.9000
 Authors@R: person("Alexandre M.J.-C.", "Wadoux",
     email = "alexandre.wadoux@yahoo.fr",
     role = c("aut", "cre", "cph"))
-Description: Evaluates quantitative prediction models using map- and model-skill
-    indices together with Taylor, solar, and target diagrams. The implementation
-    follows Wadoux, Walvoort, and Brus (2022) <doi:10.1016/j.geoderma.2021.115332>.
+Description: Evaluates quantitative prediction models using point-prediction
+    and predictive-uncertainty validation metrics together with Taylor, solar,
+    target, and coverage diagrams. The diagram implementation follows Wadoux,
+    Walvoort, and Brus (2022) <doi:10.1016/j.geoderma.2021.115332>.
 License: MIT + file LICENSE
 URL: https://github.com/AlexandreWadoux/modelskill
 BugReports: https://github.com/AlexandreWadoux/modelskill/issues

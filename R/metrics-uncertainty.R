@@ -1,0 +1,133 @@
+#' Empirical prediction-interval coverage
+#'
+#' Proportion of observations satisfying `lower <= obs <= upper`. Endpoints are
+#' included. Missing triplets are removed when `na.rm = TRUE`.
+#' @param obs Numeric observation vector.
+#' @param lower,upper Numeric lower and upper prediction-interval bounds.
+#' @param na.rm Logical; remove incomplete triplets?
+#' @return One numeric value.
+#' @examples coverage(1:3, c(0, 1, 2), c(2, 3, 4))
+#' @export
+coverage <- function(obs, lower, upper, na.rm = TRUE) {
+  x <- prepare_interval_vectors(obs, lower, upper, na.rm)
+  if (is.null(x) || !length(x$obs)) return(NA_real_)
+  mean(x$obs >= x$lower & x$obs <= x$upper)
+}
+
+#' Prediction-interval coverage error
+#'
+#' Empirical [coverage()] minus nominal coverage `level`. Positive values mean
+#' over-coverage and negative values mean under-coverage.
+#' @inheritParams coverage
+#' @param level Nominal central interval coverage, strictly between zero and one.
+#' @return One numeric value.
+#' @examples coverage_error(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
+#' @export
+coverage_error <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
+  check_probability(level, "level")
+  coverage(obs, lower, upper, na.rm = na.rm) - level
+}
+
+#' Average prediction-interval width
+#'
+#' Arithmetic mean of `upper - lower`. Smaller widths are sharper, but should
+#' always be interpreted jointly with empirical coverage.
+#' @inheritParams coverage
+#' @return One numeric value.
+#' @examples interval_width(1:3, c(0, 1, 2), c(2, 3, 4))
+#' @export
+interval_width <- function(obs, lower, upper, na.rm = TRUE) {
+  x <- prepare_interval_vectors(obs, lower, upper, na.rm)
+  if (is.null(x) || !length(x$obs)) return(NA_real_)
+  mean(x$upper - x$lower)
+}
+
+#' Central prediction-interval score
+#'
+#' The interval score is `upper - lower + 2 / alpha * (lower - obs)` below the
+#' interval and `upper - lower + 2 / alpha * (obs - upper)` above it, where
+#' `alpha = 1 - level`; there is no penalty inside the interval. Lower scores
+#' indicate sharper, well-calibrated intervals.
+#' @inheritParams coverage
+#' @param level Nominal central interval coverage, strictly between zero and one.
+#' @return One numeric value.
+#' @references Gneiting, T. and Raftery, A. E. (2007). Strictly proper scoring
+#'   rules, prediction, and estimation. *Journal of the American Statistical
+#'   Association*, 102, 359-378.
+#' @examples interval_score(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
+#' @export
+interval_score <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
+  check_probability(level, "level")
+  x <- prepare_interval_vectors(obs, lower, upper, na.rm)
+  if (is.null(x) || !length(x$obs)) return(NA_real_)
+  alpha <- 1 - level
+  width <- x$upper - x$lower
+  mean(width + 2 / alpha * pmax(x$lower - x$obs, 0) +
+         2 / alpha * pmax(x$obs - x$upper, 0))
+}
+
+#' Standardized prediction errors
+#'
+#' Returns `(obs - pred) / predictive_sd` for each complete triplet. The term
+#' *predictive standard deviation* refers to the uncertainty supplied for each
+#' prediction, not the sample standard deviation of the prediction vector.
+#' @param obs Numeric observation vector.
+#' @param pred Numeric predictive-mean vector.
+#' @param predictive_sd Numeric predictive standard deviation vector; values
+#'   must be finite and strictly positive.
+#' @param na.rm Logical; remove incomplete triplets? If `FALSE` and a triplet
+#'   is incomplete, a vector of `NA` values is returned.
+#' @return Numeric vector of standardized errors.
+#' @examples standardized_error(1:3, c(1, 2, 4), c(1, 1, 2))
+#' @export
+standardized_error <- function(obs, pred, predictive_sd, na.rm = TRUE) {
+  x <- prepare_predictive_sd_vectors(obs, pred, predictive_sd, na.rm)
+  if (is.null(x)) return(rep(NA_real_, length(obs)))
+  (x$obs - x$pred) / x$predictive_sd
+}
+
+#' Mean standardized prediction error
+#'
+#' Mean of [standardized_error()]. An ideally calibrated unbiased predictive
+#' distribution has a value near zero.
+#' @inheritParams standardized_error
+#' @return One numeric value.
+#' @examples standardized_error_mean(1:3, c(1, 2, 4), c(1, 1, 2))
+#' @export
+standardized_error_mean <- function(obs, pred, predictive_sd, na.rm = TRUE) {
+  z <- standardized_error(obs, pred, predictive_sd, na.rm)
+  if (!length(z) || anyNA(z)) return(NA_real_)
+  mean(z)
+}
+
+#' Standard deviation of standardized prediction errors
+#'
+#' Sample standard deviation of [standardized_error()]. One is ideal. Values
+#' above one indicate predictive uncertainty is generally too small; values
+#' below one indicate it is generally too large.
+#' @inheritParams standardized_error
+#' @return One numeric value.
+#' @examples standardized_error_sd(1:3, c(1, 2, 4), c(1, 1, 2))
+#' @export
+standardized_error_sd <- function(obs, pred, predictive_sd, na.rm = TRUE) {
+  z <- standardized_error(obs, pred, predictive_sd, na.rm)
+  if (length(z) < 2L || anyNA(z)) return(NA_real_)
+  stats::sd(z)
+}
+
+#' Proportion within predictive standard deviations
+#'
+#' Proportion satisfying `abs(obs - pred) <= k * predictive_sd`. For a normal,
+#' calibrated predictive distribution, approximately 68% and 95% fall within
+#' one and 1.96 predictive standard deviations, respectively.
+#' @inheritParams standardized_error
+#' @param k Positive number of predictive standard deviations.
+#' @return One numeric value.
+#' @examples within_sd(1:3, c(1, 2, 4), c(1, 1, 2), k = 1)
+#' @export
+within_sd <- function(obs, pred, predictive_sd, k = 1, na.rm = TRUE) {
+  check_number(k, "k", positive = TRUE)
+  z <- standardized_error(obs, pred, predictive_sd, na.rm)
+  if (!length(z) || anyNA(z)) return(NA_real_)
+  mean(abs(z) <= k)
+}

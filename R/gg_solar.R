@@ -45,7 +45,7 @@
 #' Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
 #' integrated approach for the evaluation of quantitative soil maps through
 #' Taylor and solar diagrams. *Geoderma*, 405, 115332.
-#' <https://doi.org/10.1016/j.geoderma.2021.115332>
+#' <doi:10.1016/j.geoderma.2021.115332>
 #'
 #' @examples
 #' obs <- c(1, 2, 3, 4, 5)
