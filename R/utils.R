@@ -169,6 +169,16 @@ prepare_interval_vectors <- function(obs, lower, upper, na.rm = TRUE) {
   values
 }
 
+prepare_interval_bounds <- function(lower, upper, na.rm = TRUE) {
+  values <- prepare_metric_vectors(lower = lower, upper = upper, na.rm = na.rm)
+  if (is.null(values)) return(NULL)
+  if (any(values$lower > values$upper)) {
+    stop("`lower` must be less than or equal to `upper` for every complete pair.",
+         call. = FALSE)
+  }
+  values
+}
+
 prepare_predictive_sd_vectors <- function(obs, pred, predictive_sd,
                                           na.rm = TRUE) {
   if (!is_numeric_vector(predictive_sd)) {

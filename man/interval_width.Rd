@@ -17,8 +17,12 @@ interval_width(obs, lower, upper, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Arithmetic mean of \code{upper - lower}. Smaller widths are sharper, but should
-always be interpreted jointly with empirical coverage.
+Arithmetic mean of \code{upper - lower}, i.e. PIW(tau) = sum(upper - lower) / n
+for a tau-level prediction interval. Smaller widths are sharper, but should
+always be interpreted jointly with empirical coverage. PIW is independent of
+observed values: \code{obs} is retained only to check input length compatibility.
+Central intervals have lower and upper predictive quantiles at
+\code{(1 - tau) / 2} and \code{(1 + tau) / 2}, respectively.
 }
 \examples{
 interval_width(1:3, c(0, 1, 2), c(2, 3, 4))

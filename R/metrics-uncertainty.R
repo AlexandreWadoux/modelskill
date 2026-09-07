@@ -30,15 +30,21 @@ coverage_error <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
 
 #' Average prediction-interval width
 #'
-#' Arithmetic mean of `upper - lower`. Smaller widths are sharper, but should
-#' always be interpreted jointly with empirical coverage.
+#' Arithmetic mean of `upper - lower`, i.e. PIW(tau) = sum(upper - lower) / n
+#' for a tau-level prediction interval. Smaller widths are sharper, but should
+#' always be interpreted jointly with empirical coverage. PIW is independent of
+#' observed values: `obs` is retained only to check input length compatibility.
+#' Central intervals have lower and upper predictive quantiles at
+#' `(1 - tau) / 2` and `(1 + tau) / 2`, respectively.
 #' @inheritParams coverage
 #' @return One numeric value.
 #' @examples interval_width(1:3, c(0, 1, 2), c(2, 3, 4))
 #' @export
 interval_width <- function(obs, lower, upper, na.rm = TRUE) {
-  x <- prepare_interval_vectors(obs, lower, upper, na.rm)
-  if (is.null(x) || !length(x$obs)) return(NA_real_)
+  # Keep `obs` in the API while ensuring PIW itself is independent of test data.
+  prepare_metric_vectors(obs = obs, lower = lower, upper = upper, na.rm = FALSE)
+  x <- prepare_interval_bounds(lower, upper, na.rm)
+  if (is.null(x) || !length(x$lower)) return(NA_real_)
   mean(x$upper - x$lower)
 }
 

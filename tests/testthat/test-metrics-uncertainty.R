@@ -14,6 +14,7 @@ test_that("interval metrics validate bounds, levels and missing pairs", {
   expect_error(coverage_error(1:3, 0:2, 2:4, level = 1), "between")
   expect_equal(coverage(c(1, NA, 3), c(0, 0, 2), c(2, 2, 4)), 1)
   expect_true(is.na(coverage(c(1, NA, 3), c(0, 0, 2), c(2, 2, 4), na.rm = FALSE)))
+  expect_equal(interval_width(c(1, NA, 3), c(0, 0, 2), c(2, 2, 4)), 2)
 })
 
 test_that("predictive-SD metrics have known values", {
