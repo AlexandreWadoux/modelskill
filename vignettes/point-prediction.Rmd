@@ -133,22 +133,22 @@ Here $Q_{0.25}(o)$ and $Q_{0.75}(o)$ are the observation quartiles, so
 $\mathrm{IQR}(o)=Q_{0.75}(o)-Q_{0.25}(o)$. The logarithm is natural.
 ME and RMSE are defined in the core table above, and $r$ is Pearson's $r$.
 
-| Statistic (output column) | Equation | Range, ideal, and interpretation | Reference / convention |
-|:--|:--|:--|:--|
-| MdAE (`mdae`) | $\mathrm{MdAE}=\mathrm{median}_{i=1,\ldots,n}(\lvert o_i-p_i\rvert)$ | Nonnegative; 0 ideal. Robust typical error, response units. | Hyndman & Koehler (2006) |
-| RPD (`rpd`) | $\mathrm{RPD}=\frac{s_o}{\mathrm{RMSE}}$ | Nonnegative; larger is better. NA at perfect prediction. | Bellon-Maurel et al. (2010) |
-| RPIQ (`rpiq`) | $\mathrm{RPIQ}=\frac{Q_{0.75}(o)-Q_{0.25}(o)}{\mathrm{RMSE}}$ | Nonnegative; larger is better. Type-7 quartiles; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
-| SEP (`sep`) | $\mathrm{SEP}=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}[(o_i-p_i)-\mathrm{ME}]^2}$ | Nonnegative; 0 ideal. Bias removed; at least two pairs. | Bellon-Maurel et al. (2010) |
-| RER (`rer`) | $\mathrm{RER}=\frac{\max_i o_i-\min_i o_i}{\mathrm{RMSE}}$ | Nonnegative; larger is better; sensitive to extremes; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
-| MAPE (`mape`) | $\mathrm{MAPE}=\frac{1}{n}\sum_{i=1}^{n}\left\lvert\frac{o_i-p_i}{o_i}\right\rvert$ | Nonnegative fraction; 0 ideal. Multiply by 100 for percent; NA for any zero observation. | Hyndman & Koehler (2006) |
-| MPE (`mpe`) | $\mathrm{MPE}=\frac{100}{n}\sum_{i=1}^{n}\frac{o_i-p_i}{o_i}$ | Unbounded percent; 0 ideal. Positive means underprediction only for positive observations; NA at zero. | Hyndman & Koehler (2006); obs-minus-pred sign |
-| sMAPE (`smape`) | $\mathrm{sMAPE}=\frac{1}{n}\sum_{i=1}^{n}\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}$ | [0,2] fraction; 0 ideal. Both-zero pair contributes 0; multiply by 100 for percent. | Hyndman & Koehler (2006); absolute-denominator variant |
-| MSLE (`msle`) | $\mathrm{MSLE}=\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2$ | Nonnegative; 0 ideal. NA for negative inputs; target units affect log1p. | Hodson (2022), transformed errors; package log1p convention |
-| RMSLE (`rmsle`) | $\mathrm{RMSLE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2}$ | Nonnegative; 0 ideal. Same domain as MSLE. | Hodson (2022); package log1p convention |
-| RAE (`rae`) | $\mathrm{RAE}=\frac{\sum_{i=1}^{n}\lvert o_i-p_i\rvert}{\sum_{i=1}^{n}\lvert o_i-\bar o\rvert}$ | Nonnegative; 0 ideal, 1 observed-mean absolute-error benchmark; NA if A=0. | Hyndman & Koehler (2006); mean benchmark |
-| RRMSE (`rrmse`) | $\mathrm{RRMSE}=100\frac{\mathrm{RMSE}}{\lvert\bar o\rvert}$ | Nonnegative percent; 0 ideal; NA at zero mean, unstable near zero. | Willmott et al. (1985), RMSE; package absolute-mean normalization |
-| Willmott's $d$ (`willmott_d`) | $d=1-\frac{\sum_{i=1}^{n}(o_i-p_i)^2}{\sum_{i=1}^{n}(\lvert p_i-\bar o\rvert+\lvert o_i-\bar o\rvert)^2}$ | [0,1]; 1 ideal. NA if D=0 (identical constant vectors); sensitive to large errors. | Willmott et al. (1985) |
-| KGE (`kge`) | $\mathrm{KGE}=1-\sqrt{(r-1)^2+\left(\frac{s_p}{s_o}-1\right)^2+\left(\frac{\bar p}{\bar o}-1\right)^2}$ | At most 1; 1 ideal. Zero is not NSE's benchmark. NA for zero observation mean or either constant vector. | Gupta et al. (2009) |
+| Statistic | Package function | Equation | Range, ideal, and interpretation | Reference / convention |
+|:--|:--|:--|:--|:--|
+| MdAE | `mdae(obs, pred)` | $\mathrm{MdAE}=\mathrm{median}_{i=1,\ldots,n}(\lvert o_i-p_i\rvert)$ | Nonnegative; 0 ideal. Robust typical error, response units. | Hyndman & Koehler (2006) |
+| RPD | `rpd(obs, pred)` | $\mathrm{RPD}=\frac{s_o}{\mathrm{RMSE}}$ | Nonnegative; larger is better. NA at perfect prediction. | Bellon-Maurel et al. (2010) |
+| RPIQ | `rpiq(obs, pred)` | $\mathrm{RPIQ}=\frac{Q_{0.75}(o)-Q_{0.25}(o)}{\mathrm{RMSE}}$ | Nonnegative; larger is better. Type-7 quartiles; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
+| SEP | `sep(obs, pred)` | $\mathrm{SEP}=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}[(o_i-p_i)-\mathrm{ME}]^2}$ | Nonnegative; 0 ideal. Bias removed; at least two pairs. | Bellon-Maurel et al. (2010) |
+| RER | `rer(obs, pred)` | $\mathrm{RER}=\frac{\max_i o_i-\min_i o_i}{\mathrm{RMSE}}$ | Nonnegative; larger is better; sensitive to extremes; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
+| MAPE | `mape(obs, pred)` | $\mathrm{MAPE}=\frac{1}{n}\sum_{i=1}^{n}\left\lvert\frac{o_i-p_i}{o_i}\right\rvert$ | Nonnegative fraction; 0 ideal. Multiply by 100 for percent; NA for any zero observation. | Hyndman & Koehler (2006) |
+| MPE | `mpe(obs, pred)` | $\mathrm{MPE}=\frac{100}{n}\sum_{i=1}^{n}\frac{o_i-p_i}{o_i}$ | Unbounded percent; 0 ideal. Positive means underprediction only for positive observations; NA at zero. | Hyndman & Koehler (2006); obs-minus-pred sign |
+| sMAPE | `smape(obs, pred)` | $\mathrm{sMAPE}=\frac{1}{n}\sum_{i=1}^{n}\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}$ | [0,2] fraction; 0 ideal. Both-zero pair contributes 0; multiply by 100 for percent. | Hyndman & Koehler (2006); absolute-denominator variant |
+| MSLE | `msle(obs, pred)` | $\mathrm{MSLE}=\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2$ | Nonnegative; 0 ideal. NA for negative inputs; target units affect log1p. | Hodson (2022), transformed errors; package log1p convention |
+| RMSLE | `rmsle(obs, pred)` | $\mathrm{RMSLE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2}$ | Nonnegative; 0 ideal. Same domain as MSLE. | Hodson (2022); package log1p convention |
+| RAE | `rae(obs, pred)` | $\mathrm{RAE}=\frac{\sum_{i=1}^{n}\lvert o_i-p_i\rvert}{\sum_{i=1}^{n}\lvert o_i-\bar o\rvert}$ | Nonnegative; 0 ideal, 1 observed-mean absolute-error benchmark; NA if A=0. | Hyndman & Koehler (2006); mean benchmark |
+| RRMSE | `rrmse(obs, pred)` | $\mathrm{RRMSE}=100\frac{\mathrm{RMSE}}{\lvert\bar o\rvert}$ | Nonnegative percent; 0 ideal; NA at zero mean, unstable near zero. | Willmott et al. (1985), RMSE; package absolute-mean normalization |
+| Willmott's $d$ | `willmott_d(obs, pred)` | $d=1-\frac{\sum_{i=1}^{n}(o_i-p_i)^2}{\sum_{i=1}^{n}(\lvert p_i-\bar o\rvert+\lvert o_i-\bar o\rvert)^2}$ | [0,1]; 1 ideal. NA if D=0 (identical constant vectors); sensitive to large errors. | Willmott et al. (1985) |
+| KGE | `kge(obs, pred)` | $\mathrm{KGE}=1-\sqrt{(r-1)^2+\left(\frac{s_p}{s_o}-1\right)^2+\left(\frac{\bar p}{\bar o}-1\right)^2}$ | At most 1; 1 ideal. Zero is not NSE's benchmark. NA for zero observation mean or either constant vector. | Gupta et al. (2009) |
 
 ### Redundancy and comparison conventions
 
