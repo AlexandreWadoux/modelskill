@@ -19,5 +19,20 @@ pinball_loss(obs, pred, level = 0.5, na.rm = TRUE)
 One numeric loss; lower is better.
 }
 \description{
-Quantile (pinball) loss
+Quantile loss evaluates a prediction for a specified conditional quantile.
+With \code{e_i = obs_i - pred_i} and quantile level \code{tau}, it is
+}
+\details{
+\deqn{L_\tau = \frac{1}{n}\sum_{i=1}^{n}
+\begin{cases}\tau e_i, & e_i \geq 0\\
+(\tau-1)e_i, & e_i < 0.\end{cases}}
+
+It is non-negative and zero is ideal. Underprediction is penalized more when
+\code{level} is high; overprediction is penalized more when \code{level} is low. At
+\code{level = 0.5}, it equals one-half of \code{\link[=mae]{mae()}}. Missing-value handling follows
+\code{\link[=bias]{bias()}}.
+}
+\references{
+Koenker, R. and Bassett, G. (1978). Regression quantiles.
+\emph{Econometrica}, 46, 33-50. \url{doi:10.2307/1913643}
 }

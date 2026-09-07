@@ -17,10 +17,24 @@ ccc(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Lin's CCC combines Pearson correlation with agreement in location and scale.
-It ranges from -1 to 1 and equals one for perfect agreement. Population
-variances (divisor n) are used, matching the existing package convention.
+Lin's concordance correlation coefficient (CCC) combines Pearson correlation
+with agreement in location and scale.
+}
+\details{
+\deqn{\rho_c = \frac{2s_{obs,pred}}
+{s_{obs}^2 + s_{pred}^2 + (\bar{obs} - \bar{pred})^2}}
+
+CCC ranges from -1 to one and equals one for perfect agreement. Values near
+zero indicate little concordance; negative values indicate discordant linear
+association. Unlike Pearson correlation, CCC is reduced by mean and scale
+differences. Population variances (divisor n) are used, matching the
+established package convention. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 ccc(1:3, c(1, 3, 2))
+}
+\references{
+Lin, L. I.-K. (1989). A concordance correlation coefficient to
+evaluate reproducibility. \emph{Biometrics}, 45, 255-268.
+\url{doi:10.2307/2532051}
 }

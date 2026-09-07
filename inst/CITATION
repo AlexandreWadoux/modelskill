@@ -1,9 +1,8 @@
 bibentry(
-  bibtype = "Article",
-  title = paste("An integrated approach for the evaluation of quantitative",
-                "soil maps through Taylor and solar diagrams"),
-  author = c(person("Alexandre M. J.-C.", "Wadoux"),
-             person("Dennis J. J.", "Walvoort"), person("Dick J.", "Brus")),
-  journal = "Geoderma", year = "2022", volume = "405", pages = "115332",
-  doi = "10.1016/j.geoderma.2021.115332"
+  bibtype = "Manual",
+  title = "modelskill: Assessing and Visualising Continuous Prediction Model Performance",
+  author = person("Alexandre M.J.-C.", "Wadoux"),
+  year = "2026",
+  note = "R package version 0.0.0.9000",
+  url = "https://github.com/AlexandreWadoux/modelskill"
 )

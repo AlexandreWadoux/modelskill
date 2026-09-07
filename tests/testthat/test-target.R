@@ -7,7 +7,7 @@ test_that("gg_target returns a composable ggplot object", {
 })
 
 test_that("gg_target uses the documented defaults", {
-  expect_identical(formals(gg_target)$axis_begin, -1.5)
+  expect_equal(eval(formals(gg_target)$axis_begin), -1.5)
   expect_identical(formals(gg_target)$axis_end, 1.5)
   expect_identical(
     eval(formals(gg_target)$colour_by),
@@ -31,7 +31,10 @@ test_that("gg_target colours by R2/NSE efficiency by default", {
   )
 
   expect_equal(p$data$colvar, unname(expected), tolerance = 1e-12)
-  expect_identical(p$scales$get_scales("fill")$name, "R²")
+  expect_identical(
+    utf8ToInt(enc2utf8(p$scales$get_scales("fill")$name)),
+    c(82L, 178L)
+  )
 })
 
 test_that("gg_target supports categorical model colours", {

@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use modelskill, please cite it using the metadata below."
+title: "modelskill: Assessing and Visualising Continuous Prediction Model Performance"
+type: software
+version: 0.0.0.9000
+authors:
+  - family-names: Wadoux
+    given-names: Alexandre M.J.-C.
+    email: alexandre.wadoux@yahoo.fr
+repository-code: https://github.com/AlexandreWadoux/modelskill
+license: MIT

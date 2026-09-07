@@ -5,5 +5,8 @@ inst/doc/
 Rplots.pdf
 review/*.rds
 tmp/
+docs/
+pkgdown/
+vignettes/*.html
 /doc/
 /Meta/

@@ -17,5 +17,21 @@ kge(obs, pred, na.rm = TRUE)
 One numeric value; one is ideal.
 }
 \description{
-Kling-Gupta efficiency
+Kling-Gupta efficiency (KGE) combines correlation, variability ratio, and
+mean ratio. Let \code{r} be \code{\link[=correlation]{correlation()}}, \code{alpha = s_pred / s_obs}, and
+\code{beta = mean(pred) / mean(obs)}.
+}
+\details{
+\deqn{\mathrm{KGE} = 1 - \sqrt{(r-1)^2 + (\alpha-1)^2 + (\beta-1)^2}}
+
+One is ideal. Values closer to one indicate agreement in linear association,
+spread, and mean. KGE is undefined when observed means or standard deviations
+are zero. As with NSE, avoid treating KGE as the only measure of model
+quality; inspect its components and complementary error metrics.
+}
+\references{
+Gupta, H. V., Kling, H., Yilmaz, K. K., and Martinez, G. F.
+(2009). Decomposition of the mean squared error and NSE performance
+criteria: Implications for improving hydrological modelling. \emph{Journal of
+Hydrology}, 377, 80-91. \url{doi:10.1016/j.jhydrol.2009.08.003}
 }

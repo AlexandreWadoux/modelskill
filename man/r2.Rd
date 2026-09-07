@@ -17,9 +17,27 @@ r2(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Square of \code{\link[=correlation]{correlation()}}. It measures linear association, not agreement in
-level or scale, and is undefined when correlation is undefined.
+Squared Pearson correlation is the square of \code{\link[=correlation]{correlation()}}.
+}
+\details{
+\deqn{r^2 = r \times r}
+
+It ranges from zero to one and summarizes the strength, but not the sign, of
+linear association. A value of one can occur despite additive bias or
+proportional scale differences, so it is not a measure of agreement or
+prediction accuracy. Do not confuse lowercase \code{r2()} with \code{\link[=nse]{nse()}}, \code{\link[=mec]{mec()}},
+or uppercase \code{R2()}, which are aliases for model efficiency.
 }
 \examples{
 r2(1:3, c(1, 3, 2))
+}
+\references{
+Willmott, C. J. (1984). On the evaluation of model performance
+in physical geography. In G. L. Gaile and C. J. Willmott (Eds.), \emph{Spatial
+Statistics and Models} (pp. 443-460). D. Reidel.
+
+Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of
+goodness-of-fit measures in hydrologic and hydroclimatic model validation.
+\emph{Water Resources Research}, 35(1), 233-241.
+\url{doi:10.1029/1998WR900018}
 }

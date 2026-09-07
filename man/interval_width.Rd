@@ -24,6 +24,17 @@ observed values: \code{obs} is retained only to check input length compatibility
 Central intervals have lower and upper predictive quantiles at
 \code{(1 - tau) / 2} and \code{(1 + tau) / 2}, respectively.
 }
+\details{
+\deqn{\mathrm{PIW}(\tau) = \frac{1}{n}\sum_{i=1}^{n}(upper_i-lower_i)}
+
+PIW has response units. Smaller values indicate sharper predictions, but are
+desirable only when calibration is adequate; assess it alongside \code{\link[=picp]{picp()}}.
+}
 \examples{
 interval_width(1:3, c(0, 1, 2), c(2, 3, 4))
+}
+\references{
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of
+uncertainty predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
+\url{doi:10.1016/j.geoderma.2023.116585}
 }

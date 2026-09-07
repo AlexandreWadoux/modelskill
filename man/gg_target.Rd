@@ -89,7 +89,7 @@ is equivalent to NSE and MEC. This should not be confused with lowercase
 The function returns an ordinary ggplot2 object. Styling that belongs to the
 ggplot2 ecosystem can therefore be applied after the function call. Use
 \code{labs()} for titles, \code{theme()} for typography and legend placement, and
-\code{scale_fill_*()} to replace the point-colour scale.
+\verb{scale_fill_*()} to replace the point-colour scale.
 
 The axis arguments control the manually drawn target-diagram reference axes
 rather than clipping limits. Models outside those reference axes remain
@@ -104,12 +104,32 @@ displayed horizontal title is ME* and the displayed vertical title is
 SDE* multiplied by the sign of the standard-deviation difference.
 }
 
+\section{Interpretation}{
+
+The target diagram combines the solar error decomposition
+\deqn{\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2}}
+with the sign of the prediction-versus-observation standard-deviation
+difference. The signed SDE coordinate distinguishes predictions with less
+variation than observations from predictions with greater variation; the
+mean-error coordinate distinguishes overprediction (negative ME*) from
+underprediction (positive ME*) under the \code{obs - pred} convention. The
+distance to the origin is standardized RMSE, so points near the origin are
+preferred.
+
+The circular contours are RMSE* references. A point near the origin is both
+close in mean and in spread/pattern; a point displaced along the mean-error
+direction is chiefly biased; and a point displaced along the signed-SDE
+direction chiefly differs in variability or pattern. The displayed titles
+intentionally retain the original implementation's visual orientation; use
+the coordinate definitions above when interpreting position.
+}
+
 \section{ggplot2 customization}{
 
 Arguments that change the statistical content or core target-diagram
 construction are exposed directly by \code{gg_target()}. Ordinary appearance is
 intentionally left to ggplot2. For example, users can add \code{labs()}, \code{theme()},
-a replacement \code{scale_fill_*()}, or a replacement \code{coord_fixed()}.
+a replacement \verb{scale_fill_*()}, or a replacement \code{coord_fixed()}.
 }
 
 \examples{
@@ -135,6 +155,11 @@ Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
 integrated approach for the evaluation of quantitative soil maps through
 Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{doi:10.1016/j.geoderma.2021.115332}
+
+Jolliff, J. K., Kindle, J. C., Shulman, I., Penta, B., Friedrichs, M. A. M.,
+Helber, R., and Arnone, R. A. (2009). Summary diagrams for coupled
+hydrodynamic-ecosystem model skill assessment. \emph{Journal of Marine Systems},
+76, 64-82. \url{doi:10.1016/j.jmarsys.2008.05.014}
 }
 \seealso{
 \code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}}

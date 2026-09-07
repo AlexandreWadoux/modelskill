@@ -17,10 +17,23 @@ nrmse(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-RMSE divided by the sample standard deviation of observations. This is the
-normalization used by the package's diagram statistics; lower values are
-better. It is undefined for constant observations.
+Normalized RMSE (NRMSE) divides \code{\link[=rmse]{rmse()}} by the sample standard deviation of
+observations.
+}
+\details{
+\deqn{\mathrm{NRMSE} = \frac{\mathrm{RMSE}}{s_{obs}}}
+
+NRMSE is unitless and zero is ideal. Smaller values indicate less error
+relative to the observed variation. A value of one means RMSE equals one
+observed sample standard deviation. This package uses this normalization to
+remain consistent with its diagram statistics. NRMSE is undefined for
+constant observations. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 nrmse(1:3, c(1, 3, 2))
+}
+\references{
+Taylor, K. E. (2001). Summarizing multiple aspects of model
+performance in a single diagram. \emph{Journal of Geophysical Research}, 106,
+7183-7192. \url{doi:10.1029/2000JD900719}
 }

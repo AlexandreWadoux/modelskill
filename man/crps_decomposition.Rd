@@ -20,7 +20,15 @@ One-row data frame with \code{crps}, \code{reliability}, and \code{potential_crp
 \description{
 Decomposes mean ensemble CRPS into a reliability component and potential
 CRPS following Hersbach (2000). Predictive-distribution columns are treated
-as equally likely ensemble members; lower \code{reliability} is better.
+as equally likely ensemble members.
+}
+\details{
+\deqn{\mathrm{CRPS} = \mathrm{RELI} + \mathrm{potential\ CRPS}}
+
+\code{reliability} (RELI) is non-negative and zero is ideal; smaller values
+indicate better distributional calibration. \code{potential_crps} is the
+remainder after removing reliability error. The decomposition is applicable
+here only to equally weighted predictive samples.
 }
 \examples{
 crps_decomposition(c(0, 1), matrix(c(-1, 1, 0, 2), nrow = 2))

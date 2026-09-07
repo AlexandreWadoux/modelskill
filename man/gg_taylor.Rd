@@ -82,6 +82,27 @@ subsequently be customised with ordinary ggplot2 layers.
 RMSD contours can be removed with \code{rmsd = FALSE}, recoloured with
 \code{rmsd_colour}, or placed at user-defined values with \code{rmsd_breaks}.
 }
+\section{Interpretation}{
+
+Let sigma-star denote the prediction standard deviation divided by the
+observation standard deviation, and let \code{r} be Pearson correlation.
+The Taylor geometry follows
+\deqn{\mathrm{SDE}^{*} = \sqrt{1 + \sigma_{\mathrm{star}}^2 -
+2\sigma_{\mathrm{star}}r},}
+where SDE* is the centred (unbiased) root mean square difference divided by
+the observation standard deviation. Radial distance gives \code{sigma_star}; the
+polar angle is \code{acos(r)}; and the reference point has a standard-deviation
+ratio of one and correlation of one. Points nearer the reference point have
+smaller unbiased error.
+
+A point inside the unit-radius arc has less variation than the observations
+(a smoother prediction), while a point outside it has greater variation.
+Points nearer the horizontal positive-correlation axis have stronger pattern
+agreement. The diagram does not show mean error: a model can be close to the
+reference point but systematically biased. Use \code{\link[=gg_solar]{gg_solar()}} or \code{\link[=gg_target]{gg_target()}}
+together with \code{\link[=bias]{bias()}} when mean error is important.
+}
+
 \examples{
 obs <- c(1, 2, 3, 4, 5)
 
@@ -129,6 +150,10 @@ Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022).
 An integrated approach for the evaluation of quantitative soil maps
 through Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{doi:10.1016/j.geoderma.2021.115332}
+
+Taylor, K. E. (2001). Summarizing multiple aspects of model performance in a
+single diagram. \emph{Journal of Geophysical Research}, 106, 7183-7192.
+\url{doi:10.1029/2000JD900719}
 }
 \seealso{
 \code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_solar]{gg_solar()}}, \code{\link[=gg_target]{gg_target()}}

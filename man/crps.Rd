@@ -26,6 +26,13 @@ are better. Supply either equally weighted predictive samples in
 \code{distribution}, or a normal predictive distribution through \code{pred} and
 \code{predictive_sd}.
 }
+\details{
+\deqn{\mathrm{CRPS}(F, obs) = \int_{-\infty}^{\infty}
+[F(z)-I(z\geq obs)]^2\,dz}
+
+CRPS has response units and lower values are better; zero is ideal. It is a
+proper scoring rule that jointly rewards calibrated and sharp distributions.
+}
 \examples{
 crps(0, distribution = matrix(c(-1, 1), nrow = 1))
 }

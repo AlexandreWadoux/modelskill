@@ -17,9 +17,30 @@ mae(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Mean absolute observation-minus-prediction error. It has the input units;
-zero is ideal. Missing-value handling follows \code{\link[=bias]{bias()}}.
+Mean absolute error (MAE) is the average absolute difference between
+observations and predictions.
+}
+\details{
+\deqn{\mathrm{MAE} = \frac{1}{n}\sum_{i = 1}^{n}|obs_i - pred_i|}
+
+MAE is non-negative and has the same units as the response variable. Zero
+indicates perfect predictions; smaller values indicate smaller typical
+prediction errors. Unlike mean error (ME), positive and negative errors
+cannot cancel. MAE gives each error equal weight and is therefore less
+sensitive to unusually large errors than \code{\link[=rmse]{rmse()}}. Interpret MAE alongside
+\code{\link[=bias]{bias()}} to assess both typical error magnitude and systematic
+over- or underprediction. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 mae(1:3, c(1, 3, 2))
+}
+\references{
+Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean
+absolute error (MAE) over the root mean square error (RMSE) in assessing
+average model performance. \emph{Climate Research}, 30, 79-82.
+\url{doi:10.3354/cr030079}
+
+Hodson, T. O. (2022). Root mean square error (RMSE) or mean absolute error
+(MAE): When to use them or not. \emph{Geoscientific Model Development
+Discussions}, 2022, 1-10. \url{doi:10.5194/gmd-2022-1}
 }

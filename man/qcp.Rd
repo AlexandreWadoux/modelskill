@@ -25,6 +25,13 @@ observations less than or equal to the predicted quantile. A calibrated
 predictive distribution has QCP close to the nominal quantile level. Unlike
 PICP, QCP can reveal one-sided quantile bias.
 }
+\details{
+\deqn{\mathrm{QCP}(p) = \frac{1}{n}\sum_{i=1}^{n}I(obs_i \leq q_{i,p})}
+
+For each level \code{p}, QCP close to \code{p} indicates calibration. Values above \code{p}
+mean the predicted quantile is generally too high; values below \code{p} mean it
+is generally too low.
+}
 \examples{
 qcp(1:3, cbind(c(0, 1, 2), c(1, 2, 3)), c(.25, .75))
 }

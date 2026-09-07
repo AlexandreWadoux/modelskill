@@ -3,6 +3,10 @@
 #' PICP is the empirical proportion of observations satisfying
 #' `lower <= obs <= upper`; endpoints are included. It is returned on the
 #' probability scale from zero to one, so multiply by 100 to report a percent.
+#'
+#' \deqn{\mathrm{PICP}(\tau) = \frac{1}{n}\sum_{i=1}^{n}
+#' I(lower_i \leq obs_i \leq upper_i)}
+#'
 #' For a well-calibrated central interval, `picp()` should be close to its
 #' nominal level. Missing triplets are removed when `na.rm = TRUE`.
 #'
@@ -16,6 +20,11 @@
 #' @return One numeric value.
 #' @references Goovaerts, P. (2001). Geostatistical modelling of uncertainty in
 #'   soil science. *Geoderma*, 103, 3-26. <doi:10.1016/S0016-7061(01)00067-2>
+#'
+#'   Shrestha, D. L. and Solomatine, D. P. (2008). Data-driven approaches for
+#'   estimating uncertainty in rainfall-runoff modelling. *International Journal
+#'   of River Basin Management*, 6, 109-122.
+#'   <doi:10.1080/15715124.2008.9635341>
 #' @examples picp(1:3, c(0, 1, 2), c(2, 3, 4))
 #' @export
 picp <- function(obs, lower, upper, na.rm = TRUE) {
@@ -27,7 +36,8 @@ picp <- function(obs, lower, upper, na.rm = TRUE) {
 #' Empirical prediction-interval coverage
 #'
 #' Backward-compatible alias for [picp()]. New code should prefer `picp()`, the
-#' conventional abbreviation for prediction interval coverage probability.
+#' conventional abbreviation for prediction interval coverage probability. Its
+#' equation, interpretation, and reference are given in [picp()].
 #' @inheritParams picp
 #' @return One numeric value on the probability scale from zero to one.
 #' @examples coverage(1:3, c(0, 1, 2), c(2, 3, 4))
@@ -41,9 +51,17 @@ coverage <- function(obs, lower, upper, na.rm = TRUE) {
 #' Empirical [picp()] minus nominal coverage `level`. Positive values mean
 #' over-coverage and negative values mean under-coverage. The result is on the
 #' probability scale; multiply by 100 for percentage points.
+#'
+#' \deqn{\mathrm{PICP\ error}(\tau) = \mathrm{PICP}(\tau) - \tau}
+#'
+#' Zero is ideal. Positive values mean intervals cover too often (are too wide
+#' or over-pessimistic); negative values mean intervals cover too rarely.
 #' @inheritParams picp
 #' @param level Nominal central interval coverage, strictly between zero and one.
 #' @return One numeric value.
+#' @references Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of
+#'   uncertainty predictions in digital soil mapping. *Geoderma*, 437, 116585.
+#'   <doi:10.1016/j.geoderma.2023.116585>
 #' @examples coverage_error(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
 #' @export
 coverage_error <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
@@ -59,8 +77,16 @@ coverage_error <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
 #' observed values: `obs` is retained only to check input length compatibility.
 #' Central intervals have lower and upper predictive quantiles at
 #' `(1 - tau) / 2` and `(1 + tau) / 2`, respectively.
+#'
+#' \deqn{\mathrm{PIW}(\tau) = \frac{1}{n}\sum_{i=1}^{n}(upper_i-lower_i)}
+#'
+#' PIW has response units. Smaller values indicate sharper predictions, but are
+#' desirable only when calibration is adequate; assess it alongside [picp()].
 #' @inheritParams coverage
 #' @return One numeric value.
+#' @references Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of
+#'   uncertainty predictions in digital soil mapping. *Geoderma*, 437, 116585.
+#'   <doi:10.1016/j.geoderma.2023.116585>
 #' @examples interval_width(1:3, c(0, 1, 2), c(2, 3, 4))
 #' @export
 interval_width <- function(obs, lower, upper, na.rm = TRUE) {
@@ -77,6 +103,14 @@ interval_width <- function(obs, lower, upper, na.rm = TRUE) {
 #' interval and `upper - lower + 2 / alpha * (obs - upper)` above it, where
 #' `alpha = 1 - level`; there is no penalty inside the interval. Lower scores
 #' indicate sharper, well-calibrated intervals.
+#'
+#' \deqn{\mathrm{IS}_\tau = \frac{1}{n}\sum_{i=1}^{n}[upper_i-lower_i+
+#' \frac{2}{1-\tau}\max(lower_i-obs_i,0)+
+#' \frac{2}{1-\tau}\max(obs_i-upper_i,0)]}
+#'
+#' The score has response units and lower values are better. It rewards narrow
+#' intervals but penalizes observations outside them by their distance from the
+#' nearest bound.
 #' @inheritParams coverage
 #' @param level Nominal central interval coverage, strictly between zero and one.
 #' @return One numeric value.
@@ -101,6 +135,12 @@ interval_score <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
 #' observations less than or equal to the predicted quantile. A calibrated
 #' predictive distribution has QCP close to the nominal quantile level. Unlike
 #' PICP, QCP can reveal one-sided quantile bias.
+#'
+#' \deqn{\mathrm{QCP}(p) = \frac{1}{n}\sum_{i=1}^{n}I(obs_i \leq q_{i,p})}
+#'
+#' For each level `p`, QCP close to `p` indicates calibration. Values above `p`
+#' mean the predicted quantile is generally too high; values below `p` mean it
+#' is generally too low.
 #' @param obs Numeric observation vector.
 #' @param quantiles Numeric matrix or data frame with observations in rows and
 #'   predicted quantiles in columns.
@@ -127,6 +167,12 @@ qcp <- function(obs, quantiles, levels, na.rm = TRUE) {
 #' Validates already evaluated predictive-CDF values, `cdf_at_obs = F_i(y_i)`.
 #' For calibrated continuous predictive distributions, PIT values are uniform
 #' on zero to one. Plot them with [gg_pit()].
+#'
+#' \deqn{u_i = F_i(obs_i)}
+#'
+#' PIT values have no individually preferred value. Across cases, a uniform
+#' distribution indicates calibration; systematic departures in [gg_pit()] can
+#' reveal bias or incorrect predictive dispersion.
 #' @param cdf_at_obs Numeric vector of predictive CDF values evaluated at the
 #'   corresponding observations.
 #' @param na.rm Logical; remove missing values?
@@ -177,7 +223,14 @@ crps_casewise <- function(obs, distribution = NULL, pred = NULL,
 #'
 #' Decomposes mean ensemble CRPS into a reliability component and potential
 #' CRPS following Hersbach (2000). Predictive-distribution columns are treated
-#' as equally likely ensemble members; lower `reliability` is better.
+#' as equally likely ensemble members.
+#'
+#' \deqn{\mathrm{CRPS} = \mathrm{RELI} + \mathrm{potential\ CRPS}}
+#'
+#' `reliability` (RELI) is non-negative and zero is ideal; smaller values
+#' indicate better distributional calibration. `potential_crps` is the
+#' remainder after removing reliability error. The decomposition is applicable
+#' here only to equally weighted predictive samples.
 #' @inheritParams crps
 #' @return One-row data frame with `crps`, `reliability`, and `potential_crps`.
 #' @references Hersbach, H. (2000). Decomposition of the continuous ranked
@@ -233,6 +286,12 @@ crps_decomposition <- function(obs, distribution, na.rm = TRUE) {
 #' are better. Supply either equally weighted predictive samples in
 #' `distribution`, or a normal predictive distribution through `pred` and
 #' `predictive_sd`.
+#'
+#' \deqn{\mathrm{CRPS}(F, obs) = \int_{-\infty}^{\infty}
+#' [F(z)-I(z\geq obs)]^2\,dz}
+#'
+#' CRPS has response units and lower values are better; zero is ideal. It is a
+#' proper scoring rule that jointly rewards calibrated and sharp distributions.
 #' @param obs Numeric observation vector.
 #' @param distribution Numeric matrix/data frame of equally weighted predictive
 #'   samples, one row per observation.
@@ -256,8 +315,18 @@ crps <- function(obs, distribution = NULL, pred = NULL, predictive_sd = NULL,
 #'
 #' Median of case-wise CRPS values. Lower values are better. It is a robust
 #' descriptive summary when a few large errors dominate mean CRPS.
+#'
+#' \deqn{\mathrm{median\ CRPS} = \mathrm{median}(\mathrm{CRPS}_i)}
+#'
+#' It has response units; lower values are better. Unlike mean CRPS, it
+#' describes a typical case and is less sensitive to a small number of very poor
+#' predictive distributions.
 #' @inheritParams crps
 #' @return One numeric median CRPS value.
+#' @references Hersbach, H. (2000). Decomposition of the continuous ranked
+#'   probability score for ensemble prediction systems. *Weather and
+#'   Forecasting*, 15, 559-570.
+#'   <doi:10.1175/1520-0434(2000)015%3C0559:DOTCRP%3E2.0.CO;2>
 #' @examples median_crps(0, distribution = matrix(c(-1, 1), nrow = 1))
 #' @export
 median_crps <- function(obs, distribution = NULL, pred = NULL,
@@ -272,6 +341,12 @@ median_crps <- function(obs, distribution = NULL, pred = NULL,
 #' Returns the mean negative log predictive density at the observations. Lower
 #' values are better. This score requires positive predictive densities and is
 #' particularly sensitive to observations assigned very low density.
+#'
+#' \deqn{\mathrm{Log\ score} = -\frac{1}{n}\sum_{i=1}^{n}\log f_i(obs_i)}
+#'
+#' Lower values are better. The score strongly penalizes assigning near-zero
+#' density to observations, so it is useful for comparing full predictive
+#' distributions but can be dominated by tail failures.
 #' @param obs Numeric observation vector, retained for length checking.
 #' @param density_at_obs Numeric vector of strictly positive predictive-density
 #'   values evaluated at each corresponding observation.

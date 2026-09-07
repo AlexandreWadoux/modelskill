@@ -90,12 +90,12 @@ By default, point colour represents the model-efficiency coefficient
 (uppercase R-squared), equivalent to NSE and MEC in modelskill. This must
 not be confused with squared Pearson correlation, available with
 \code{colour_by = "r2"}. The default legend title for the efficiency colour
-scale is simply \code{R²}.
+scale is simply \verb{R²}.
 
 The function returns an ordinary ggplot2 object. Styling that belongs to
 the ggplot2 ecosystem can therefore be applied after the function call.
 Use \code{labs()} for titles, \code{theme()} for typography and legend placement,
-\code{scale_colour_*()} to replace the point-colour scale, and \code{scale_fill_*()}
+\verb{scale_colour_*()} to replace the point-colour scale, and \verb{scale_fill_*()}
 to replace the correlation-region palette.
 
 Reference-axis arguments control the manually drawn solar axes rather than
@@ -112,12 +112,32 @@ original implementation; their interpretation requires the normalization
 assumptions documented in \code{\link[=diagram_stats]{diagram_stats()}}.
 }
 
+\section{Interpretation}{
+
+The solar diagram uses the error decomposition
+\deqn{\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2},}
+where ME*, SDE*, and RMSE* are respectively mean error, centred root mean
+square difference, and RMSE divided by the observation standard deviation.
+The distance from the origin is RMSE*. The origin is perfect prediction;
+points on the vertical axis have no mean error; negative ME* indicates
+overprediction under the package convention \code{obs - pred}; and positive ME*
+indicates underprediction.
+
+Points inside the outer RMSE* = 1 circle improve on predicting the observed
+mean (equivalently, MEC/NSE/R2 is positive). The pale-yellow regions give
+lower bounds on correlation, rather than exact correlation values. For
+example, a point near the origin and inside the correlation-greater-than-0.9
+region has low total error and strong pattern agreement; a point far left or right is
+systematically biased; and a point high on the vertical axis is unbiased but
+has substantial pattern or spread disagreement.
+}
+
 \section{ggplot2 customization}{
 
 Arguments that change the statistical content or core diagram construction
 are exposed directly by \code{gg_solar()}. Ordinary appearance is intentionally
 left to ggplot2. For example, users can add \code{labs()}, \code{theme()}, a replacement
-\code{scale_colour_*()} or \code{scale_fill_*()}, or a replacement \code{coord_fixed()}.
+\verb{scale_colour_*()} or \verb{scale_fill_*()}, or a replacement \code{coord_fixed()}.
 }
 
 \examples{
@@ -143,6 +163,11 @@ Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
 integrated approach for the evaluation of quantitative soil maps through
 Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{doi:10.1016/j.geoderma.2021.115332}
+
+Jolliff, J. K., Kindle, J. C., Shulman, I., Penta, B., Friedrichs, M. A. M.,
+Helber, R., and Arnone, R. A. (2009). Summary diagrams for coupled
+hydrodynamic-ecosystem model skill assessment. \emph{Journal of Marine Systems},
+76, 64-82. \url{doi:10.1016/j.jmarsys.2008.05.014}
 }
 \seealso{
 \code{\link[=diagram_stats]{diagram_stats()}}, \code{\link[=model_metrics]{model_metrics()}}, \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_target]{gg_target()}}

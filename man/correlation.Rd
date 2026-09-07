@@ -18,8 +18,28 @@ One numeric value.
 }
 \description{
 Pearson product-moment correlation between observations and predictions.
-It ranges from -1 to 1 and is undefined for a constant vector.
+}
+\details{
+\deqn{r = \frac{\sum_{i = 1}^{n}(obs_i - \bar{obs})(pred_i - \bar{pred})}
+{\sqrt{\sum_{i = 1}^{n}(obs_i - \bar{obs})^2\sum_{i = 1}^{n}(pred_i - \bar{pred})^2}}}
+
+Correlation ranges from -1 to 1: one indicates a perfect increasing linear
+association, minus one a perfect decreasing linear association, and zero no
+linear association. It is undefined for a constant vector. Correlation is
+unaffected by additive bias and proportional scaling, so it measures pattern
+association rather than agreement or prediction accuracy. Interpret it with
+\code{\link[=bias]{bias()}}, \code{\link[=rmse]{rmse()}}, and an agreement measure such as \code{\link[=ccc]{ccc()}}.
 }
 \examples{
 correlation(1:3, c(1, 3, 2))
+}
+\references{
+Willmott, C. J. (1984). On the evaluation of model performance
+in physical geography. In G. L. Gaile and C. J. Willmott (Eds.), \emph{Spatial
+Statistics and Models} (pp. 443-460). D. Reidel.
+
+Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of
+goodness-of-fit measures in hydrologic and hydroclimatic model validation.
+\emph{Water Resources Research}, 35(1), 233-241.
+\url{doi:10.1029/1998WR900018}
 }

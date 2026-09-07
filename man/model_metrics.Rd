@@ -17,8 +17,8 @@ names must be unique; missing names are generated.}
 be removed. The default is \code{TRUE}. If \code{FALSE}, incomplete pairs result in
 missing statistics rather than being silently removed.}
 
-\item{extended}{Logical; include extended error metrics used in spectroscopy
-and quantile-regression workflows?}
+\item{extended}{Logical; include additional robust, scale-normalised,
+percentage, and quantile-regression metrics?}
 
 \item{digits}{Integer or \code{NULL}. If supplied, round numeric results to this
 many digits (0 to 22). \code{NULL} retains full numerical precision.}

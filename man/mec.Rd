@@ -19,7 +19,8 @@ One numeric value.
 \description{
 Alias for \code{\link[=nse]{nse()}}. MEC, NSE, and the uppercase R-squared efficiency \code{R2()}
 are the same statistic. They must not be confused with lowercase \code{r2()},
-the squared Pearson correlation.
+the squared Pearson correlation. Its equation, interpretation, and references
+are given in \code{\link[=nse]{nse()}}.
 }
 \examples{
 mec(1:3, c(1, 3, 2))

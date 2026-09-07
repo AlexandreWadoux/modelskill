@@ -17,10 +17,34 @@ nse(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-One minus the ratio of prediction squared error to the observation sum of
-squares about its mean. One is ideal, zero equals predicting the observation
-mean, and negative values are worse. It is undefined for constant observations.
+Nash-Sutcliffe efficiency (NSE; also called the model efficiency coefficient,
+MEC) compares the prediction squared error with the squared error from using
+the observed mean as a constant prediction.
+}
+\details{
+\deqn{\mathrm{NSE} = 1 - \frac{\sum_{i = 1}^{n}(obs_i - pred_i)^2}
+{\sum_{i = 1}^{n}(obs_i - \bar{obs})^2}}
+
+One is ideal; zero means the predictions are no better than predicting the
+observed mean; negative values indicate worse performance than that
+benchmark. NSE is undefined for constant observations. It is sensitive to
+large errors because it uses squared differences. NSE, \code{\link[=mec]{mec()}}, and uppercase
+\code{R2()} are identical in this package; they are not lowercase \code{\link[=r2]{r2()}}.
 }
 \examples{
 nse(1:3, c(1, 3, 2))
+}
+\references{
+Nash, J. E. and Sutcliffe, J. V. (1970). River flow forecasting
+through conceptual models part I: A discussion of principles. \emph{Journal of
+Hydrology}, 10, 282-290. \url{doi:10.1016/0022-1694(70)90255-6}
+
+Janssen, P. H. M. and Heuberger, P. S. C. (1995). Calibration of
+process-oriented models. \emph{Ecological Modelling}, 83, 55-66.
+\url{doi:10.1016/0304-3800(95)00084-9}
+
+Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of
+goodness-of-fit measures in hydrologic and hydroclimatic model validation.
+\emph{Water Resources Research}, 35(1), 233-241.
+\url{doi:10.1029/1998WR900018}
 }

@@ -64,6 +64,24 @@
 #' original implementation; their interpretation requires the normalization
 #' assumptions documented in [diagram_stats()].
 #'
+#' @section Interpretation:
+#' The solar diagram uses the error decomposition
+#' \deqn{\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2},}
+#' where ME*, SDE*, and RMSE* are respectively mean error, centred root mean
+#' square difference, and RMSE divided by the observation standard deviation.
+#' The distance from the origin is RMSE*. The origin is perfect prediction;
+#' points on the vertical axis have no mean error; negative ME* indicates
+#' overprediction under the package convention `obs - pred`; and positive ME*
+#' indicates underprediction.
+#'
+#' Points inside the outer RMSE* = 1 circle improve on predicting the observed
+#' mean (equivalently, MEC/NSE/R2 is positive). The pale-yellow regions give
+#' lower bounds on correlation, rather than exact correlation values. For
+#' example, a point near the origin and inside the correlation-greater-than-0.9
+#' region has low total error and strong pattern agreement; a point far left or right is
+#' systematically biased; and a point high on the vertical axis is unbiased but
+#' has substantial pattern or spread disagreement.
+#'
 #' @section ggplot2 customization:
 #' Arguments that change the statistical content or core diagram construction
 #' are exposed directly by `gg_solar()`. Ordinary appearance is intentionally
@@ -78,6 +96,11 @@
 #' integrated approach for the evaluation of quantitative soil maps through
 #' Taylor and solar diagrams. *Geoderma*, 405, 115332.
 #' <doi:10.1016/j.geoderma.2021.115332>
+#'
+#' Jolliff, J. K., Kindle, J. C., Shulman, I., Penta, B., Friedrichs, M. A. M.,
+#' Helber, R., and Arnone, R. A. (2009). Summary diagrams for coupled
+#' hydrodynamic-ecosystem model skill assessment. *Journal of Marine Systems*,
+#' 76, 64-82. <doi:10.1016/j.jmarsys.2008.05.014>
 #'
 #' @examples
 #' obs <- c(1, 2, 3, 4, 5)
@@ -151,7 +174,7 @@ gg_solar <- function(
   } else if (identical(colour_by, "efficiency")) {
     data$colvar <- data$R2_NSE
     discrete_colour <- FALSE
-    if (is.null(colorval.name)) colorval.name <- "R²"
+    if (is.null(colorval.name)) colorval.name <- paste0("R", intToUtf8(0x00B2))
   } else if (identical(colour_by, "correlation")) {
     data$colvar <- data$r
     discrete_colour <- FALSE
@@ -159,7 +182,7 @@ gg_solar <- function(
   } else if (identical(colour_by, "r2")) {
     data$colvar <- data$r^2
     discrete_colour <- FALSE
-    if (is.null(colorval.name)) colorval.name <- "r²"
+    if (is.null(colorval.name)) colorval.name <- paste0("r", intToUtf8(0x00B2))
   } else {
     data$colvar <- factor(data$model, levels = data$model)
     discrete_colour <- TRUE

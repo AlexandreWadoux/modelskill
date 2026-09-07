@@ -18,7 +18,8 @@ One numeric value on the probability scale from zero to one.
 }
 \description{
 Backward-compatible alias for \code{\link[=picp]{picp()}}. New code should prefer \code{picp()}, the
-conventional abbreviation for prediction interval coverage probability.
+conventional abbreviation for prediction interval coverage probability. Its
+equation, interpretation, and reference are given in \code{\link[=picp]{picp()}}.
 }
 \examples{
 coverage(1:3, c(0, 1, 2), c(2, 3, 4))

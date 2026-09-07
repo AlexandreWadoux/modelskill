@@ -1,25 +1,28 @@
 Package: modelskill
 Type: Package
-Title: Assessing and Visualising Predictive Model and Map Quality
+Title: Assessing and Visualising Continuous Prediction Model Performance
 Version: 0.0.0.9000
 Authors@R: c(
     person("Alexandre M.J.-C.", "Wadoux",
       email = "alexandre.wadoux@yahoo.fr",
       role = c("aut", "cre", "cph"))
     )
-Description: Evaluates quantitative prediction models using point-prediction
-    and predictive-uncertainty validation metrics together with Taylor, solar,
+Description: Evaluates continuous predictions from statistical, machine
+    learning, and process-based models. It provides point-prediction and
+    predictive-uncertainty validation metrics together with Taylor, solar,
     target, and coverage diagrams. The diagram implementation follows Wadoux,
     Walvoort, and Brus (2022) <doi:10.1016/j.geoderma.2021.115332>.
 License: MIT + file LICENSE
-URL: https://github.com/AlexandreWadoux/modelskill
+URL: https://github.com/AlexandreWadoux/modelskill,
+    https://alexandrewadoux.github.io/modelskill/
 BugReports: https://github.com/AlexandreWadoux/modelskill/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    pkgdown
 Imports:
     ggplot2 (>= 3.5.0),
     ggrepel,

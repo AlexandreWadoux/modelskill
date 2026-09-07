@@ -45,6 +45,68 @@ rae(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-These metrics complement the core error and agreement statistics. MAPE is
-undefined for zero observations; log metrics require non-negative values.
+These metrics complement the core error and agreement statistics. Let
+\code{e_i = obs_i - pred_i}, and let RMSE denote \code{\link[=rmse]{rmse()}}.
+}
+\details{
+\describe{
+\item{\code{mdae()}}{Median absolute error:
+\deqn{\mathrm{MdAE} = \mathrm{median}(|e_i|).}
+It has response units; zero is ideal. It describes a typical absolute error
+robustly, so large outliers have less influence than on MAE or RMSE.}
+\item{\code{rpd()}}{Ratio of performance to deviation:
+\deqn{\mathrm{RPD} = s_{obs} / \mathrm{RMSE}.}
+Larger values indicate error small relative to observed variation; it is
+undefined for perfect predictions in this implementation rather than
+returning infinity.}
+\item{\code{rpiq()}}{Ratio of performance to interquartile distance:
+\deqn{\mathrm{RPIQ} = \mathrm{IQR}(obs) / \mathrm{RMSE}.}
+Larger values are better; it is less affected by extreme observations than
+RPD.}
+\item{\code{sep()}}{Bias-corrected standard error of prediction:
+\deqn{\mathrm{SEP} = \sqrt{\sum(e_i - \mathrm{ME})^2/(n-1)}.}
+It has response units; zero is ideal and constant bias is removed.}
+\item{\code{rer()}}{Ratio of error to range:
+\deqn{\mathrm{RER} = (\max(obs)-\min(obs))/\mathrm{RMSE}.}
+Larger values are better, but the observed range makes it sensitive to
+extremes.}
+\item{\code{mape()}}{Mean absolute percentage error:
+\deqn{\mathrm{MAPE} = n^{-1}\sum|e_i / obs_i|.}
+It is unitless; zero is ideal. It is undefined when any observation is zero
+and can overemphasize errors at small observed values.}
+\item{\code{smape()}}{Symmetric mean absolute percentage error:
+\deqn{\mathrm{sMAPE} = n^{-1}\sum 2|e_i|/(|obs_i|+|pred_i|).}
+It is unitless; zero is ideal. A pair of zeros contributes zero.}
+\item{\code{msle()}}{Mean squared logarithmic error:
+\deqn{\mathrm{MSLE} = n^{-1}\sum[\log(1+obs_i)-\log(1+pred_i)]^2.}
+It is non-negative; zero is ideal and emphasizes relative differences. It
+requires non-negative observations and predictions.}
+\item{\code{rmsle()}}{Root mean squared logarithmic error:
+\deqn{\mathrm{RMSLE} = \sqrt{\mathrm{MSLE}}.}
+It is non-negative; zero is ideal and has the log-scale interpretation of
+MSLE.}
+\item{\code{rae()}}{Relative absolute error:
+\deqn{\mathrm{RAE} = \sum|e_i| / \sum|obs_i-\bar{obs}|.}
+Zero is ideal; one equals the absolute-error benchmark from predicting the
+observed mean; values above one are worse.}
+}
+
+MAPE is undefined for zero observations; log metrics require non-negative
+values. Missing-value handling follows \code{\link[=bias]{bias()}}.
+}
+\references{
+Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean
+absolute error (MAE) over the root mean square error (RMSE) in assessing
+average model performance. \emph{Climate Research}, 30, 79-82.
+\url{doi:10.3354/cr030079}
+
+Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger, J.-M., and
+McBratney, A. (2010). Critical review of chemometric indicators commonly
+used for assessing the quality of the prediction of soil attributes by NIR
+spectroscopy. \emph{Trends in Analytical Chemistry}, 29, 1073-1081.
+\url{doi:10.1016/j.trac.2010.05.006}
+
+Hyndman, R. J. and Koehler, A. B. (2006). Another look at measures of
+forecast accuracy. \emph{International Journal of Forecasting}, 22, 679-688.
+\url{doi:10.1016/j.ijforecast.2006.03.001}
 }

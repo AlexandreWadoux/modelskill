@@ -8,3 +8,6 @@
 ^tmp$
 ^doc$
 ^Meta$
+^docs$
+^pkgdown$
+^vignettes/.*\\.html$

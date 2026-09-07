@@ -17,8 +17,37 @@ rmse(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Square root of \code{\link[=mse]{mse()}}, in the input units. Lower values are better.
+Root mean squared error (RMSE) is the square root of mean squared error.
+}
+\details{
+\deqn{\mathrm{RMSE} = \sqrt{\frac{1}{n}\sum_{i = 1}^{n}(obs_i - pred_i)^2}}
+
+RMSE is non-negative, has the same units as the response variable, and is
+zero for perfect predictions. Smaller values indicate better agreement.
+Squaring means that a small number of large errors can disproportionately
+increase RMSE. Therefore, when errors are skewed or asymmetric, interpret
+RMSE together with \code{\link[=mae]{mae()}} and inspect the error distribution rather than
+relying on RMSE alone. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 rmse(1:3, c(1, 3, 2))
+}
+\references{
+Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of
+goodness-of-fit measures in hydrologic and hydroclimatic model validation.
+\emph{Water Resources Research}, 35(1), 233-241.
+\url{doi:10.1029/1998WR900018}
+
+Armstrong, J. S. (2001). Evaluating forecasting methods. In J. S.
+Armstrong (Ed.), \emph{Principles of Forecasting} (pp. 443-472). Springer.
+\url{doi:10.1007/978-0-306-47630-3_20}
+
+Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean absolute
+error (MAE) over the root mean square error (RMSE) in assessing average
+model performance. \emph{Climate Research}, 30, 79-82.
+\url{doi:10.3354/cr030079}
+
+Hodson, T. O. (2022). Root mean square error (RMSE) or mean absolute error
+(MAE): When to use them or not. \emph{Geoscientific Model Development
+Discussions}, 2022, 1-10. \url{doi:10.5194/gmd-2022-1}
 }

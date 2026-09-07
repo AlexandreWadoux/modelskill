@@ -10,7 +10,7 @@ test_that("undefined correlation is separate from constant-model geometry", {
   expect_equal(p$data$x, c(0, 1))
   expect_equal(p$data$y, c(0, 0))
   for (fn in list(gg_solar, gg_target)) {
-    p <- fn(mods, obs)
+    p <- fn(mods, obs, colour_by = "correlation")
     b <- ggplot2::ggplot_build(p)
     points <- which(vapply(p$layers, function(l)
       inherits(l$geom, "GeomPoint"), logical(1)))

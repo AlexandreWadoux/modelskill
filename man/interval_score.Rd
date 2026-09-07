@@ -24,6 +24,15 @@ interval and \code{upper - lower + 2 / alpha * (obs - upper)} above it, where
 \code{alpha = 1 - level}; there is no penalty inside the interval. Lower scores
 indicate sharper, well-calibrated intervals.
 }
+\details{
+\deqn{\mathrm{IS}_\tau = \frac{1}{n}\sum_{i=1}^{n}[upper_i-lower_i+
+\frac{2}{1-\tau}\max(lower_i-obs_i,0)+
+\frac{2}{1-\tau}\max(obs_i-upper_i,0)]}
+
+The score has response units and lower values are better. It rewards narrow
+intervals but penalizes observations outside them by their distance from the
+nearest bound.
+}
 \examples{
 interval_score(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
 }

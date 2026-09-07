@@ -17,10 +17,23 @@ sd_ratio(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Sample standard deviation of predictions divided by sample standard deviation
-of observations. One indicates equal spread; it is undefined when observation
-spread is zero.
+The standard deviation ratio compares the sample standard deviation of
+predictions with that of observations.
+}
+\details{
+\deqn{\mathrm{SD\ ratio} = \frac{s_{pred}}{s_{obs}}}
+
+The ratio is non-negative and one indicates equal spread. Values below one
+indicate under-dispersed predictions; values above one indicate
+over-dispersed predictions. It assesses spread, not mean bias or association,
+and is undefined for constant observations. Missing-value handling follows
+\code{\link[=bias]{bias()}}.
 }
 \examples{
 sd_ratio(1:3, c(1, 3, 2))
+}
+\references{
+Taylor, K. E. (2001). Summarizing multiple aspects of model
+performance in a single diagram. \emph{Journal of Geophysical Research}, 106,
+7183-7192. \url{doi:10.1029/2000JD900719}
 }

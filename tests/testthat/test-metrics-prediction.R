@@ -37,6 +37,8 @@ test_that("prediction metrics handle perfect, biased and missing predictions", {
   expect_equal(ccc(obs, obs), 1)
   expect_equal(bias(obs, obs + 2), -2)
   expect_equal(mae(obs, obs + 2), 2)
+  expect_equal(mae(c(1, NA, 3), c(1, 2, 2)), mae(c(1, 3), c(1, 2)))
+  expect_true(is.na(mae(c(1, NA, 3), c(1, 2, 2), na.rm = FALSE)))
   expect_equal(rmse(c(1, NA, 3), c(1, 2, 2)), rmse(c(1, 3), c(1, 2)))
   expect_true(is.na(rmse(c(1, NA, 3), c(1, 2, 2), na.rm = FALSE)))
 })

@@ -30,7 +30,10 @@ test_that("gg_solar colours by R2/NSE efficiency by default", {
   )
 
   expect_equal(p$data$colvar, unname(expected), tolerance = 1e-12)
-  expect_identical(p$scales$get_scales("colour")$name, "R²")
+  expect_identical(
+    utf8ToInt(enc2utf8(p$scales$get_scales("colour")$name)),
+    c(82L, 178L)
+  )
 })
 
 test_that("gg_solar supports categorical model colours", {

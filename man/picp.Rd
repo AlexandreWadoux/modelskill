@@ -20,10 +20,14 @@ One numeric value.
 PICP is the empirical proportion of observations satisfying
 \verb{lower <= obs <= upper}; endpoints are included. It is returned on the
 probability scale from zero to one, so multiply by 100 to report a percent.
-For a well-calibrated central interval, \code{picp()} should be close to its
-nominal level. Missing triplets are removed when \code{na.rm = TRUE}.
 }
 \details{
+\deqn{\mathrm{PICP}(\tau) = \frac{1}{n}\sum_{i=1}^{n}
+I(lower_i \leq obs_i \leq upper_i)}
+
+For a well-calibrated central interval, \code{picp()} should be close to its
+nominal level. Missing triplets are removed when \code{na.rm = TRUE}.
+
 A single PICP does not reveal whether non-coverage is balanced between the
 lower and upper tails. Use \code{\link[=gg_coverage]{gg_coverage()}} to inspect PICP across interval
 levels; assess tail-specific calibration separately when directional bias is
@@ -35,4 +39,9 @@ picp(1:3, c(0, 1, 2), c(2, 3, 4))
 \references{
 Goovaerts, P. (2001). Geostatistical modelling of uncertainty in
 soil science. \emph{Geoderma}, 103, 3-26. \url{doi:10.1016/S0016-7061(01)00067-2}
+
+Shrestha, D. L. and Solomatine, D. P. (2008). Data-driven approaches for
+estimating uncertainty in rainfall-runoff modelling. \emph{International Journal
+of River Basin Management}, 6, 109-122.
+\url{doi:10.1080/15715124.2008.9635341}
 }

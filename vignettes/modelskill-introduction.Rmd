@@ -1,9 +1,9 @@
 ---
-title: "Evaluating quantitative models with modelskill"
-author: "modelskill contributors"
+title: "Evaluating continuous prediction models with modelskill"
+author: "Alexandre M.J.-C. Wadoux"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Evaluating quantitative models with modelskill}
+  %\VignetteIndexEntry{Evaluating continuous prediction models with modelskill}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,16 +15,20 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
 
 ## Why use several diagnostics?
 
-A single statistic rarely describes every important aspect of a quantitative
-model. A model may have a strong correlation but still be biased, or it may
-have a small average error while failing to reproduce the observed variation.
+A single statistic rarely describes every important aspect of a continuous
+prediction model. A model can have a strong correlation yet be biased, or have
+a small average error while failing to reproduce the observed variation.
 `modelskill` combines point-prediction statistics, predictive-uncertainty
 diagnostics, and graphical summaries so that these behaviours can be inspected
 together.
 
-The approach follows Wadoux, Walvoort, and Brus (2022), who introduced the use
-of Taylor and solar diagrams for integrated evaluation of quantitative maps.
-The same tools are useful more generally for quantitative prediction models.
+The package evaluates paired observed and predicted numeric values, regardless
+of how predictions were produced. It is suitable for machine-learning
+regression models (such as random forests, boosting, neural networks,
+support-vector machines, and ensembles), as well as linear, geostatistical,
+physical, and process-based models. Maps are one useful application, but are
+not a requirement. For an honest estimate of predictive performance, use an
+independent validation set or an appropriate resampling scheme.
 
 ## Reproducible example
 
@@ -54,7 +58,33 @@ locations. The `Good` model should be closest to the ideal reference. The
 correlation near one while still having a substantial mean error. The `Noisy`
 model illustrates loss of pattern agreement and larger prediction errors.
 
-## Indices
+```{r observed-predicted, fig.height=4.5}
+plot_data <- data.frame(
+  observed = rep(obs, times = length(mods)),
+  predicted = unlist(mods, use.names = FALSE),
+  model = rep(names(mods), each = length(obs))
+)
+
+ggplot2::ggplot(plot_data, ggplot2::aes(observed, predicted, colour = model)) +
+  ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  ggplot2::geom_point(alpha = 0.7, size = 1.5) +
+  ggplot2::coord_equal() +
+  ggplot2::theme_classic() +
+  ggplot2::labs(title = "Observed versus predicted values",
+                x = "Observed", y = "Predicted", colour = "Model")
+```
+
+The dashed equality line represents perfect predictions. `Good` stays close
+to it, `Biased` is systematically above it, and `Noisy` is more dispersed.
+This first diagnostic is useful for any continuous predictive model; the
+following sections quantify and summarize what it shows.
+
+# Part 1: Point-prediction evaluation
+
+This part introduces complementary statistics for evaluating predicted values:
+mean error for systematic error, absolute and squared error measures for error
+magnitude, association and concordance measures, and benchmark-relative model
+efficiency. No single statistic represents every aspect of predictive quality.
 
 ```{r metrics}
 metrics <- model_metrics(mods, obs)
@@ -67,7 +97,8 @@ squared prediction error with predicting the observed mean. Lowercase `r2()`
 is instead squared Pearson correlation, and measures association rather than
 agreement. They should not be interchanged.
 
-For spectroscopy-oriented reporting, request the extended metrics explicitly:
+For specialised workflows, the extended metrics add robust, scale-normalised,
+percentage, and quantile-loss summaries:
 
 ```{r extended-metrics}
 model_metrics(mods, obs, extended = TRUE)
@@ -95,13 +126,33 @@ rmse(obs, mods$Good)
 ccc(obs, mods$Good)
 ```
 
-## Predictive uncertainty
+# Part 2: Evaluation of predictive uncertainty
+
+This part evaluates *quantified predictive uncertainty*, rather than only the
+accuracy of point predictions. A prediction interval or distribution makes a
+probabilistic statement for each case. For example, a central 90% prediction
+interval has lower and upper predictive quantiles at 0.05 and 0.95, and should
+contain the future observation in about 90% of comparable validation cases.
 
 Good point predictions do not automatically imply good uncertainty estimates.
-Uncertainty validation should assess **calibration** (whether stated intervals
-contain observations as often as intended) and **sharpness** (whether intervals
-are usefully narrow). Here we create simple 80% and 95% intervals around the
-`Good` predictions for illustration.
+Schmidinger and Heuvelink (2023) distinguish two complementary properties:
+
+* **Calibration** (also called reliability) asks whether stated probabilities
+  agree with observed frequencies.
+* **Sharpness** asks whether predictive distributions are concentrated or,
+  equivalently for an interval, usefully narrow. Sharpness is meaningful only
+  when considered together with calibration: a narrow interval is not useful
+  if it misses observations too often.
+
+These principles apply to uncertainty estimates from machine-learning models,
+such as quantile regression, ensembles, and conformal intervals, as well as
+Bayesian, geostatistical, and process-based models. The appropriate function
+depends on the output available: interval bounds, predicted quantiles, CDF
+values, predictive samples, or a normal predictive mean and standard
+deviation.
+
+Here we create simple central 80% and 95% normal intervals around the `Good`
+predictions solely to illustrate the input format.
 
 ```{r uncertainty-data}
 predictive_sd <- rep(0.8, length(obs))
@@ -111,17 +162,58 @@ lower95 <- mods$Good - 1.96 * predictive_sd
 upper95 <- mods$Good + 1.96 * predictive_sd
 ```
 
-Interval validation returns prediction interval coverage probability (PICP),
-its departure from nominal coverage, average width, and the proper interval
-score (lower is better). PICP is the proportion of test observations inside an
-interval; for a 95% interval, a calibrated model has PICP close to 0.95.
+## Prediction intervals: calibration, sharpness, and interval score
+
+At one nominal interval level, `uncertainty_metrics()` returns four
+complementary quantities:
+
+* **PICP** is the prediction interval coverage probability, bounded from 0 to
+  1. Its ideal value is the nominal interval level (for example, 0.95 for a
+  95% interval).
+* **PICP error** is PICP minus the nominal level, bounded from -1 to 1 with
+  ideal value 0. Negative values indicate under-coverage (intervals too narrow
+  or over-confident); positive values indicate over-coverage (intervals too
+  wide or over-cautious).
+* **PIW** is the average prediction-interval width. It has the response unit
+  and no universal acceptable threshold: smaller values mean sharper intervals,
+  provided PICP is close to the nominal level.
+* **Interval score** combines width and the distance of observations outside
+  the interval. It is a proper scoring rule with lower values preferred and an
+  ideal value of 0. Compare scores only for the same response, validation data,
+  and nominal level.
+
+PICP is the proportion of test observations inside an interval; for a 95%
+interval, a calibrated model has PICP close to 0.95.
 
 ```{r interval-metrics}
 uncertainty_metrics(obs, lower = lower95, upper = upper95, level = .95)
 ```
 
-For complete predictive distributions, use QCP and PIT to assess calibration,
-and CRPS to compare competing probabilistic models. Lower CRPS is better.
+## Calibration across a distribution
+
+One PICP does not establish calibration of the entire predictive distribution.
+`gg_coverage()` evaluates PICP over many nominal levels: a calibration curve
+near the 1:1 line is desirable. It is often called a **reliability plot** and
+was introduced in geostatistical uncertainty validation as an **accuracy plot**
+(Goovaerts, 2001). Its summary areas from `accuracy_plot_metrics()` have ideal
+value 0; smaller areas mean a curve closer to the 1:1 line.
+
+PICP alone can hide one-sided bias. For example, a 90% interval may still
+cover 90% of observations even when most misses occur below its lower bound.
+Use QCP and PIT to inspect this more closely:
+
+* **QCP** at quantile probability \(p\) is between 0 and 1 and is ideal when
+  it equals \(p\). Values above \(p\) indicate that the predicted quantile is
+  generally too high; values below \(p\) indicate that it is generally too
+  low.
+* **PIT** values are individually between 0 and 1; there is no preferred value
+  for one case. Across many validation cases their histogram should be roughly
+  uniform. Systematic departures flag distributional bias or incorrect spread.
+
+For a normal predictive distribution, the following examples calculate QCP,
+PIT, and CRPS. CRPS is a proper scoring rule with response units: 0 is ideal,
+lower values are better, and values should be compared only on the same
+response scale and validation data.
 
 ```{r distribution-metrics}
 qhat <- cbind(`0.1` = mods$Good - 1.282 * predictive_sd,
@@ -131,14 +223,8 @@ qcp(obs, qhat, c(.1, .5, .9))
 crps(obs, pred = mods$Good, predictive_sd = predictive_sd)
 ```
 
-The calibration curve compares PICP at multiple nominal levels. It is a PICP
-**reliability plot**, also called an **accuracy plot** in geostatistical
-uncertainty validation (Goovaerts, 2001): it extends a single PICP across the
-predictive distribution. When predictive means and predictive standard
-deviations are available, `gg_coverage()` can calculate every 1%--99% normal
-interval directly. Central PICP does not by itself reveal asymmetric lower- and
-upper-tail misses, so it should be complemented by residual and tail-specific
-checks when a one-sided bias is relevant.
+When predictive means and predictive standard deviations are available,
+`gg_coverage()` can calculate every 1%--99% central normal interval directly.
 
 ```{r coverage}
 gg_coverage(
@@ -153,11 +239,42 @@ gg_qcp(obs, qhat, c(.1, .5, .9))
 gg_pit(pit(stats::pnorm(obs, mean = mods$Good, sd = predictive_sd)))
 ```
 
+## Full-distribution scoring rules
+
+For competing full predictive distributions, scoring rules jointly reward
+calibration and sharpness. `crps()` and `median_crps()` accept either equally
+weighted predictive samples or a normal mean and predictive standard deviation.
+`crps_decomposition()` additionally reports RELI, the non-negative reliability
+component of ensemble CRPS, whose ideal value is 0. `log_score()` evaluates
+the negative log predictive density at the observations; lower values are
+better, but it has no universal numerical range and strongly penalizes events
+assigned very low density. Use these scores to rank models evaluated on the
+same cases rather than as stand-alone pass/fail thresholds.
+
+# Part 3: Summary diagrams and diagnostic plots
+
+The diagrams below combine complementary statistics into compact visual
+diagnostics. They should be read alongside the numerical metrics, not as a
+replacement for scientific judgement about the intended use of a model.
+
 ## Taylor diagram
 
-The Taylor diagram displays correlation through the polar angle and the
-standard-deviation ratio through the radial distance. The reference point is
-the red point at correlation 1 and standardized standard deviation 1.
+The Taylor diagram combines correlation, relative spread, and centred error.
+Its radial coordinate is the standard-deviation ratio
+\(\sigma^* = \mathrm{sd}(pred) / \mathrm{sd}(obs)\); its polar angle is
+\(\arccos(r)\). The distance from a model point to the reference point
+\((\sigma^*=1, r=1)\) is the standardized centred root mean square difference:
+
+\[
+\mathrm{SDE}^* = \sqrt{1 + \sigma^{*2} - 2\sigma^*r}.
+\]
+
+The `Good` point should be near the reference point. `Biased` can also be near
+it because a Taylor diagram does **not** represent mean error; its perfect
+linear association and unchanged spread hide its constant offset. `Noisy`
+should be farther away and at a larger polar angle because it has weaker
+pattern agreement. A radius below one indicates smoothing (too little
+variation); a radius above one indicates too much variation.
 
 ```{r taylor}
 gg_taylor(mods, obs, label = TRUE)
@@ -165,25 +282,42 @@ gg_taylor(mods, obs, label = TRUE)
 
 ## Solar diagram
 
-The solar diagram combines normalized mean error and standardized unbiased
-RMSD. The point colour can display any model-level statistic, such as NSE.
+The solar diagram makes the mean error omitted by a Taylor diagram explicit.
+It uses the standardized decomposition
+
+\[
+\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2}.
+\]
+
+Horizontal position is ME* and vertical position is SDE*. Distance from the
+origin is RMSE*. Under `modelskill`'s `obs - pred` convention, points to the
+left overpredict and points to the right underpredict. Thus `Biased` falls to
+the left, `Good` should be near the origin, and `Noisy` should lie higher on
+the SDE* axis. The outer circle at RMSE* = 1 marks the mean-prediction
+benchmark: points inside it have positive MEC/NSE/R2. The pale regions indicate
+correlation lower bounds, not exact correlation values.
 
 ```{r solar}
-gg_solar(mods, obs, colorval = metrics$NSE, colorval.name = "NSE",
-         label = TRUE, x.axis_begin = -1.5, x.axis_end = 1.5,
+gg_solar(mods, obs, label = TRUE,
+         x.axis_begin = -1.5, x.axis_end = 1.5,
          y.axis_end = 2, by = 0.25)
 ```
 
 ## Target diagram
 
-The target diagram separates signed error components while retaining RMSD
-contours. Models closer to the origin generally have smaller combined error,
-with the sign of the horizontal coordinate indicating the direction of the
-standard-deviation difference.
+The target diagram builds on the same RMSE* decomposition but additionally
+shows whether prediction variability is lower or higher than observed
+variability. The signed SDE coordinate distinguishes smoother from more
+variable predictions, while ME* distinguishes overprediction from
+underprediction. The distance from the origin remains RMSE*, so `Good` should
+be nearest the origin. `Biased` is chiefly displaced by mean error, whereas a
+model displaced in the signed-SDE direction chiefly has a spread or pattern
+difference. The axis-title placement retains the original diagram style; the
+function help documents the underlying coordinates explicitly.
 
 ```{r target}
-gg_target(mods, obs, colorval = metrics$NSE, colorval.name = "NSE",
-          label = TRUE, axis_begin = -2, axis_end = 2, by = 0.5)
+gg_target(mods, obs, label = TRUE,
+          axis_begin = -2, axis_end = 2, by = 0.5)
 ```
 
 ## Standard ggplot2 customisation
@@ -202,3 +336,16 @@ Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
 integrated approach for the evaluation of quantitative soil maps through
 Taylor and solar diagrams. *Geoderma*, 405, 115332.
 <https://doi.org/10.1016/j.geoderma.2021.115332>
+
+Taylor, K. E. (2001). Summarizing multiple aspects of model performance in a
+single diagram. *Journal of Geophysical Research*, 106, 7183-7192.
+<https://doi.org/10.1029/2000JD900719>
+
+Jolliff, J. K., Kindle, J. C., Shulman, I., Penta, B., Friedrichs, M. A. M.,
+Helber, R., and Arnone, R. A. (2009). Summary diagrams for coupled
+hydrodynamic-ecosystem model skill assessment. *Journal of Marine Systems*,
+76, 64-82. <https://doi.org/10.1016/j.jmarsys.2008.05.014>
+
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+predictions in digital soil mapping. *Geoderma*, 437, 116585.
+<https://doi.org/10.1016/j.geoderma.2023.116585>

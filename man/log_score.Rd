@@ -22,6 +22,13 @@ Returns the mean negative log predictive density at the observations. Lower
 values are better. This score requires positive predictive densities and is
 particularly sensitive to observations assigned very low density.
 }
+\details{
+\deqn{\mathrm{Log\ score} = -\frac{1}{n}\sum_{i=1}^{n}\log f_i(obs_i)}
+
+Lower values are better. The score strongly penalizes assigning near-zero
+density to observations, so it is useful for comparing full predictive
+distributions but can be dominated by tail failures.
+}
 \examples{
 log_score(0, stats::dnorm(0))
 }

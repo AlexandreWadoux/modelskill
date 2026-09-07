@@ -2,7 +2,7 @@
 % Please edit documentation in R/metrics-prediction.R
 \name{bias}
 \alias{bias}
-\title{Bias of quantitative predictions}
+\title{Mean error (ME) of quantitative predictions}
 \usage{
 bias(obs, pred, na.rm = TRUE)
 }
@@ -17,10 +17,25 @@ bias(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Mean signed error, calculated as observation minus prediction. Negative
-values indicate overprediction and zero is ideal. Missing pairs are removed
-when \code{na.rm = TRUE}; otherwise the result is \code{NA} when any pair is missing.
+Mean error (ME; also called bias) is the mean signed difference between
+observations and predictions, calculated as observation minus prediction.
+}
+\details{
+\deqn{\mathrm{ME} = \frac{1}{n}\sum_{i = 1}^{n}(obs_i - pred_i)}
+
+An ME of zero indicates no average systematic error. Negative values indicate
+overprediction on average, whereas positive values indicate underprediction
+on average. ME has the same units as the response variable. Opposing errors
+can cancel, so interpret ME together with an unsigned error measure such as
+\code{\link[=mae]{mae()}} or \code{\link[=rmse]{rmse()}}. Missing pairs are removed when \code{na.rm = TRUE}; otherwise
+the result is \code{NA} when any pair is missing.
 }
 \examples{
 bias(c(1, 2, 3), c(1, 3, 2))
+}
+\references{
+Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of
+goodness-of-fit measures in hydrologic and hydroclimatic model validation.
+\emph{Water Resources Research}, 35(1), 233-241.
+\url{doi:10.1029/1998WR900018}
 }

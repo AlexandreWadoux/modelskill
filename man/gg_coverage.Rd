@@ -47,10 +47,11 @@ A \code{ggplot2} object with \code{nominal} and \code{picp} data columns.
 Compares prediction interval coverage probability (PICP) at multiple nominal
 central prediction-interval levels. Points on the dashed 1:1 line are
 calibrated; points below it under-cover observations. This is a PICP
-reliability plot, also called an \emph{accuracy plot} in geostatistical
-uncertainty validation (Goovaerts, 2001). It is therefore an extension of a
-single PICP to multiple interval levels. The result is an ordinary ggplot
-object.
+reliability plot. Goovaerts (2001) introduced it to geostatistical
+uncertainty validation as an \emph{accuracy plot}; reliability plot is the more
+generally accepted term across probabilistic-prediction fields. It is an
+extension of a single PICP to multiple interval levels. The result is an
+ordinary ggplot object.
 }
 \details{
 Central PICP curves assess overall interval reliability, but cannot by
@@ -65,4 +66,8 @@ gg_coverage(obs, lower = list(`0.8` = c(0, 1, 2)),
 \references{
 Goovaerts, P. (2001). Geostatistical modelling of uncertainty in
 soil science. \emph{Geoderma}, 103, 3-26. \url{doi:10.1016/S0016-7061(01)00067-2}
+
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
+\url{doi:10.1016/j.geoderma.2023.116585}
 }

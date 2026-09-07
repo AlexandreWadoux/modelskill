@@ -17,9 +17,23 @@ crmse(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Root mean square error after subtracting the mean error. It measures pattern
-and scale disagreement independently of constant bias; lower is better.
+Centered RMSE (cRMSE) is the root mean square difference after removing the
+mean error from the paired errors.
+}
+\details{
+\deqn{\mathrm{cRMSE} = \sqrt{\frac{1}{n}\sum_{i = 1}^{n}
+[(obs_i - pred_i) - \mathrm{ME}]^2}}
+
+cRMSE is non-negative, has the response units, and zero is ideal. It measures
+disagreement in pattern and spread independently of a constant mean bias.
+Interpret it with \code{\link[=bias]{bias()}} because two models with identical cRMSE can have
+different systematic errors. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 crmse(1:3, c(1, 3, 2))
+}
+\references{
+Taylor, K. E. (2001). Summarizing multiple aspects of model
+performance in a single diagram. \emph{Journal of Geophysical Research}, 106,
+7183-7192. \url{doi:10.1029/2000JD900719}
 }

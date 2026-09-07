@@ -18,7 +18,8 @@ One numeric value.
 }
 \description{
 Alias for \code{\link[=nse]{nse()}} and \code{mec()}. This uppercase \code{R2()} is the model-efficiency
-coefficient; lowercase \code{r2()} remains squared Pearson correlation.
+coefficient; lowercase \code{r2()} remains squared Pearson correlation. Its
+equation, interpretation, and references are given in \code{\link[=nse]{nse()}}.
 }
 \examples{
 R2(1:3, c(1, 3, 2))

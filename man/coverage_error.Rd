@@ -23,6 +23,17 @@ Empirical \code{\link[=picp]{picp()}} minus nominal coverage \code{level}. Posit
 over-coverage and negative values mean under-coverage. The result is on the
 probability scale; multiply by 100 for percentage points.
 }
+\details{
+\deqn{\mathrm{PICP\ error}(\tau) = \mathrm{PICP}(\tau) - \tau}
+
+Zero is ideal. Positive values mean intervals cover too often (are too wide
+or over-pessimistic); negative values mean intervals cover too rarely.
+}
 \examples{
 coverage_error(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
+}
+\references{
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of
+uncertainty predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
+\url{doi:10.1016/j.geoderma.2023.116585}
 }

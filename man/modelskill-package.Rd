@@ -18,6 +18,7 @@ return ordinary ggplot objects. No spatial data class is required.
 Useful links:
 \itemize{
   \item \url{https://github.com/AlexandreWadoux/modelskill}
+  \item \url{https://alexandrewadoux.github.io/modelskill/}
   \item Report bugs at \url{https://github.com/AlexandreWadoux/modelskill/issues}
 }
 

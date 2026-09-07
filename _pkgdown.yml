@@ -1,0 +1,80 @@
+url: https://alexandrewadoux.github.io/modelskill/
+template:
+  bootstrap: 5
+  light-switch: true
+  bslib:
+    primary: "#1B6CA8"
+    link-color: "#1B6CA8"
+
+navbar:
+  structure:
+    left: [reference, articles, news]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: "Get started: model evaluation"
+          href: articles/modelskill-introduction.html
+    github:
+      icon: fa-github
+      href: https://github.com/AlexandreWadoux/modelskill
+      aria-label: GitHub repository
+
+articles:
+  - title: "Model evaluation guide"
+    navbar: "Get started"
+    contents:
+      - modelskill-introduction
+
+reference:
+  - title: Point-prediction evaluation
+    desc: Continuous-prediction error, association, agreement, and efficiency metrics.
+    contents:
+      - model_metrics
+      - bias
+      - mae
+      - mse
+      - rmse
+      - nrmse
+      - crmse
+      - correlation
+      - r2
+      - R2
+      - mec
+      - nse
+      - sd_ratio
+      - ccc
+      - extended_prediction_metrics
+      - pinball_loss
+      - kge
+  - title: Predictive-uncertainty evaluation
+    desc: Interval, quantile, and full-distribution calibration and scoring diagnostics.
+    contents:
+      - uncertainty_metrics
+      - picp
+      - coverage
+      - coverage_error
+      - interval_width
+      - interval_score
+      - qcp
+      - pit
+      - crps
+      - median_crps
+      - crps_decomposition
+      - log_score
+      - gg_coverage
+      - gg_qcp
+      - gg_pit
+      - accuracy_plot_metrics
+  - title: Summary diagrams
+    desc: Integrated graphical diagnostics for prediction and map quality.
+    contents:
+      - diagram_stats
+      - gg_taylor
+      - gg_solar
+      - gg_target
+
+authors:
+  Alexandre M.J.-C. Wadoux:
+    href: https://github.com/AlexandreWadoux

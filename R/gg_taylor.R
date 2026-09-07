@@ -29,6 +29,25 @@
 #' RMSD contours can be removed with `rmsd = FALSE`, recoloured with
 #' `rmsd_colour`, or placed at user-defined values with `rmsd_breaks`.
 #'
+#' @section Interpretation:
+#' Let sigma-star denote the prediction standard deviation divided by the
+#' observation standard deviation, and let `r` be Pearson correlation.
+#' The Taylor geometry follows
+#' \deqn{\mathrm{SDE}^{*} = \sqrt{1 + \sigma_{\mathrm{star}}^2 -
+#' 2\sigma_{\mathrm{star}}r},}
+#' where SDE* is the centred (unbiased) root mean square difference divided by
+#' the observation standard deviation. Radial distance gives `sigma_star`; the
+#' polar angle is `acos(r)`; and the reference point has a standard-deviation
+#' ratio of one and correlation of one. Points nearer the reference point have
+#' smaller unbiased error.
+#'
+#' A point inside the unit-radius arc has less variation than the observations
+#' (a smoother prediction), while a point outside it has greater variation.
+#' Points nearer the horizontal positive-correlation axis have stronger pattern
+#' agreement. The diagram does not show mean error: a model can be close to the
+#' reference point but systematically biased. Use [gg_solar()] or [gg_target()]
+#' together with [bias()] when mean error is important.
+#'
 #' @param label Logical; draw model names directly on the diagram using
 #'   `ggrepel`?
 #' @param legend Logical; colour model points by model and display a legend?
@@ -52,6 +71,10 @@
 #' An integrated approach for the evaluation of quantitative soil maps
 #' through Taylor and solar diagrams. *Geoderma*, 405, 115332.
 #' <doi:10.1016/j.geoderma.2021.115332>
+#'
+#' Taylor, K. E. (2001). Summarizing multiple aspects of model performance in a
+#' single diagram. *Journal of Geophysical Research*, 106, 7183-7192.
+#' <doi:10.1029/2000JD900719>
 #'
 #' @examples
 #' obs <- c(1, 2, 3, 4, 5)

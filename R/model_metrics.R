@@ -14,8 +14,8 @@
 #' @param na.rm Logical; whether incomplete observation-prediction pairs should
 #'   be removed. The default is `TRUE`. If `FALSE`, incomplete pairs result in
 #'   missing statistics rather than being silently removed.
-#' @param extended Logical; include extended error metrics used in spectroscopy
-#'   and quantile-regression workflows?
+#' @param extended Logical; include additional robust, scale-normalised,
+#'   percentage, and quantile-regression metrics?
 #' @param digits Integer or `NULL`. If supplied, round numeric results to this
 #'   many digits (0 to 22). `NULL` retains full numerical precision.
 #'

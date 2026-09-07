@@ -20,6 +20,13 @@ Validates already evaluated predictive-CDF values, \code{cdf_at_obs = F_i(y_i)}.
 For calibrated continuous predictive distributions, PIT values are uniform
 on zero to one. Plot them with \code{\link[=gg_pit]{gg_pit()}}.
 }
+\details{
+\deqn{u_i = F_i(obs_i)}
+
+PIT values have no individually preferred value. Across cases, a uniform
+distribution indicates calibration; systematic departures in \code{\link[=gg_pit]{gg_pit()}} can
+reveal bias or incorrect predictive dispersion.
+}
 \examples{
 pit(stats::pnorm(c(-1, 0, 1)))
 }

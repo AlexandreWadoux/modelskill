@@ -17,8 +17,24 @@ mse(obs, pred, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Mean squared observation-minus-prediction error. Lower values are better.
+Mean squared error (MSE) is the mean squared difference between observations
+and predictions.
+}
+\details{
+\deqn{\mathrm{MSE} = \frac{1}{n}\sum_{i = 1}^{n}(obs_i - pred_i)^2}
+
+MSE is non-negative and zero indicates perfect predictions. Smaller values
+indicate better agreement. Squaring gives larger errors disproportionately
+more influence, making MSE sensitive to large deviations. Its units are the
+squared units of the response variable, so \code{\link[=rmse]{rmse()}} is usually easier to
+interpret on the original response scale. Missing-value handling follows
+\code{\link[=bias]{bias()}}.
 }
 \examples{
 mse(1:3, c(1, 3, 2))
+}
+\references{
+Hodson, T. O. (2022). Root mean square error (RMSE) or mean
+absolute error (MAE): When to use them or not. \emph{Geoscientific Model
+Development Discussions}, 2022, 1-10. \url{doi:10.5194/gmd-2022-1}
 }

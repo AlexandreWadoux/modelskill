@@ -58,6 +58,24 @@
 #' displayed horizontal title is ME* and the displayed vertical title is
 #' SDE* multiplied by the sign of the standard-deviation difference.
 #'
+#' @section Interpretation:
+#' The target diagram combines the solar error decomposition
+#' \deqn{\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2}}
+#' with the sign of the prediction-versus-observation standard-deviation
+#' difference. The signed SDE coordinate distinguishes predictions with less
+#' variation than observations from predictions with greater variation; the
+#' mean-error coordinate distinguishes overprediction (negative ME*) from
+#' underprediction (positive ME*) under the `obs - pred` convention. The
+#' distance to the origin is standardized RMSE, so points near the origin are
+#' preferred.
+#'
+#' The circular contours are RMSE* references. A point near the origin is both
+#' close in mean and in spread/pattern; a point displaced along the mean-error
+#' direction is chiefly biased; and a point displaced along the signed-SDE
+#' direction chiefly differs in variability or pattern. The displayed titles
+#' intentionally retain the original implementation's visual orientation; use
+#' the coordinate definitions above when interpreting position.
+#'
 #' @section ggplot2 customization:
 #' Arguments that change the statistical content or core target-diagram
 #' construction are exposed directly by `gg_target()`. Ordinary appearance is
@@ -72,6 +90,11 @@
 #' integrated approach for the evaluation of quantitative soil maps through
 #' Taylor and solar diagrams. *Geoderma*, 405, 115332.
 #' <doi:10.1016/j.geoderma.2021.115332>
+#'
+#' Jolliff, J. K., Kindle, J. C., Shulman, I., Penta, B., Friedrichs, M. A. M.,
+#' Helber, R., and Arnone, R. A. (2009). Summary diagrams for coupled
+#' hydrodynamic-ecosystem model skill assessment. *Journal of Marine Systems*,
+#' 76, 64-82. <doi:10.1016/j.jmarsys.2008.05.014>
 #'
 #' @examples
 #' obs <- c(1, 2, 3, 4, 5)
@@ -144,7 +167,7 @@ gg_target <- function(
   } else if (identical(colour_by, "efficiency")) {
     data$colvar <- data$R2_NSE
     discrete_colour <- FALSE
-    if (is.null(colorval.name)) colorval.name <- "R²"
+    if (is.null(colorval.name)) colorval.name <- paste0("R", intToUtf8(0x00B2))
   } else if (identical(colour_by, "correlation")) {
     data$colvar <- data$r
     discrete_colour <- FALSE
@@ -152,7 +175,7 @@ gg_target <- function(
   } else if (identical(colour_by, "r2")) {
     data$colvar <- data$r^2
     discrete_colour <- FALSE
-    if (is.null(colorval.name)) colorval.name <- "r²"
+    if (is.null(colorval.name)) colorval.name <- paste0("r", intToUtf8(0x00B2))
   } else {
     data$colvar <- factor(data$model, levels = data$model)
     discrete_colour <- TRUE
@@ -336,11 +359,7 @@ gg_target <- function(
         na.value = "grey50",
         name = colorval.name,
         labels = function(x) {
-          format(
-            round(x, 2),
-            trim = TRUE,
-            scientific = FALSE
-          )
+          sub("\\.?0+$", "", formatC(x, format = "f", digits = 2))
         }
       ) +
       ggplot2::guides(

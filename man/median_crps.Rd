@@ -30,6 +30,19 @@ One numeric median CRPS value.
 Median of case-wise CRPS values. Lower values are better. It is a robust
 descriptive summary when a few large errors dominate mean CRPS.
 }
+\details{
+\deqn{\mathrm{median\ CRPS} = \mathrm{median}(\mathrm{CRPS}_i)}
+
+It has response units; lower values are better. Unlike mean CRPS, it
+describes a typical case and is less sensitive to a small number of very poor
+predictive distributions.
+}
 \examples{
 median_crps(0, distribution = matrix(c(-1, 1), nrow = 1))
+}
+\references{
+Hersbach, H. (2000). Decomposition of the continuous ranked
+probability score for ensemble prediction systems. \emph{Weather and
+Forecasting}, 15, 559-570.
+\url{doi:10.1175/1520-0434(2000)015\%3C0559:DOTCRP\%3E2.0.CO;2}
 }

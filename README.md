@@ -2,9 +2,9 @@
 
 # modelskill
 
-### Assessing and Visualising Predictive Model and Map Quality
+### Assessing and Visualising Continuous Prediction Model Performance
 
-`modelskill` is an R package for the **evaluation of quantitative predictions and their uncertainty**.
+`modelskill` is an R package for the **evaluation of continuous predictions and their quantified uncertainty**. It supports machine-learning regression models as readily as statistical, geostatistical, physical, and process-based prediction models. Maps are one application, not a requirement.
 
 It brings together:
 
@@ -156,7 +156,7 @@ The Taylor and solar diagram implementation builds on:
 > *Geoderma*, **405**, 115332.
 > https://doi.org/10.1016/j.geoderma.2021.115332
 
-The package originates from the scientific implementation available in [MapQualityEvaluation](https://github.com/AlexandreWadoux/MapQualityEvaluation).
+Uncertainty-validation concepts and diagnostics are discussed by Schmidinger and Heuvelink (2023), *Geoderma*, 437, 116585. <https://doi.org/10.1016/j.geoderma.2023.116585>
 
 ---
 
