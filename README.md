@@ -125,7 +125,7 @@ gg_coverage(
 
 ## Documentation
 
-A set of focused guides covers point-prediction evaluation, predictive-uncertainty validation, and summary diagrams:
+A set of focused guides covers prediction performance metrics, predictive-uncertainty validation, and summary diagrams:
 
 **[Read the online documentation](https://alexandrewadoux.github.io/modelskill/articles/point-prediction.html)**
 

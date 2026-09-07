@@ -14,7 +14,7 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: "Point-prediction evaluation"
+        - text: "Prediction performance metrics"
           href: articles/point-prediction.html
         - text: "Predictive-uncertainty evaluation"
           href: articles/predictive-uncertainty.html

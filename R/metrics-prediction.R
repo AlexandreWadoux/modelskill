@@ -304,7 +304,7 @@ ccc <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "ccc")
 
 extended_components <- function(obs, pred, na.rm = TRUE) {
   x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
-  if (is.null(x) || !length(x$obs)) return(stats::setNames(rep(NA_real_, 10), c("mdae", "rpd", "rpiq", "sep", "rer", "mape", "smape", "msle", "rmsle", "rae")))
+  if (is.null(x) || !length(x$obs)) return(stats::setNames(rep(NA_real_, 13), c("mdae", "rpd", "rpiq", "sep", "rer", "mape", "mpe", "smape", "msle", "rmsle", "rae", "rrmse", "willmott_d")))
   error <- x$obs - x$pred; root <- sqrt(mean(error^2)); n <- length(error)
   out <- c(mdae = stats::median(abs(error)),
     rpd = if (n < 2 || root == 0) NA_real_ else stats::sd(x$obs) / root,
@@ -312,11 +312,16 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
     sep = if (n < 2) NA_real_ else sqrt(sum((error - mean(error))^2) / (n - 1)),
     rer = if (root == 0) NA_real_ else diff(range(x$obs)) / root,
     mape = if (any(x$obs == 0)) NA_real_ else mean(abs(error / x$obs)),
+    mpe = if (any(x$obs == 0)) NA_real_ else 100 * mean(error / x$obs),
     smape = mean(ifelse(x$obs == 0 & x$pred == 0, 0, 2 * abs(error) / (abs(x$obs) + abs(x$pred))), na.rm = TRUE),
     msle = if (any(x$obs < 0 | x$pred < 0)) NA_real_ else mean((log1p(x$obs) - log1p(x$pred))^2),
     rmsle = NA_real_,
-    rae = if (sum(abs(x$obs - mean(x$obs))) == 0) NA_real_ else sum(abs(error)) / sum(abs(x$obs - mean(x$obs))))
+    rae = if (sum(abs(x$obs - mean(x$obs))) == 0) NA_real_ else sum(abs(error)) / sum(abs(x$obs - mean(x$obs))),
+    rrmse = if (mean(x$obs) == 0) NA_real_ else 100 * root / abs(mean(x$obs)),
+    willmott_d = NA_real_)
   out["rmsle"] <- sqrt(out["msle"])
+  potential_error <- sum((abs(x$pred - mean(x$obs)) + abs(x$obs - mean(x$obs)))^2)
+  out["willmott_d"] <- if (potential_error == 0) NA_real_ else 1 - sum(error^2) / potential_error
   out
 }
 
@@ -350,6 +355,10 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
 #' \deqn{\mathrm{MAPE} = n^{-1}\sum|e_i / obs_i|.}
 #' It is unitless; zero is ideal. It is undefined when any observation is zero
 #' and can overemphasize errors at small observed values.}
+#' \item{`mpe()`}{Mean percentage error:
+#' \deqn{\mathrm{MPE} = 100n^{-1}\sum e_i/obs_i.}
+#' It is reported in percent; zero is ideal. Positive values indicate
+#' underprediction. It is undefined when any observation is zero.}
 #' \item{`smape()`}{Symmetric mean absolute percentage error:
 #' \deqn{\mathrm{sMAPE} = n^{-1}\sum 2|e_i|/(|obs_i|+|pred_i|).}
 #' It is unitless; zero is ideal. A pair of zeros contributes zero.}
@@ -365,6 +374,14 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
 #' \deqn{\mathrm{RAE} = \sum|e_i| / \sum|obs_i-\bar{obs}|.}
 #' Zero is ideal; one equals the absolute-error benchmark from predicting the
 #' observed mean; values above one are worse.}
+#' \item{`rrmse()`}{Relative root mean square error:
+#' \deqn{\mathrm{RRMSE} = 100\,\mathrm{RMSE}/|\bar{obs}|.}
+#' It is reported in percent; zero is ideal and it is undefined for a zero
+#' observed mean.}
+#' \item{`willmott_d()`}{Willmott's original index of agreement:
+#' \deqn{d = 1 - \frac{\sum e_i^2}{\sum(|pred_i-\bar{obs}|+|obs_i-\bar{obs}|)^2}.}
+#' It ranges from zero to one for finite inputs, with one indicating perfect
+#' agreement; it can be strongly influenced by large errors.}
 #' }
 #'
 #' MAPE is undefined for zero observations; log metrics require non-negative
@@ -385,6 +402,11 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
 #'   Hyndman, R. J. and Koehler, A. B. (2006). Another look at measures of
 #'   forecast accuracy. *International Journal of Forecasting*, 22, 679-688.
 #'   <doi:10.1016/j.ijforecast.2006.03.001>
+#'
+#'   Willmott, C. J., Ackleson, S. G., Davis, R. E., Feddema, J. J., Klink,
+#'   K. M., Legates, D. R., O'Donnell, J., and Rowe, C. M. (1985). Statistics
+#'   for the evaluation and comparison of models. *Journal of Geophysical
+#'   Research*, 90, 8995-9005. <doi:10.1029/JC090iC05p08995>
 #' @name extended_prediction_metrics
 NULL
 
@@ -408,6 +430,9 @@ rer <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 mape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mape"])
 #' @rdname extended_prediction_metrics
 #' @export
+mpe <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mpe"])
+#' @rdname extended_prediction_metrics
+#' @export
 smape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["smape"])
 #' @rdname extended_prediction_metrics
 #' @export
@@ -418,6 +443,12 @@ rmsle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred,
 #' @rdname extended_prediction_metrics
 #' @export
 rae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rae"])
+#' @rdname extended_prediction_metrics
+#' @export
+rrmse <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rrmse"])
+#' @rdname extended_prediction_metrics
+#' @export
+willmott_d <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["willmott_d"])
 
 #' Quantile (pinball) loss
 #'

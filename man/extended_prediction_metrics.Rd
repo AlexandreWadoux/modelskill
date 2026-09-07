@@ -8,10 +8,13 @@
 \alias{sep}
 \alias{rer}
 \alias{mape}
+\alias{mpe}
 \alias{smape}
 \alias{msle}
 \alias{rmsle}
 \alias{rae}
+\alias{rrmse}
+\alias{willmott_d}
 \title{Extended continuous-prediction metrics}
 \usage{
 mdae(obs, pred, na.rm = TRUE)
@@ -26,6 +29,8 @@ rer(obs, pred, na.rm = TRUE)
 
 mape(obs, pred, na.rm = TRUE)
 
+mpe(obs, pred, na.rm = TRUE)
+
 smape(obs, pred, na.rm = TRUE)
 
 msle(obs, pred, na.rm = TRUE)
@@ -33,6 +38,10 @@ msle(obs, pred, na.rm = TRUE)
 rmsle(obs, pred, na.rm = TRUE)
 
 rae(obs, pred, na.rm = TRUE)
+
+rrmse(obs, pred, na.rm = TRUE)
+
+willmott_d(obs, pred, na.rm = TRUE)
 }
 \arguments{
 \item{obs}{Numeric observation vector.}
@@ -74,6 +83,10 @@ extremes.}
 \deqn{\mathrm{MAPE} = n^{-1}\sum|e_i / obs_i|.}
 It is unitless; zero is ideal. It is undefined when any observation is zero
 and can overemphasize errors at small observed values.}
+\item{\code{mpe()}}{Mean percentage error:
+\deqn{\mathrm{MPE} = 100n^{-1}\sum e_i/obs_i.}
+It is reported in percent; zero is ideal. Positive values indicate
+underprediction. It is undefined when any observation is zero.}
 \item{\code{smape()}}{Symmetric mean absolute percentage error:
 \deqn{\mathrm{sMAPE} = n^{-1}\sum 2|e_i|/(|obs_i|+|pred_i|).}
 It is unitless; zero is ideal. A pair of zeros contributes zero.}
@@ -89,6 +102,14 @@ MSLE.}
 \deqn{\mathrm{RAE} = \sum|e_i| / \sum|obs_i-\bar{obs}|.}
 Zero is ideal; one equals the absolute-error benchmark from predicting the
 observed mean; values above one are worse.}
+\item{\code{rrmse()}}{Relative root mean square error:
+\deqn{\mathrm{RRMSE} = 100\,\mathrm{RMSE}/|\bar{obs}|.}
+It is reported in percent; zero is ideal and it is undefined for a zero
+observed mean.}
+\item{\code{willmott_d()}}{Willmott's original index of agreement:
+\deqn{d = 1 - \frac{\sum e_i^2}{\sum(|pred_i-\bar{obs}|+|obs_i-\bar{obs}|)^2}.}
+It ranges from zero to one for finite inputs, with one indicating perfect
+agreement; it can be strongly influenced by large errors.}
 }
 
 MAPE is undefined for zero observations; log metrics require non-negative
@@ -109,4 +130,9 @@ spectroscopy. \emph{Trends in Analytical Chemistry}, 29, 1073-1081.
 Hyndman, R. J. and Koehler, A. B. (2006). Another look at measures of
 forecast accuracy. \emph{International Journal of Forecasting}, 22, 679-688.
 \url{doi:10.1016/j.ijforecast.2006.03.001}
+
+Willmott, C. J., Ackleson, S. G., Davis, R. E., Feddema, J. J., Klink,
+K. M., Legates, D. R., O'Donnell, J., and Rowe, C. M. (1985). Statistics
+for the evaluation and comparison of models. \emph{Journal of Geophysical
+Research}, 90, 8995-9005. \url{doi:10.1029/JC090iC05p08995}
 }
