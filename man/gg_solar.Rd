@@ -9,9 +9,10 @@ gg_solar(
   obs,
   colorval = NULL,
   colorval.name = NULL,
+  colour_by = c("efficiency", "model", "correlation", "r2"),
   x.axis_begin = -1,
   x.axis_end = 1,
-  y.axis_end = 2,
+  y.axis_end = 1.1,
   by = 0.1,
   label = FALSE,
   point_size = 7,
@@ -29,73 +30,112 @@ names must be unique; missing names are generated.}
 \item{obs}{A numeric observation vector.}
 
 \item{colorval}{Optional finite numeric vector with one value per model,
-in model order (names do not reorder values). If NULL, correlation is used.}
+in model order (names do not reorder values). When supplied, it overrides
+the continuous metric selected by \code{colour_by}.}
 
-\item{colorval.name}{Optional colour-legend title.}
+\item{colorval.name}{Optional point-colour legend title. The title can also
+be replaced afterwards with \code{labs(colour = ...)}.}
 
-\item{x.axis_begin}{Lower endpoint of the manually drawn horizontal axis.
-Axis arguments set reference-axis extents, not clipping limits.
-To zoom, add \code{\link[ggplot2:coord_cartesian]{ggplot2::coord_cartesian()}}.}
+\item{colour_by}{Character string defining point colouring. \code{"efficiency"}
+uses R-squared / NSE / MEC and is the default; \code{"model"} gives every model
+a categorical colour and model-name legend; \code{"correlation"} uses Pearson
+correlation; and \code{"r2"} uses squared Pearson correlation.}
 
-\item{x.axis_end}{Upper endpoint of the manually drawn horizontal axis.}
+\item{x.axis_begin}{Lower endpoint of the manually drawn horizontal
+reference axis.}
 
-\item{y.axis_end}{Upper endpoint of the manually drawn vertical axis.}
+\item{x.axis_end}{Upper endpoint of the manually drawn horizontal reference
+axis.}
 
-\item{by}{Spacing between manually drawn axis ticks.}
+\item{y.axis_end}{Upper endpoint of the manually drawn vertical reference
+axis. Defaults to 1.1 so that the outer correlation circle at 1 and points
+lying on it remain clearly visible.}
 
-\item{label}{Logical; draw model labels with \code{ggrepel}?}
+\item{by}{Spacing between manually drawn reference-axis ticks.}
+
+\item{label}{Logical; draw model names beside points using \code{ggrepel}?}
 
 \item{point_size}{Numeric point size.}
 
-\item{label_size}{Numeric text size for model labels.}
+\item{label_size}{Numeric size of model labels.}
 
 \item{na.rm}{Logical; remove incomplete pairs separately for each model?
 If FALSE, missing pairs cause an error because coordinates cannot be
 plotted. The default is TRUE.}
 
-\item{legend}{Logical; show the continuous point-colour legend and the
-correlation-region key? Defaults to \code{TRUE} to preserve the original plot.}
+\item{legend}{Logical; show the point-colour and correlation-region legends?}
 
-\item{reference}{Logical; draw the original correlation regions and their
-outer reference circle? Defaults to \code{TRUE}.}
+\item{reference}{Logical; draw the original correlation regions and outer
+reference circle?}
 }
 \value{
 A \code{ggplot2} plot object that can be extended with ordinary ggplot2
-layers, scales, labels, and themes.
+layers, scales, labels, themes, and coordinates.
 }
 \description{
 Creates a solar diagram comparing quantitative prediction models with an
-observation vector. The diagram plots normalized mean error against the
-standardized unbiased root mean square difference and uses correlation
-regions to provide an integrated view of model skill.
+observation vector. The horizontal coordinate is normalized mean error
+(ME*) and the vertical coordinate is standardized unbiased root mean square
+difference (SDE*).
 }
 \details{
-The default geometry, pale-yellow correlation regions, and \code{viridis}
-colour scale follow Wadoux, Walvoort, and Brus (2022) and the original
-implementation in the accompanying repository.
+The default pale-yellow correlation regions follow Wadoux, Walvoort, and
+Brus (2022). Points are coloured by the model-efficiency coefficient
+R-squared / NSE / MEC by default.
 
 Missing pairs are removed separately per model when \code{na.rm = TRUE}.
-Two complete pairs with non-zero observation SD are required. All plotted
-statistics can be retrieved with diagram_stats(). Sample SD normalization
-and the original constant-prediction convention are documented there.
+Two complete pairs with non-zero observation SD are required.
+
+By default, point colour represents the model-efficiency coefficient
+(uppercase R-squared), equivalent to NSE and MEC in modelskill. This must
+not be confused with squared Pearson correlation, available with
+\code{colour_by = "r2"}.
+
+The function returns an ordinary ggplot2 object. Styling that belongs to
+the ggplot2 ecosystem can therefore be applied after the function call.
+Use \code{labs()} for titles, \code{theme()} for typography and legend placement,
+\code{scale_colour_*()} to replace the point-colour scale, and \code{scale_fill_*()}
+to replace the correlation-region palette.
+
+Reference-axis arguments control the manually drawn solar axes rather than
+clipping limits. Observations outside those reference axes remain visible.
+To zoom while retaining equal x and y scaling, add a new \code{coord_fixed()}
+layer with the desired limits.
 }
 \section{Coordinates and labels}{
 
-The horizontal coordinate is nME and the vertical coordinate is sde.
-Axis-title placement follows the original diagram, where titles are placed
-near axis ends rather than in ordinary Cartesian positions. Use labs()
-to override titles. The reference regions retain the original rounded radii;
-their interpretation requires the normalization assumptions in diagram_stats().
+The horizontal coordinate is normalized mean error (nME; ME*) and the
+vertical coordinate is standardized unbiased root mean square difference
+(sde; SDE*). The reference regions retain the rounded radii from the
+original implementation; their interpretation requires the normalization
+assumptions documented in \code{\link[=diagram_stats]{diagram_stats()}}.
+}
+
+\section{ggplot2 customization}{
+
+Arguments that change the statistical content or core diagram construction
+are exposed directly by \code{gg_solar()}. Ordinary appearance is intentionally
+left to ggplot2. For example, users can add \code{labs()}, \code{theme()}, a replacement
+\code{scale_colour_*()} or \code{scale_fill_*()}, or a replacement \code{coord_fixed()}.
 }
 
 \examples{
 obs <- c(1, 2, 3, 4, 5)
 mods <- list(perfect = obs, biased = obs + 1)
-gg_solar(mods, obs, label = TRUE, x.axis_begin = -1,
-         x.axis_end = 1, y.axis_end = 2, by = 0.2)
 
-# Hide legends or the reference geometry when preparing a custom plot.
-gg_solar(mods, obs, legend = FALSE, reference = FALSE)
+# Default: point colour represents R-squared / NSE / MEC.
+gg_solar(mods, obs)
+
+# Give every model a categorical colour and a model-name legend.
+gg_solar(mods, obs, colour_by = "model")
+
+# Write model names directly beside points.
+gg_solar(mods, obs, label = TRUE)
+
+# Standard ggplot2 customization.
+gg_solar(mods, obs) +
+  ggplot2::labs(title = "Model performance") +
+  ggplot2::theme(legend.position = "bottom")
 }
 \references{
 Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
