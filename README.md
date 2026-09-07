@@ -1,110 +1,168 @@
 <img src="man/figures/logo.png" align="right" height="165" alt="modelskill logo" />
 
-# <span style="color:#263746;">model</span><span style="color:#5B8DB8;">skill</span>
+# modelskill
 
 ### Assessing and Visualising Predictive Model and Map Quality
 
-`modelskill` provides common validation statistics, predictive-uncertainty
-validation, and graphical summary diagnostics including Taylor, solar and
-target diagrams.
+`modelskill` is an R package for the **evaluation of quantitative predictions and their uncertainty**.
 
-All plotting functions return standard `ggplot2` objects, so figures can be modified using the usual `ggplot2` syntax. Numeric vectors, lists, matrices and data frames are supported; no spatial object or external dataset is required.
+It brings together:
 
-> **Development status**  
-> `modelskill` is currently under active development and has not yet been submitted to CRAN.
+* statistics for evaluating continuous predictions,
+* statistics for evaluating quantified uncertainty, and
+* graphical summary and diagnostic tools, including **Taylor, solar and target diagrams**.
+
+All plotting functions return standard `ggplot2` objects, allowing figures to be customised using the usual `ggplot2` syntax.
+
+<br clear="right"/>
 
 ---
 
-## Get started
+## Main features
 
-A complete introduction to the package, including interpretation of the validation indices and examples of the Taylor, solar and target diagrams, is available in the package vignette:
+| Task                                                        | Main functions                                                                                                                                          |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Statistics for the evaluation of continuous predictions** | `model_metrics()`, `rmse()`, `mae()`, `bias()`, `mse()`, `mec()`, `r2()`, `ccc()`, `nse()`, `kge()` and others                                          |
+| **Statistics for the evaluation of quantified uncertainty** | `uncertainty_metrics()`, `coverage()`, `coverage_error()`, `interval_width()`, `interval_score()`, `crps()`, `log_score()`, `pinball_loss()` and others |
+| **Summary diagrams and diagnostic plots**                   | `gg_taylor()`, `gg_solar()`, `gg_target()`, `gg_coverage()`, `gg_pit()`, `gg_qcp()`                                                                     |
 
-**[Evaluating quantitative models with modelskill](vignettes/modelskill-introduction.Rmd)**
+---
 
-After installation, the vignette can also be opened directly in R:
+## Installation
+
+Install the development version from GitHub:
 
 ```r
-install.packages("remotes") # once
+install.packages("remotes")
 remotes::install_github("AlexandreWadoux/modelskill")
-vignette("modelskill-introduction", package = "modelskill")
 ```
 
-## Example
+Then load the package:
 
 ```r
 library(modelskill)
+```
+
+> **Development status:** `modelskill` is currently under active development and has not yet been submitted to CRAN.
+
+---
+
+## Quick example
+
+```r
+library(modelskill)
+
 obs <- seq(1, 10, length.out = 40)
+
 models <- list(
   Accurate = obs + 0.3 * sin(seq_along(obs)),
   Biased = obs + 1,
   Smoothed = mean(obs) + 0.65 * (obs - mean(obs))
 )
-indices <- model_metrics(models, obs)
-indices
-diagram_stats(models, obs)
 
-gg_taylor(models, obs, label = TRUE)
-gg_solar(models, obs, colorval = indices$NSE,
-         colorval.name = "NSE", label = TRUE)
-gg_target(models, obs, colorval = indices$NSE,
-          colorval.name = "NSE", label = TRUE)
+# Evaluate predictive performance
+model_metrics(models, obs)
 
-# Uncertainty calibration and sharpness for a 95% prediction interval
-lower95 <- models$Accurate - 1.96
-upper95 <- models$Accurate + 1.96
-uncertainty_metrics(obs, lower = lower95, upper = upper95, level = .95)
+# Summary diagrams
+gg_taylor(models, obs)
+gg_solar(models, obs)
+gg_target(models, obs)
+```
 
-gg_coverage(obs,
-  lower = list(`0.80` = models$Accurate - 1.282, `0.95` = lower95),
-  upper = list(`0.80` = models$Accurate + 1.282, `0.95` = upper95)
-)
+### Graphical model evaluation
 
-p <- gg_taylor(models, obs)
-p + ggplot2::labs(title = "Model comparison") +
+<p align="center">
+  <img src="review/taylor-approved.png" width="32%" alt="Taylor diagram" />
+  <img src="review/solar-approved.png" width="32%" alt="Solar diagram" />
+  <img src="review/target-approved.png" width="32%" alt="Target diagram" />
+</p>
+
+The diagrams provide complementary summaries of model performance. Because they are returned as `ggplot2` objects, they can be modified directly:
+
+```r
+gg_taylor(models, obs) +
+  ggplot2::labs(title = "Model comparison") +
   ggplot2::theme_minimal()
 ```
 
-Errors are observation minus prediction. Original sample-SD normalization is
-retained. Missing values are paired separately for each model by default.
-Undefined correlations for constant predictions are reported as NA; constant
-models remain drawable and use grey when coloured by correlation.
-See `?diagram_stats` for interpretation and finite-sample conventions.
+---
 
-Prediction intervals should be assessed for both calibration and sharpness.
-Use `uncertainty_metrics()` for prediction-interval validation, and `gg_coverage()` to compare nominal coverage with prediction
-interval coverage probability (PICP). This PICP reliability plot is also known as an **accuracy plot**
-in geostatistics (Goovaerts, 2001); with predictive means and predictive SDs it
-can draw every nominal level from 1% to 99%. `accuracy_plot_metrics()` reports
-integrated absolute, over-, and under-uncertainty deviation from its 1:1 line.
+## Evaluating quantified uncertainty
 
-For predictive distributions, `qcp()` and `gg_qcp()` assess quantile
-calibration, `pit()` and `gg_pit()` diagnose distributional calibration, and
-`crps()` / `median_crps()` support relative model comparison. Use
-`crps_decomposition()` when predictive distributions are supplied as equally
-weighted samples and a reliability component is required.
+`modelskill` also provides statistics and diagnostics for evaluating predictive uncertainty, including prediction intervals and predictive distributions.
 
-## Diagram defaults
+For example, a 95% prediction interval can be evaluated using:
 
-The original palette and diagram conventions are retained, with space reserved
-for legends and labels. These examples use NSE as the solar/target point colour.
+```r
+lower95 <- models$Accurate - 1.96
+upper95 <- models$Accurate + 1.96
 
-![Taylor diagram](review/taylor-approved.png)
+uncertainty_metrics(
+  obs,
+  lower = lower95,
+  upper = upper95,
+  level = 0.95
+)
+```
 
-![Solar diagram](review/solar-approved.png)
+Prediction-interval calibration can be visualised with `gg_coverage()`, while `gg_pit()` and `gg_qcp()` provide diagnostics for predictive distributions.
 
-![Target diagram](review/target-approved.png)
+```r
+gg_coverage(
+  obs,
+  lower = list(
+    `0.80` = models$Accurate - 1.282,
+    `0.95` = lower95
+  ),
+  upper = list(
+    `0.80` = models$Accurate + 1.282,
+    `0.95` = upper95
+  )
+)
+```
+
+---
+
+## Documentation
+
+A more complete introduction to the package, including interpretation of the validation statistics and graphical diagnostics, is available in the package vignette:
+
+**[Evaluating quantitative models with modelskill](vignettes/modelskill-introduction.Rmd)**
+
+After installation, it can also be opened directly from R:
+
+```r
+vignette("modelskill-introduction", package = "modelskill")
+```
+
+Individual functions are documented through the standard R help system. For example:
+
+```r
+?model_metrics
+?uncertainty_metrics
+?gg_taylor
+?gg_solar
+?gg_target
+```
+
+---
 
 ## Scientific reference
 
-Wadoux, A.M.J.-C., Walvoort, D.J.J. and Brus, D.J. (2022).
-An integrated approach for the evaluation of quantitative soil maps through
-Taylor and solar diagrams. *Geoderma*, 405, 115332.
-[Paper](https://doi.org/10.1016/j.geoderma.2021.115332).
+The Taylor and solar diagram implementation builds on:
 
-The package originates from the scientific implementation in
-[MapQualityEvaluation](https://github.com/AlexandreWadoux/MapQualityEvaluation).
+> Wadoux, A.M.J.-C., Walvoort, D.J.J. & Brus, D.J. (2022).
+> An integrated approach for the evaluation of quantitative soil maps through Taylor and solar diagrams.
+> *Geoderma*, **405**, 115332.
+> https://doi.org/10.1016/j.geoderma.2021.115332
+
+The package originates from the scientific implementation available in [MapQualityEvaluation](https://github.com/AlexandreWadoux/MapQualityEvaluation).
+
+---
 
 ## Author and licence
 
-Alexandre M.J.-C. Wadoux — author, maintainer and copyright holder.
-Contact: alexandre.wadoux@yahoo.fr. [MIT licence](LICENSE.md).
+**Alexandre M.J.-C. Wadoux**
+Author, maintainer and copyright holder
+
+`modelskill` is released under the [MIT License](LICENSE.md).
