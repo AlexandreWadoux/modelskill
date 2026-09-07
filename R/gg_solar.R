@@ -19,7 +19,8 @@
 #' By default, point colour represents the model-efficiency coefficient
 #' (uppercase R-squared), equivalent to NSE and MEC in modelskill. This must
 #' not be confused with squared Pearson correlation, available with
-#' `colour_by = "r2"`.
+#' `colour_by = "r2"`. The default legend title for the efficiency colour
+#' scale is simply `R²`.
 #'
 #' The function returns an ordinary ggplot2 object. Styling that belongs to
 #' the ggplot2 ecosystem can therefore be applied after the function call.
@@ -150,7 +151,7 @@ gg_solar <- function(
   } else if (identical(colour_by, "efficiency")) {
     data$colvar <- data$R2_NSE
     discrete_colour <- FALSE
-    if (is.null(colorval.name)) colorval.name <- "R² / NSE"
+    if (is.null(colorval.name)) colorval.name <- "R²"
   } else if (identical(colour_by, "correlation")) {
     data$colvar <- data$r
     discrete_colour <- FALSE
