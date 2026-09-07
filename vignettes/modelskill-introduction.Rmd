@@ -114,13 +114,16 @@ uncertainty_metrics(obs, pred = mods$Good, predictive_sd = predictive_sd)
 ```
 
 The calibration curve compares multiple nominal levels with empirical coverage.
+It is also called an **accuracy plot** in geostatistical uncertainty validation
+(Goovaerts, 2001). When predictive means and predictive standard deviations are
+available, `gg_coverage()` can calculate every 1%--99% normal interval directly.
 
 ```{r coverage}
 gg_coverage(
-  obs,
-  lower = list(`0.80` = lower80, `0.95` = lower95),
-  upper = list(`0.80` = upper80, `0.95` = upper95)
+  obs, pred = mods$Good, predictive_sd = predictive_sd
 )
+
+accuracy_plot_metrics(obs, pred = mods$Good, predictive_sd = predictive_sd)
 ```
 
 ## Taylor diagram

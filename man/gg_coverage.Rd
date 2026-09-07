@@ -2,13 +2,16 @@
 % Please edit documentation in R/gg_coverage.R
 \name{gg_coverage}
 \alias{gg_coverage}
-\title{Plot prediction-interval coverage calibration}
+\title{Plot prediction-interval coverage calibration (accuracy plot)}
 \usage{
 gg_coverage(
   obs,
-  lower,
-  upper,
+  lower = NULL,
+  upper = NULL,
   level = NULL,
+  pred = NULL,
+  predictive_sd = NULL,
+  levels = NULL,
   na.rm = TRUE,
   point_size = 3,
   line_width = 0.6
@@ -24,6 +27,13 @@ vectors is also accepted when \code{level} is supplied.}
 \item{level}{Nominal level for a single numeric lower/upper pair. It must be
 \code{NULL} when named lists are supplied.}
 
+\item{pred, predictive_sd}{Optional predictive means and predictive standard
+deviations. When supplied together, normal central intervals are generated
+for \code{levels}; do not also supply \code{lower} or \code{upper}.}
+
+\item{levels}{Nominal levels for normal predictive distributions. Defaults to
+every percentage from 1\% to 99\%.}
+
 \item{na.rm}{Logical; remove incomplete interval triplets?}
 
 \item{point_size}{Positive numeric point size.}
@@ -36,7 +46,9 @@ A \code{ggplot2} object with \code{nominal} and \code{empirical} data columns.
 \description{
 Compares empirical coverage with nominal central prediction-interval
 coverage. Points on the dashed 1:1 line are calibrated; points below it
-under-cover observations. The result is an ordinary ggplot object.
+under-cover observations. This diagnostic is also called an \emph{accuracy plot}
+in geostatistical uncertainty validation (Goovaerts, 2001). The result is an
+ordinary ggplot object.
 }
 \examples{
 obs <- c(1, 2, 3)
