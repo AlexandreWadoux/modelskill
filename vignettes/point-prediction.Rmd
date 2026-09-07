@@ -92,8 +92,15 @@ model_metrics(models, obs, extended = TRUE)
 
 For the retained pairs, let $o_i$ be observations, $p_i$ predictions,
 $e_i=o_i-p_i$, $b=\overline e$, and $n$ the number of pairs.
-$s_o,s_p$ use divisor $n-1$; $v_o,v_p,c_{op}$ are variances and covariance
-with divisor $n$. Write $A=\sum_i\lvert o_i-\bar o\rvert$ and
+$\bar o$ and $\bar p$ are the observation and prediction means.
+The sample standard deviations are
+$s_o=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}(o_i-\bar o)^2}$ and
+$s_p=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}(p_i-\bar p)^2}$.
+For concordance, the population moments are
+$v_o=\frac{1}{n}\sum_{i=1}^{n}(o_i-\bar o)^2$,
+$v_p=\frac{1}{n}\sum_{i=1}^{n}(p_i-\bar p)^2$, and
+$c_{op}=\frac{1}{n}\sum_{i=1}^{n}(o_i-\bar o)(p_i-\bar p)$.
+Write $A=\sum_i\lvert o_i-\bar o\rvert$ and
 $D=\sum_i(\lvert p_i-\bar o\rvert+\lvert o_i-\bar o\rvert)^2$.
 All sums below run over retained pairs. Undefined cases return `NA`.
 The listed ranges apply when the metric is defined; there are no universal
@@ -101,20 +108,24 @@ cutoffs for acceptable accuracy across applications.
 
 ### Core output
 
-| Column | Equation | Range, ideal, and interpretation | Reference |
+The statistic name below matches the left-hand side of its equation; the
+output column name is shown in parentheses. Pearson's $r$ is returned in
+the `correlation` column.
+
+| Statistic (output column) | Equation | Range, ideal, and interpretation | Reference |
 |:--|:--|:--|:--|
-| `bias` (ME) | $b=n^{-1}\sum e_i$ | Real; 0 ideal. Positive: underprediction; errors can cancel. Response units. | Legates & McCabe (1999) |
-| `mae` | $n^{-1}\sum\lvert e_i\rvert$ | Nonnegative; 0 ideal. Average absolute error, response units. | Willmott & Matsuura (2005) |
-| `mse` | $n^{-1}\sum e_i^2$ | Nonnegative; 0 ideal. Squared response units. | Hodson (2022) |
-| `rmse` | $\sqrt{\mathrm{MSE}}$ | Nonnegative; 0 ideal. Response units; sensitive to large errors. | Hodson (2022) |
-| `nrmse` | $\mathrm{RMSE}/s_o$ | Nonnegative; 0 ideal. 1 means RMSE equals sample observation SD; NA for constant observations. | Taylor (2001); package normalization |
-| `crmse` | $\sqrt{n^{-1}\sum(e_i-b)^2}$ | Nonnegative; 0 ideal. Removes constant bias; response units. | Taylor (2001) |
-| `correlation` | $c_{op}/\sqrt{v_ov_p}$ | [-1,1]; 1 indicates increasing linear association, not necessarily agreement. NA for either constant vector. | Legates & McCabe (1999) |
-| `r2` | $r^2$ | [0,1]; squared association, loses the sign of correlation. | Legates & McCabe (1999) |
-| `R2` (NSE/MEC) | $1-\sum e_i^2/\sum(o_i-\bar o)^2$ | At most 1; 1 ideal, 0 observed-mean benchmark, negative worse. NA for constant observations. | Nash & Sutcliffe (1970); Janssen & Heuberger (1995) |
-| `sd_ratio` | $s_p/s_o$ | Nonnegative; 1 equal spread, below 1 smoother, above 1 more variable. | Taylor (2001) |
-| `ccc` | $2c_{op}/[v_o+v_p+(\bar o-\bar p)^2]$ | [-1,1]; 1 ideal agreement. Package returns NA for constant observations and 0 for constant predictions with varying observations. | Lin (1989) |
-| `Cb` | $2\sqrt{v_ov_p}/[v_o+v_p+(\bar o-\bar p)^2]$ | [0,1]; 1 equal means and SDs, irrespective of correlation. Same constant-input policy as CCC. | Lin (1989) |
+| ME (`bias`) | $\mathrm{ME}=\frac{1}{n}\sum_{i=1}^{n}(o_i-p_i)$ | Real; 0 ideal. Positive: underprediction; errors can cancel. Response units. | Legates & McCabe (1999) |
+| MAE (`mae`) | $\mathrm{MAE}=\frac{1}{n}\sum_{i=1}^{n}\lvert o_i-p_i\rvert$ | Nonnegative; 0 ideal. Average absolute error, response units. | Willmott & Matsuura (2005) |
+| MSE (`mse`) | $\mathrm{MSE}=\frac{1}{n}\sum_{i=1}^{n}(o_i-p_i)^2$ | Nonnegative; 0 ideal. Squared response units. | Hodson (2022) |
+| RMSE (`rmse`) | $\mathrm{RMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(o_i-p_i)^2}$ | Nonnegative; 0 ideal. Response units; sensitive to large errors. | Hodson (2022) |
+| NRMSE (`nrmse`) | $\mathrm{NRMSE}=\frac{\mathrm{RMSE}}{s_o}$ | Nonnegative; 0 ideal. 1 means RMSE equals sample observation SD; NA for constant observations. | Taylor (2001); package normalization |
+| cRMSE (`crmse`) | $\mathrm{cRMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}[(o_i-p_i)-\mathrm{ME}]^2}$ | Nonnegative; 0 ideal. Removes constant bias; response units. | Taylor (2001) |
+| Pearson's $r$ (`correlation`) | $r=\frac{\sum_{i=1}^{n}(o_i-\bar o)(p_i-\bar p)}{\sqrt{\sum_{i=1}^{n}(o_i-\bar o)^2\sum_{i=1}^{n}(p_i-\bar p)^2}}$ | [-1,1]; 1 indicates increasing linear association, not necessarily agreement. NA for either constant vector. | Legates & McCabe (1999) |
+| Squared Pearson's $r$, $r^2$ (`r2`) | $r^2=\frac{[\sum_{i=1}^{n}(o_i-\bar o)(p_i-\bar p)]^2}{\sum_{i=1}^{n}(o_i-\bar o)^2\sum_{i=1}^{n}(p_i-\bar p)^2}$ | [0,1]; squared association, loses the sign of correlation. | Legates & McCabe (1999) |
+| $R^2$ / NSE / MEC (`R2`) | $R^2=1-\frac{\sum_{i=1}^{n}(o_i-p_i)^2}{\sum_{i=1}^{n}(o_i-\bar o)^2}$ | At most 1; 1 ideal, 0 observed-mean benchmark, negative worse. NA for constant observations. | Nash & Sutcliffe (1970); Janssen & Heuberger (1995) |
+| SD ratio (`sd_ratio`) | $\mathrm{SD\ ratio}=\frac{s_p}{s_o}$ | Nonnegative; 1 equal spread, below 1 smoother, above 1 more variable. | Taylor (2001) |
+| CCC (`ccc`) | $\mathrm{CCC}=\frac{2c_{op}}{v_o+v_p+(\bar o-\bar p)^2}$ | [-1,1]; 1 ideal agreement. Package returns NA for constant observations and 0 for constant predictions with varying observations. | Lin (1989) |
+| $C_b$ (`Cb`) | $C_b=\frac{2\sqrt{v_ov_p}}{v_o+v_p+(\bar o-\bar p)^2}$ | [0,1]; 1 equal means and SDs, irrespective of correlation. Same constant-input policy as CCC. | Lin (1989) |
 
 ### Extended output (`extended = TRUE`)
 
