@@ -56,13 +56,13 @@ test_that("prediction metric validation and edge cases are explicit", {
   expect_true(is.na(nse(rep(1, 3), 1:3)))
 })
 
-test_that("model_metrics exposes canonical and legacy columns", {
+test_that("model_metrics exposes one column per statistic", {
   got <- model_metrics(list(a = 1:3, b = c(1, 3, 2)), 1:3)
   expect_equal(got$model, c("a", "b"))
   expect_equal(got$rmse, c(0, sqrt(2 / 3)))
-  expect_equal(got$RMSE, got$rmse)
-  expect_equal(got$NSE, got$nse)
-  expect_equal(got$rhoC, got$ccc)
+  expect_false(any(c("ME", "RMSE", "NSE", "MEC", "nse", "rhoC") %in% names(got)))
+  expect_equal(got$R2, c(1, 0))
+  expect_equal(got$ccc, c(1, 0.5))
   extended <- model_metrics(list(a = 1:3), 1:3, extended = TRUE)
-  expect_true(all(c("mdae", "rpd", "rpiq", "sep", "rer", "mape", "mpe", "smape", "msle", "rmsle", "rae", "rrmse", "willmott_d", "MEC", "R2") %in% names(extended)))
+  expect_true(all(c("mdae", "rpd", "rpiq", "sep", "rer", "mape", "mpe", "smape", "msle", "rmsle", "rae", "rrmse", "willmott_d", "kge", "R2") %in% names(extended)))
 })

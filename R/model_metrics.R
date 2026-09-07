@@ -1,8 +1,9 @@
 #' Calculate prediction-validation metrics for one or more models
 #'
 #' Applies the individual prediction metrics to one or more prediction vectors.
-#' Canonical lower-case columns are returned together with legacy upper-case
-#' columns retained for compatibility with earlier versions of `modelskill`.
+#' Each statistic is returned once. Efficiency is named `R2`; standalone
+#' [nse()] and [mec()] remain aliases. See the linked metric help pages for
+#' equations, references, and interpretation.
 #'
 #' Errors are observation minus prediction. See [bias()], [crmse()], [nse()],
 #' and [ccc()] for definitions and interpretation.
@@ -15,7 +16,7 @@
 #'   be removed. The default is `TRUE`. If `FALSE`, incomplete pairs result in
 #'   missing statistics rather than being silently removed.
 #' @param extended Logical; include additional robust, scale-normalised,
-#'   percentage, and quantile-regression metrics?
+#'   percentage, agreement, and KGE metrics?
 #' @param digits Integer or `NULL`. If supplied, round numeric results to this
 #'   many digits (0 to 22). `NULL` retains full numerical precision.
 #'
@@ -35,8 +36,17 @@
 #' @seealso [diagram_stats()], [gg_taylor()], [gg_solar()], [gg_target()]
 #' @return A base data frame with one row per model and canonical columns
 #'   `model`, `bias`, `mae`, `mse`, `rmse`, `nrmse`, `crmse`, `correlation`,
-#'   `r2`, `nse`, `sd_ratio`, and `ccc`. Legacy columns `ME`, `MAE`, `RMSE`,
-#'   `r`, `NSE`, `rhoC`, and `Cb` are also retained.
+#'   `r2`, `R2`, `sd_ratio`, `ccc`, and `Cb`. With `extended = TRUE`, adds
+#'   `mdae`, `rpd`, `rpiq`, `sep`, `rer`, `mape`, `mpe`, `smape`, `msle`,
+#'   `rmsle`, `rae`, `rrmse`, `willmott_d`, and `kge`.
+#'   Duplicate columns ME, MAE, RMSE, r, nse, NSE, MEC, and rhoC have been
+#'   removed; use bias, mae, rmse, correlation, R2, and ccc instead.
+#' @section Bias correction factor:
+#' `Cb` is Lin's bias correction factor, using population SDs and means:
+#' \deqn{C_b = \frac{2\sigma_o\sigma_p}{\sigma_o^2+\sigma_p^2+(\mu_o-\mu_p)^2}.}
+#' It ranges from zero to one; one indicates equal means and SDs. It does
+#' not measure correlation. For defined correlation, CCC equals r times Cb.
+#' See [ccc()] and Lin (1989), <doi:10.2307/2532051>.
 #'
 #' @references
 #' Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
@@ -70,15 +80,13 @@ model_metrics <- function(mods, obs, na.rm = TRUE, extended = FALSE, digits = NU
     }
   })
   canonical <- as.data.frame(do.call(rbind, rows))
-  result <- data.frame(model = names(mods), canonical[, setdiff(names(canonical), "cb"), drop = FALSE],
-    ME = canonical$bias, MAE = canonical$mae, RMSE = canonical$rmse,
-    r = canonical$correlation, NSE = canonical$nse, rhoC = canonical$ccc,
-    Cb = canonical$cb, check.names = FALSE)
-  result$MEC <- result$nse
-  result$R2 <- result$nse
+  result <- data.frame(model = names(mods), canonical, check.names = FALSE)
+  names(result)[names(result) == "nse"] <- "R2"
+  names(result)[names(result) == "cb"] <- "Cb"
   if (extended) {
     extra <- do.call(rbind, lapply(mods, function(pred) extended_components(obs, pred, na.rm)))
     result <- cbind(result, as.data.frame(extra))
+    result$kge <- vapply(mods, function(pred) kge(obs, pred, na.rm), numeric(1))
   }
   rownames(result) <- names(mods)
   numeric <- vapply(result, is.numeric, logical(1))

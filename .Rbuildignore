@@ -10,4 +10,6 @@
 ^Meta$
 ^docs$
 ^pkgdown$
+^CITATION\.cff$
+^_pkgdown\.yml$
 ^vignettes/.*\\.html$

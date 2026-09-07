@@ -46,8 +46,7 @@ bias <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "bias")
 #'   <doi:10.3354/cr030079>
 #'
 #'   Hodson, T. O. (2022). Root mean square error (RMSE) or mean absolute error
-#'   (MAE): When to use them or not. *Geoscientific Model Development
-#'   Discussions*, 2022, 1-10. <doi:10.5194/gmd-2022-1>
+#'   (MAE): When to use them or not. *Geoscientific Model Development*, 15, 5481-5487. <doi:10.5194/gmd-15-5481-2022>
 #' @examples mae(1:3, c(1, 3, 2))
 #' @export
 mae <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "mae")
@@ -69,7 +68,7 @@ mae <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "mae")
 #' @return One numeric value.
 #' @references Hodson, T. O. (2022). Root mean square error (RMSE) or mean
 #'   absolute error (MAE): When to use them or not. *Geoscientific Model
-#'   Development Discussions*, 2022, 1-10. <doi:10.5194/gmd-2022-1>
+#'   Development*, 15, 5481-5487. <doi:10.5194/gmd-15-5481-2022>
 #' @examples mse(1:3, c(1, 3, 2))
 #' @export
 mse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "mse")
@@ -103,8 +102,7 @@ mse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "mse")
 #'   <doi:10.3354/cr030079>
 #'
 #'   Hodson, T. O. (2022). Root mean square error (RMSE) or mean absolute error
-#'   (MAE): When to use them or not. *Geoscientific Model Development
-#'   Discussions*, 2022, 1-10. <doi:10.5194/gmd-2022-1>
+#'   (MAE): When to use them or not. *Geoscientific Model Development*, 15, 5481-5487. <doi:10.5194/gmd-15-5481-2022>
 #' @examples rmse(1:3, c(1, 3, 2))
 #' @export
 rmse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "rmse")
@@ -292,7 +290,9 @@ sd_ratio <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "sd
 #' zero indicate little concordance; negative values indicate discordant linear
 #' association. Unlike Pearson correlation, CCC is reduced by mean and scale
 #' differences. Population variances (divisor n) are used, matching the
-#' established package convention. Missing-value handling follows [bias()].
+#' established package convention. The package returns NA for constant
+#' observations or fewer than two pairs, and zero for constant predictions
+#' with varying observations. Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Lin, L. I.-K. (1989). A concordance correlation coefficient to
@@ -347,7 +347,7 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
 #' \item{`sep()`}{Bias-corrected standard error of prediction:
 #' \deqn{\mathrm{SEP} = \sqrt{\sum(e_i - \mathrm{ME})^2/(n-1)}.}
 #' It has response units; zero is ideal and constant bias is removed.}
-#' \item{`rer()`}{Ratio of error to range:
+#' \item{`rer()`}{Range-to-RMSE ratio:
 #' \deqn{\mathrm{RER} = (\max(obs)-\min(obs))/\mathrm{RMSE}.}
 #' Larger values are better, but the observed range makes it sensitive to
 #' extremes.}
@@ -358,10 +358,14 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
 #' \item{`mpe()`}{Mean percentage error:
 #' \deqn{\mathrm{MPE} = 100n^{-1}\sum e_i/obs_i.}
 #' It is reported in percent; zero is ideal. Positive values indicate
-#' underprediction. It is undefined when any observation is zero.}
+#' underprediction when observations are strictly positive. For negative
+#' observations the relative-error sign reverses. Its range is unbounded;
+#' opposite relative errors can cancel. It is NA when any retained observation
+#' is zero and unstable near zero.}
 #' \item{`smape()`}{Symmetric mean absolute percentage error:
 #' \deqn{\mathrm{sMAPE} = n^{-1}\sum 2|e_i|/(|obs_i|+|pred_i|).}
-#' It is unitless; zero is ideal. A pair of zeros contributes zero.}
+#' It ranges from zero to two; zero is ideal. A pair of zeros contributes zero.
+#' Multiply by 100 to express it as a percentage.}
 #' \item{`msle()`}{Mean squared logarithmic error:
 #' \deqn{\mathrm{MSLE} = n^{-1}\sum[\log(1+obs_i)-\log(1+pred_i)]^2.}
 #' It is non-negative; zero is ideal and emphasizes relative differences. It
@@ -377,15 +381,24 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
 #' \item{`rrmse()`}{Relative root mean square error:
 #' \deqn{\mathrm{RRMSE} = 100\,\mathrm{RMSE}/|\bar{obs}|.}
 #' It is reported in percent; zero is ideal and it is undefined for a zero
-#' observed mean.}
+#' observed mean. Its range is zero to infinity; values near a zero mean are
+#' unstable. This is a mean-normalized convention, distinct from [nrmse()].}
 #' \item{`willmott_d()`}{Willmott's original index of agreement:
 #' \deqn{d = 1 - \frac{\sum e_i^2}{\sum(|pred_i-\bar{obs}|+|obs_i-\bar{obs}|)^2}.}
 #' It ranges from zero to one for finite inputs, with one indicating perfect
-#' agreement; it can be strongly influenced by large errors.}
+#' agreement; it can be strongly influenced by large errors. A zero denominator
+#' (identical constant observations and predictions) returns NA, not one.}
 #' }
 #'
 #' MAPE is undefined for zero observations; log metrics require non-negative
-#' values. Missing-value handling follows [bias()].
+#' values. MAPE and sMAPE return fractions, whereas MPE and RRMSE return
+#' percentages; this preserves existing behaviour. RPD, RPIQ, and RER return
+#' NA when RMSE is zero. SEP requires two pairs. RAE requires nonconstant
+#' observations. IQR uses R's default type-7 quantiles. Missing-value handling
+#' follows [bias()]. MdAE, RPD, RPIQ, SEP, RER, MAPE, and RAE have
+#' non-negative ranges with no universal acceptable-performance thresholds.
+#' The log1p convention for MSLE is an explicit package
+#' choice; percentage metrics need a meaningful zero on the response scale.
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean
@@ -484,8 +497,10 @@ pinball_loss <- function(obs, pred, level = .5, na.rm = TRUE) {
 #' \deqn{\mathrm{KGE} = 1 - \sqrt{(r-1)^2 + (\alpha-1)^2 + (\beta-1)^2}}
 #'
 #' One is ideal. Values closer to one indicate agreement in linear association,
-#' spread, and mean. KGE is undefined when observed means or standard deviations
-#' are zero. As with NSE, avoid treating KGE as the only measure of model
+#' spread, and mean. The range is unbounded below and at most one. Zero is
+#' not the observed-mean benchmark used for NSE. KGE is undefined when the
+#' observed mean or either vector's standard deviation is zero, or fewer than
+#' two pairs remain. As with NSE, avoid treating KGE as the only measure of model
 #' quality; inspect its components and complementary error metrics.
 #' @inheritParams bias
 #' @return One numeric value; one is ideal.

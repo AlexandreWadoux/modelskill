@@ -33,3 +33,10 @@ Compatibility: missing/nonfinite colour values, numeric logical flags, duplicate
 names and invalid dimensions now error. digits is limited to integers 0 through
 22. Degenerate metric outputs are explicitly defined above. No existing arguments
 were renamed or reordered.
+## Prediction metric audit
+
+* `model_metrics()` now reports each statistic once. Duplicate ME, MAE, RMSE,
+  r, nse/NSE/MEC, and rhoC columns are removed in favour of bias, mae, rmse,
+  correlation, R2, and ccc. Standalone efficiency aliases remain available.
+* Extended output includes KGE. Added independent numerical reference tests
+  and a vignette table of equations, ranges, conventions, and references.

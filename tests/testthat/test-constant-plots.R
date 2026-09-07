@@ -28,7 +28,7 @@ test_that("all-constant predictions render with default or supplied colours", {
   for (fn in list(gg_taylor, gg_solar, gg_target)) {
     expect_warning(print(fn(rep(3, 5), obs, label = TRUE)), NA)
   }
-  nse <- model_metrics(rep(3, 5), obs)$NSE
+  nse <- model_metrics(rep(3, 5), obs)$R2
   for (fn in list(gg_solar, gg_target)) {
     expect_warning(print(fn(rep(3, 5), obs, colorval = nse,
                             colorval.name = "NSE", label = TRUE)), NA)

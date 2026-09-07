@@ -48,6 +48,5 @@ model performance. \emph{Climate Research}, 30, 79-82.
 \url{doi:10.3354/cr030079}
 
 Hodson, T. O. (2022). Root mean square error (RMSE) or mean absolute error
-(MAE): When to use them or not. \emph{Geoscientific Model Development
-Discussions}, 2022, 1-10. \url{doi:10.5194/gmd-2022-1}
+(MAE): When to use them or not. \emph{Geoscientific Model Development}, 15, 5481-5487. \url{doi:10.5194/gmd-15-5481-2022}
 }

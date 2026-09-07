@@ -81,12 +81,97 @@ mean-benchmark efficiency coefficient. Lowercase `r2()` is squared Pearson
 correlation and must not be interpreted as the efficiency coefficient.
 Concordance (`ccc()`) combines correlation with level and spread agreement.
 
-For specialised workflows, request robust, relative, percentage, and quantile
-loss metrics explicitly:
+For specialised workflows, request robust, relative, percentage, agreement,
+and KGE metrics explicitly:
 
 ```{r extended}
 model_metrics(models, obs, extended = TRUE)
 ```
+
+## Equations, interpretation, and references
+
+For the retained pairs, let $o_i$ be observations, $p_i$ predictions,
+$e_i=o_i-p_i$, $b=\overline e$, and $n$ the number of pairs.
+$s_o,s_p$ use divisor $n-1$; $v_o,v_p,c_{op}$ are variances and covariance
+with divisor $n$. Write $A=\sum_i\lvert o_i-\bar o\rvert$ and
+$D=\sum_i(\lvert p_i-\bar o\rvert+\lvert o_i-\bar o\rvert)^2$.
+All sums below run over retained pairs. Undefined cases return `NA`.
+The listed ranges apply when the metric is defined; there are no universal
+cutoffs for acceptable accuracy across applications.
+
+### Core output
+
+| Column | Equation | Range, ideal, and interpretation | Reference |
+|:--|:--|:--|:--|
+| `bias` (ME) | $b=n^{-1}\sum e_i$ | Real; 0 ideal. Positive: underprediction; errors can cancel. Response units. | Legates & McCabe (1999) |
+| `mae` | $n^{-1}\sum\lvert e_i\rvert$ | Nonnegative; 0 ideal. Average absolute error, response units. | Willmott & Matsuura (2005) |
+| `mse` | $n^{-1}\sum e_i^2$ | Nonnegative; 0 ideal. Squared response units. | Hodson (2022) |
+| `rmse` | $\sqrt{\mathrm{MSE}}$ | Nonnegative; 0 ideal. Response units; sensitive to large errors. | Hodson (2022) |
+| `nrmse` | $\mathrm{RMSE}/s_o$ | Nonnegative; 0 ideal. 1 means RMSE equals sample observation SD; NA for constant observations. | Taylor (2001); package normalization |
+| `crmse` | $\sqrt{n^{-1}\sum(e_i-b)^2}$ | Nonnegative; 0 ideal. Removes constant bias; response units. | Taylor (2001) |
+| `correlation` | $c_{op}/\sqrt{v_ov_p}$ | [-1,1]; 1 indicates increasing linear association, not necessarily agreement. NA for either constant vector. | Legates & McCabe (1999) |
+| `r2` | $r^2$ | [0,1]; squared association, loses the sign of correlation. | Legates & McCabe (1999) |
+| `R2` (NSE/MEC) | $1-\sum e_i^2/\sum(o_i-\bar o)^2$ | At most 1; 1 ideal, 0 observed-mean benchmark, negative worse. NA for constant observations. | Nash & Sutcliffe (1970); Janssen & Heuberger (1995) |
+| `sd_ratio` | $s_p/s_o$ | Nonnegative; 1 equal spread, below 1 smoother, above 1 more variable. | Taylor (2001) |
+| `ccc` | $2c_{op}/[v_o+v_p+(\bar o-\bar p)^2]$ | [-1,1]; 1 ideal agreement. Package returns NA for constant observations and 0 for constant predictions with varying observations. | Lin (1989) |
+| `Cb` | $2\sqrt{v_ov_p}/[v_o+v_p+(\bar o-\bar p)^2]$ | [0,1]; 1 equal means and SDs, irrespective of correlation. Same constant-input policy as CCC. | Lin (1989) |
+
+### Extended output (`extended = TRUE`)
+
+| Column | Equation | Range, ideal, and interpretation | Reference / convention |
+|:--|:--|:--|:--|
+| `mdae` | $\mathrm{median}(\lvert e_i\rvert)$ | Nonnegative; 0 ideal. Robust typical error, response units. | Hyndman & Koehler (2006) |
+| `rpd` | $s_o/\mathrm{RMSE}$ | Nonnegative; larger is better. NA at perfect prediction. | Bellon-Maurel et al. (2010) |
+| `rpiq` | $\mathrm{IQR}(o)/\mathrm{RMSE}$ | Nonnegative; larger is better. Type-7 quartiles; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
+| `sep` | $\sqrt{\sum(e_i-b)^2/(n-1)}$ | Nonnegative; 0 ideal. Bias removed; at least two pairs. | Bellon-Maurel et al. (2010) |
+| `rer` | $(\max o-\min o)/\mathrm{RMSE}$ | Nonnegative; larger is better; sensitive to extremes; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
+| `mape` | $n^{-1}\sum\lvert e_i/o_i\rvert$ | Nonnegative fraction; 0 ideal. Multiply by 100 for percent; NA for any zero observation. | Hyndman & Koehler (2006) |
+| `mpe` | $100n^{-1}\sum e_i/o_i$ | Unbounded percent; 0 ideal. Positive means underprediction only for positive observations; NA at zero. | Hyndman & Koehler (2006); obs-minus-pred sign |
+| `smape` | $n^{-1}\sum 2\lvert e_i\rvert/(\lvert o_i\rvert+\lvert p_i\rvert)$ | [0,2] fraction; 0 ideal. Both-zero pair contributes 0; multiply by 100 for percent. | Hyndman & Koehler (2006); absolute-denominator variant |
+| `msle` | $n^{-1}\sum[\log(1+o_i)-\log(1+p_i)]^2$ | Nonnegative; 0 ideal. NA for negative inputs; target units affect log1p. | Hodson (2022), transformed errors; package log1p convention |
+| `rmsle` | $\sqrt{\mathrm{MSLE}}$ | Nonnegative; 0 ideal. Same domain as MSLE. | Hodson (2022); package log1p convention |
+| `rae` | $\sum\lvert e_i\rvert/A$ | Nonnegative; 0 ideal, 1 observed-mean absolute-error benchmark; NA if A=0. | Hyndman & Koehler (2006); mean benchmark |
+| `rrmse` | $100\mathrm{RMSE}/\lvert\bar o\rvert$ | Nonnegative percent; 0 ideal; NA at zero mean, unstable near zero. | Willmott et al. (1985), RMSE; package absolute-mean normalization |
+| `willmott_d` | $1-\sum e_i^2/D$ | [0,1]; 1 ideal. NA if D=0 (identical constant vectors); sensitive to large errors. | Willmott et al. (1985) |
+| `kge` | $1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar p/\bar o-1)^2}$ | At most 1; 1 ideal. Zero is not NSE's benchmark. NA for zero observation mean or either constant vector. | Gupta et al. (2009) |
+
+### Redundancy and comparison conventions
+
+Each statistic now appears once: use `bias`, `mae`, `rmse`, `correlation`,
+`R2`, and `ccc` instead of the former duplicate columns `ME`, `MAE`, `RMSE`,
+`r`, `nse`/`NSE`/`MEC`, and `rhoC`. Standalone `nse()` and `mec()` remain
+aliases for `R2()`. `Cb` is retained because it measures a separate component.
+KGE is included in extended output. Quantile loss is requested separately
+with `pinball_loss()`, since it requires a scientifically chosen quantile.
+
+Related metrics are not independent evidence: MSE is RMSE squared, RPD is
+the reciprocal of NRMSE when defined, and SEP equals cRMSE times
+$\sqrt{n/(n-1)}$. These have different units or established interpretations
+and remain available. With identical pairs,
+$R^2=1-n\,\mathrm{NRMSE}^2/(n-1)$ and
+$\mathrm{RMSE}^2=b^2+\mathrm{cRMSE}^2$.
+
+Missing pairs are removed separately for each model by default; use a shared
+complete validation set for fair comparisons. With `na.rm = FALSE`, missing
+pairs produce missing metrics. Core correlation, efficiency, SD ratio, CCC,
+and Cb require at least two pairs and varying observations. Percentage errors
+need a meaningful zero and are unstable with small denominators. In particular,
+the existing MAPE/sMAPE fraction scale is preserved, unlike MPE/RRMSE's percent
+scale.
+
+### References
+
+* Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of goodness-of-fit measures in hydrologic and hydroclimatic model validation. *Water Resources Research*, 35, 233-241. <https://doi.org/10.1029/1998WR900018>
+* Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean absolute error (MAE) over the root mean square error (RMSE) in assessing average model performance. *Climate Research*, 30, 79-82. <https://doi.org/10.3354/cr030079>
+* Hodson, T. O. (2022). Root-mean-square error (RMSE) or mean absolute error (MAE): when to use them or not. *Geoscientific Model Development*, 15, 5481-5487. <https://doi.org/10.5194/gmd-15-5481-2022>
+* Taylor, K. E. (2001). Summarizing multiple aspects of model performance in a single diagram. *Journal of Geophysical Research*, 106, 7183-7192. <https://doi.org/10.1029/2000JD900719>
+* Nash, J. E. and Sutcliffe, J. V. (1970). River flow forecasting through conceptual models part I. *Journal of Hydrology*, 10, 282-290. <https://doi.org/10.1016/0022-1694(70)90255-6>
+* Janssen, P. H. M. and Heuberger, P. S. C. (1995). Calibration of process-oriented models. *Ecological Modelling*, 83, 55-66. <https://doi.org/10.1016/0304-3800(95)00084-9>
+* Lin, L. I.-K. (1989). A concordance correlation coefficient to evaluate reproducibility. *Biometrics*, 45, 255-268. <https://doi.org/10.2307/2532051>
+* Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger, J.-M., and McBratney, A. (2010). Critical review of chemometric indicators commonly used for assessing the quality of the prediction of soil attributes by NIR spectroscopy. *Trends in Analytical Chemistry*, 29, 1073-1081. <https://doi.org/10.1016/j.trac.2010.05.006>
+* Hyndman, R. J. and Koehler, A. B. (2006). Another look at measures of forecast accuracy. *International Journal of Forecasting*, 22, 679-688. <https://doi.org/10.1016/j.ijforecast.2006.03.001>
+* Willmott, C. J., Ackleson, S. G., Davis, R. E., Feddema, J. J., Klink, K. M., Legates, D. R., O'Donnell, J., and Rowe, C. M. (1985). Statistics for the evaluation and comparison of models. *Journal of Geophysical Research*, 90, 8995-9005. <https://doi.org/10.1029/JC090iC05p08995>
+* Gupta, H. V., Kling, H., Yilmaz, K. K., and Martinez, G. F. (2009). Decomposition of the mean squared error and NSE performance criteria. *Journal of Hydrology*, 377, 80-91. <https://doi.org/10.1016/j.jhydrol.2009.08.003>
 
 ## Next steps
 

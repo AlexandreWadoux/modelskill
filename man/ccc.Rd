@@ -28,7 +28,9 @@ CCC ranges from -1 to one and equals one for perfect agreement. Values near
 zero indicate little concordance; negative values indicate discordant linear
 association. Unlike Pearson correlation, CCC is reduced by mean and scale
 differences. Population variances (divisor n) are used, matching the
-established package convention. Missing-value handling follows \code{\link[=bias]{bias()}}.
+established package convention. The package returns NA for constant
+observations or fewer than two pairs, and zero for constant predictions
+with varying observations. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 ccc(1:3, c(1, 3, 2))

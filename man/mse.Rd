@@ -36,5 +36,5 @@ mse(1:3, c(1, 3, 2))
 \references{
 Hodson, T. O. (2022). Root mean square error (RMSE) or mean
 absolute error (MAE): When to use them or not. \emph{Geoscientific Model
-Development Discussions}, 2022, 1-10. \url{doi:10.5194/gmd-2022-1}
+Development}, 15, 5481-5487. \url{doi:10.5194/gmd-15-5481-2022}
 }

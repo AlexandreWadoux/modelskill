@@ -18,7 +18,7 @@ be removed. The default is \code{TRUE}. If \code{FALSE}, incomplete pairs result
 missing statistics rather than being silently removed.}
 
 \item{extended}{Logical; include additional robust, scale-normalised,
-percentage, and quantile-regression metrics?}
+percentage, agreement, and KGE metrics?}
 
 \item{digits}{Integer or \code{NULL}. If supplied, round numeric results to this
 many digits (0 to 22). \code{NULL} retains full numerical precision.}
@@ -26,13 +26,17 @@ many digits (0 to 22). \code{NULL} retains full numerical precision.}
 \value{
 A base data frame with one row per model and canonical columns
 \code{model}, \code{bias}, \code{mae}, \code{mse}, \code{rmse}, \code{nrmse}, \code{crmse}, \code{correlation},
-\code{r2}, \code{nse}, \code{sd_ratio}, and \code{ccc}. Legacy columns \code{ME}, \code{MAE}, \code{RMSE},
-\code{r}, \code{NSE}, \code{rhoC}, and \code{Cb} are also retained.
+\code{r2}, \code{R2}, \code{sd_ratio}, \code{ccc}, and \code{Cb}. With \code{extended = TRUE}, adds
+\code{mdae}, \code{rpd}, \code{rpiq}, \code{sep}, \code{rer}, \code{mape}, \code{mpe}, \code{smape}, \code{msle},
+\code{rmsle}, \code{rae}, \code{rrmse}, \code{willmott_d}, and \code{kge}.
+Duplicate columns ME, MAE, RMSE, r, nse, NSE, MEC, and rhoC have been
+removed; use bias, mae, rmse, correlation, R2, and ccc instead.
 }
 \description{
 Applies the individual prediction metrics to one or more prediction vectors.
-Canonical lower-case columns are returned together with legacy upper-case
-columns retained for compatibility with earlier versions of \code{modelskill}.
+Each statistic is returned once. Efficiency is named \code{R2}; standalone
+\code{\link[=nse]{nse()}} and \code{\link[=mec]{mec()}} remain aliases. See the linked metric help pages for
+equations, references, and interpretation.
 }
 \details{
 Errors are observation minus prediction. See \code{\link[=bias]{bias()}}, \code{\link[=crmse]{crmse()}}, \code{\link[=nse]{nse()}},
@@ -52,6 +56,15 @@ undefined. Constant observations give NA efficiency
 and concordance. Constant predictions with varying observations give zero
 Cb and rhoC (the continuous limiting value). All-missing models return NA.
 }
+\section{Bias correction factor}{
+
+\code{Cb} is Lin's bias correction factor, using population SDs and means:
+\deqn{C_b = \frac{2\sigma_o\sigma_p}{\sigma_o^2+\sigma_p^2+(\mu_o-\mu_p)^2}.}
+It ranges from zero to one; one indicates equal means and SDs. It does
+not measure correlation. For defined correlation, CCC equals r times Cb.
+See \code{\link[=ccc]{ccc()}} and Lin (1989), \url{doi:10.2307/2532051}.
+}
+
 \examples{
 obs <- c(1, 2, 3, 4, 5)
 preds <- list(model_a = c(1, 2, 3, 4, 5),

@@ -25,8 +25,10 @@ mean ratio. Let \code{r} be \code{\link[=correlation]{correlation()}}, \code{alp
 \deqn{\mathrm{KGE} = 1 - \sqrt{(r-1)^2 + (\alpha-1)^2 + (\beta-1)^2}}
 
 One is ideal. Values closer to one indicate agreement in linear association,
-spread, and mean. KGE is undefined when observed means or standard deviations
-are zero. As with NSE, avoid treating KGE as the only measure of model
+spread, and mean. The range is unbounded below and at most one. Zero is
+not the observed-mean benchmark used for NSE. KGE is undefined when the
+observed mean or either vector's standard deviation is zero, or fewer than
+two pairs remain. As with NSE, avoid treating KGE as the only measure of model
 quality; inspect its components and complementary error metrics.
 }
 \references{

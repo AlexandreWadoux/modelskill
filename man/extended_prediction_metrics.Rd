@@ -75,7 +75,7 @@ RPD.}
 \item{\code{sep()}}{Bias-corrected standard error of prediction:
 \deqn{\mathrm{SEP} = \sqrt{\sum(e_i - \mathrm{ME})^2/(n-1)}.}
 It has response units; zero is ideal and constant bias is removed.}
-\item{\code{rer()}}{Ratio of error to range:
+\item{\code{rer()}}{Range-to-RMSE ratio:
 \deqn{\mathrm{RER} = (\max(obs)-\min(obs))/\mathrm{RMSE}.}
 Larger values are better, but the observed range makes it sensitive to
 extremes.}
@@ -86,10 +86,14 @@ and can overemphasize errors at small observed values.}
 \item{\code{mpe()}}{Mean percentage error:
 \deqn{\mathrm{MPE} = 100n^{-1}\sum e_i/obs_i.}
 It is reported in percent; zero is ideal. Positive values indicate
-underprediction. It is undefined when any observation is zero.}
+underprediction when observations are strictly positive. For negative
+observations the relative-error sign reverses. Its range is unbounded;
+opposite relative errors can cancel. It is NA when any retained observation
+is zero and unstable near zero.}
 \item{\code{smape()}}{Symmetric mean absolute percentage error:
 \deqn{\mathrm{sMAPE} = n^{-1}\sum 2|e_i|/(|obs_i|+|pred_i|).}
-It is unitless; zero is ideal. A pair of zeros contributes zero.}
+It ranges from zero to two; zero is ideal. A pair of zeros contributes zero.
+Multiply by 100 to express it as a percentage.}
 \item{\code{msle()}}{Mean squared logarithmic error:
 \deqn{\mathrm{MSLE} = n^{-1}\sum[\log(1+obs_i)-\log(1+pred_i)]^2.}
 It is non-negative; zero is ideal and emphasizes relative differences. It
@@ -105,15 +109,24 @@ observed mean; values above one are worse.}
 \item{\code{rrmse()}}{Relative root mean square error:
 \deqn{\mathrm{RRMSE} = 100\,\mathrm{RMSE}/|\bar{obs}|.}
 It is reported in percent; zero is ideal and it is undefined for a zero
-observed mean.}
+observed mean. Its range is zero to infinity; values near a zero mean are
+unstable. This is a mean-normalized convention, distinct from \code{\link[=nrmse]{nrmse()}}.}
 \item{\code{willmott_d()}}{Willmott's original index of agreement:
 \deqn{d = 1 - \frac{\sum e_i^2}{\sum(|pred_i-\bar{obs}|+|obs_i-\bar{obs}|)^2}.}
 It ranges from zero to one for finite inputs, with one indicating perfect
-agreement; it can be strongly influenced by large errors.}
+agreement; it can be strongly influenced by large errors. A zero denominator
+(identical constant observations and predictions) returns NA, not one.}
 }
 
 MAPE is undefined for zero observations; log metrics require non-negative
-values. Missing-value handling follows \code{\link[=bias]{bias()}}.
+values. MAPE and sMAPE return fractions, whereas MPE and RRMSE return
+percentages; this preserves existing behaviour. RPD, RPIQ, and RER return
+NA when RMSE is zero. SEP requires two pairs. RAE requires nonconstant
+observations. IQR uses R's default type-7 quantiles. Missing-value handling
+follows \code{\link[=bias]{bias()}}. MdAE, RPD, RPIQ, SEP, RER, MAPE, and RAE have
+non-negative ranges with no universal acceptable-performance thresholds.
+The log1p convention for MSLE is an explicit package
+choice; percentage metrics need a meaningful zero on the response scale.
 }
 \references{
 Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean

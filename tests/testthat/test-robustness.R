@@ -1,13 +1,13 @@
 test_that("metrics agree with analytical bias and anticorrelation cases", {
   obs <- 1:5
   bias <- model_metrics(obs + 1, obs)
-  expect_equal(unname(unlist(bias[c("ME", "MAE", "RMSE", "r", "r2", "NSE", "rhoC", "Cb")])),
+  expect_equal(unname(unlist(bias[c("bias", "mae", "rmse", "correlation", "r2", "R2", "ccc", "Cb")])),
                c(-1, 1, 1, 1, 1, 0.5, 0.8, 0.8))
   reverse <- model_metrics(6 - obs, obs)
-  expect_equal(reverse$r, -1)
+  expect_equal(reverse$correlation, -1)
   expect_equal(reverse$r2, 1)
-  expect_equal(reverse$NSE, -3)
-  expect_equal(reverse$rhoC, -1)
+  expect_equal(reverse$R2, -3)
+  expect_equal(reverse$ccc, -1)
   expect_equal(reverse$Cb, 1)
 })
 
@@ -21,7 +21,7 @@ test_that("concordance matches the original scale and location expression", {
   cb <- 2 / (v + 1 / v + u^2)
   got <- model_metrics(pred, obs)
   expect_equal(got$Cb, cb, tolerance = 1e-12)
-  expect_equal(got$rhoC, cor(pred, obs) * cb, tolerance = 1e-12)
+  expect_equal(got$ccc, cor(pred, obs) * cb, tolerance = 1e-12)
 })
 
 test_that("all APIs accept columns and preserve partial names", {
@@ -67,17 +67,17 @@ test_that("missing values use each model's complete pairs consistently", {
   missing_metrics <- model_metrics(rep(NA_real_, 3), 1:3)
   expect_true(all(is.na(missing_metrics[vapply(missing_metrics, is.numeric, logical(1))])))
   one <- model_metrics(2, 1)
-  expect_equal(one$ME, -1)
-  expect_true(is.na(one$r))
+  expect_equal(one$bias, -1)
+  expect_true(is.na(one$correlation))
 })
 
 test_that("constant predictions have an explicit finite convention", {
   m <- model_metrics(rep(3, 5), 1:5)
-  expect_true(is.na(m$r))
+  expect_true(is.na(m$correlation))
   expect_true(is.na(m$r2))
-  expect_equal(m$NSE, 0)
+  expect_equal(m$R2, 0)
   expect_equal(m$Cb, 0)
-  expect_equal(m$rhoC, 0)
+  expect_equal(m$ccc, 0)
   d <- diagram_stats(rep(3, 5), 1:5)
   expect_true(is.na(d$r))
   expect_equal(d$sde, 1)
@@ -106,9 +106,15 @@ test_that("near-perfect and extreme-unit inputs remain numerically usable", {
   pred <- c(1, 2, 2, 5, 4)
   baseline <- model_metrics(pred, obs)
   for (scale in c(1e-200, 1e200)) {
-    got <- model_metrics(pred * scale, obs * scale)
-    expect_equal(got$RMSE / scale, baseline$RMSE)
-    expect_equal(got$NSE, baseline$NSE)
+    if (scale > 1) {
+      expect_warning(got <- model_metrics(pred * scale, obs * scale),
+                     "Some metrics exceed numeric precision")
+      expect_true(is.infinite(got$mse))
+    } else {
+      got <- model_metrics(pred * scale, obs * scale)
+    }
+    expect_equal(got$rmse / scale, baseline$rmse)
+    expect_equal(got$R2, baseline$R2)
     expect_equal(got$Cb, baseline$Cb)
     expect_equal(diagram_stats(pred * scale, obs * scale)$sde,
                  diagram_stats(pred, obs)$sde)
@@ -200,7 +206,7 @@ test_that("documented sample normalization is distinct from population RMSE", {
   pred <- c(1, 2, 2, 5, 4)
   d <- diagram_stats(pred, obs)
   m <- model_metrics(pred, obs)
-  expect_equal(m$RMSE^2 / sd(obs)^2, d$nME^2 + (4 / 5) * d$sde^2)
+  expect_equal(m$rmse^2 / sd(obs)^2, d$nME^2 + (4 / 5) * d$sde^2)
 })
 
 test_that("custom axes preserve their specified reference endpoints", {

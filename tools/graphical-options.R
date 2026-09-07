@@ -24,7 +24,7 @@ standard_titles <- ggplot2::theme(
   axis.title.y = ggplot2::element_text(
     hjust = 0.5, margin = ggplot2::margin(r = 10))
 )
-solar <- gg_solar(mods, obs, colorval = metrics$NSE, colorval.name = "NSE",
+solar <- gg_solar(mods, obs, colorval = metrics$R2, colorval.name = "NSE",
                   label = TRUE, by = 0.2)
 solar_titles <- solar +
   ggplot2::scale_x_continuous(position = "bottom") +
@@ -37,7 +37,7 @@ write_comparison(list(
     ggplot2::labs(title = "C: Titles + equal axis units")
 ), "review/solar-options.png")
 
-target <- gg_target(mods, obs, colorval = metrics$NSE, colorval.name = "NSE",
+target <- gg_target(mods, obs, colorval = metrics$R2, colorval.name = "NSE",
                     label = TRUE, by = 0.2)
 target_titles <- target +
   ggplot2::labs(x = "Signed standardized error SD",

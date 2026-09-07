@@ -11,7 +11,7 @@ for (name in c("taylor", "solar", "target")) {
   fun <- get(paste0("gg_", name))
   args <- list(mods = mods, obs = obs, label = TRUE)
   if (name != "taylor") {
-    args$colorval <- metrics$NSE
+    args$colorval <- metrics$R2
     args$colorval.name <- "NSE"
     args$by <- 0.2
   }
