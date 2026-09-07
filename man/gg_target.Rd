@@ -9,8 +9,9 @@ gg_target(
   obs,
   colorval = NULL,
   colorval.name = NULL,
-  axis_begin = -2,
-  axis_end = 2,
+  colour_by = c("efficiency", "model", "correlation", "r2"),
+  axis_begin = -1.5,
+  axis_end = 1.5,
   by = 0.1,
   label = FALSE,
   point_size = 7,
@@ -28,70 +29,106 @@ names must be unique; missing names are generated.}
 \item{obs}{A numeric observation vector.}
 
 \item{colorval}{Optional finite numeric vector with one value per model,
-in model order (names do not reorder values). If NULL, correlation is used.}
+in model order. When supplied, it overrides the continuous metric selected
+by \code{colour_by}.}
 
-\item{colorval.name}{Optional colour-legend title.}
+\item{colorval.name}{Optional point-colour legend title. The title can also
+be replaced afterwards with \code{labs(fill = ...)}.}
 
-\item{axis_begin}{Lower limit for both manually drawn axes.}
+\item{colour_by}{Character string defining point colouring. \code{"efficiency"}
+uses uppercase R-squared / NSE / MEC and is the default; \code{"model"} gives
+every model a categorical colour and model-name legend; \code{"correlation"}
+uses Pearson correlation; and \code{"r2"} uses squared Pearson correlation.}
 
-\item{axis_end}{Upper limit for both manually drawn axes.}
+\item{axis_begin}{Lower endpoint of both manually drawn reference axes.
+Defaults to -1.5.}
 
-\item{by}{Spacing between manually drawn axis ticks.}
+\item{axis_end}{Upper endpoint of both manually drawn reference axes.
+Defaults to 1.5.}
 
-\item{label}{Logical; draw model labels with \code{ggrepel}?}
+\item{by}{Spacing between manually drawn reference-axis ticks.}
+
+\item{label}{Logical; draw model names beside points using \code{ggrepel}?}
 
 \item{point_size}{Numeric point size.}
 
-\item{label_size}{Numeric text size for model labels.}
+\item{label_size}{Numeric size of model labels.}
 
 \item{na.rm}{Logical; remove incomplete pairs separately for each model?
 If FALSE, missing pairs cause an error because coordinates cannot be
 plotted. The default is TRUE.}
 
-\item{legend}{Logical; show the continuous point-colour legend? Defaults to
-\code{TRUE} to preserve the original plot.}
+\item{legend}{Logical; show the point-colour legend?}
 
-\item{reference}{Logical; draw the original RMSD reference circles and their
-labels? Defaults to \code{TRUE}.}
+\item{reference}{Logical; draw the original RMSD reference circles and
+their labels?}
 }
 \value{
-A \code{ggplot2} plot object that can be extended with ordinary ggplot2
-layers, scales, labels, and themes.
+A \code{ggplot2} object that can be extended with ordinary ggplot2 layers,
+scales, labels, themes, and coordinates.
 }
 \description{
 Creates a target diagram comparing quantitative prediction models with an
-observation vector. The signed horizontal coordinate combines standardized
-unbiased RMSD with the direction of the model standard-deviation difference;
-the vertical coordinate is normalized mean error. Concentric circles show
-RMSD thresholds associated with correlation levels.
+observation vector. The horizontal coordinate is the signed standardized
+unbiased root mean square difference and the vertical coordinate is
+normalized mean error. Concentric circles provide reference thresholds
+associated with correlation levels.
 }
 \details{
-The default geometry and continuous \code{viridis} colour scale follow Wadoux,
-Walvoort, and Brus (2022) and the original implementation in the
-accompanying repository.
+The default geometry follows Wadoux, Walvoort, and Brus (2022). By default,
+points are coloured by the model-efficiency coefficient R-squared, equivalent
+to NSE and MEC in modelskill.
 
 Missing pairs are removed separately per model when \code{na.rm = TRUE}.
-Two complete pairs with non-zero observation SD are required. All plotted
-statistics can be retrieved with diagram_stats(). Sample SD normalization
-and the original constant-prediction convention are documented there.
+Two complete pairs with non-zero observation standard deviation are required.
+
+The default point-colour variable is the uppercase modelskill \code{R2()}, which
+is equivalent to NSE and MEC. This should not be confused with lowercase
+\code{r2()}, which is squared Pearson correlation.
+
+The function returns an ordinary ggplot2 object. Styling that belongs to the
+ggplot2 ecosystem can therefore be applied after the function call. Use
+\code{labs()} for titles, \code{theme()} for typography and legend placement, and
+\code{scale_fill_*()} to replace the point-colour scale.
+
+The axis arguments control the manually drawn target-diagram reference axes
+rather than clipping limits. Models outside those reference axes remain
+visible. Equal coordinate scaling is retained so that the reference circles
+remain circular.
 }
 \section{Coordinates and labels}{
 
-The horizontal coordinate is signed_sde and the vertical coordinate is nME.
-Axis-title placement follows the original diagram, where titles are placed
-near axis ends rather than in ordinary Cartesian positions. Use labs()
-to override titles. The reference regions retain the original rounded radii;
-their interpretation requires the normalization assumptions in diagram_stats().
+The horizontal coordinate is \code{signed_sde} and the vertical coordinate is
+\code{nME}. To retain the presentation of the original implementation, the
+displayed horizontal title is ME* and the displayed vertical title is
+SDE* multiplied by the sign of the standard-deviation difference.
+}
+
+\section{ggplot2 customization}{
+
+Arguments that change the statistical content or core target-diagram
+construction are exposed directly by \code{gg_target()}. Ordinary appearance is
+intentionally left to ggplot2. For example, users can add \code{labs()}, \code{theme()},
+a replacement \code{scale_fill_*()}, or a replacement \code{coord_fixed()}.
 }
 
 \examples{
 obs <- c(1, 2, 3, 4, 5)
 mods <- list(perfect = obs, biased = obs + 1)
-gg_target(mods, obs, label = TRUE, axis_begin = -2,
-          axis_end = 2, by = 0.5)
 
-# Hide the legend or reference circles when preparing a custom plot.
-gg_target(mods, obs, legend = FALSE, reference = FALSE)
+# Default: point colour represents R-squared / NSE / MEC.
+gg_target(mods, obs)
+
+# Give every model a categorical colour and a model-name legend.
+gg_target(mods, obs, colour_by = "model")
+
+# Write model names directly beside points.
+gg_target(mods, obs, label = TRUE)
+
+# Standard ggplot2 customization.
+gg_target(mods, obs) +
+  ggplot2::labs(title = "Model performance") +
+  ggplot2::theme(legend.position = "bottom")
 }
 \references{
 Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
