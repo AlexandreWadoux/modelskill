@@ -61,6 +61,18 @@ metrics <- model_metrics(mods, obs)
 metrics
 ```
 
+The package distinguishes two commonly confused quantities. `nse()`, `mec()`,
+and uppercase `R2()` are the same model-efficiency coefficient: they compare
+squared prediction error with predicting the observed mean. Lowercase `r2()`
+is instead squared Pearson correlation, and measures association rather than
+agreement. They should not be interchanged.
+
+For spectroscopy-oriented reporting, request the extended metrics explicitly:
+
+```{r extended-metrics}
+model_metrics(mods, obs, extended = TRUE)
+```
+
 The columns have complementary meanings:
 
 * `ME` is the signed average error; its sign indicates systematic

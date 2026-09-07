@@ -4,7 +4,7 @@
 \alias{model_metrics}
 \title{Calculate prediction-validation metrics for one or more models}
 \usage{
-model_metrics(mods, obs, na.rm = TRUE, digits = NULL)
+model_metrics(mods, obs, na.rm = TRUE, extended = FALSE, digits = NULL)
 }
 \arguments{
 \item{mods}{Numeric vector, list of numeric vectors, or numeric matrix/data
@@ -16,6 +16,9 @@ names must be unique; missing names are generated.}
 \item{na.rm}{Logical; whether incomplete observation-prediction pairs should
 be removed. The default is \code{TRUE}. If \code{FALSE}, incomplete pairs result in
 missing statistics rather than being silently removed.}
+
+\item{extended}{Logical; include extended error metrics used in spectroscopy
+and quantile-regression workflows?}
 
 \item{digits}{Integer or \code{NULL}. If supplied, round numeric results to this
 many digits (0 to 22). \code{NULL} retains full numerical precision.}

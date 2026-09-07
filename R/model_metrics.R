@@ -14,6 +14,8 @@
 #' @param na.rm Logical; whether incomplete observation-prediction pairs should
 #'   be removed. The default is `TRUE`. If `FALSE`, incomplete pairs result in
 #'   missing statistics rather than being silently removed.
+#' @param extended Logical; include extended error metrics used in spectroscopy
+#'   and quantile-regression workflows?
 #' @param digits Integer or `NULL`. If supplied, round numeric results to this
 #'   many digits (0 to 22). `NULL` retains full numerical precision.
 #'
@@ -48,8 +50,9 @@
 #'               model_b = c(2, 2, 3, 4, 4))
 #' model_metrics(preds, obs)
 #' @export
-model_metrics <- function(mods, obs, na.rm = TRUE, digits = NULL) {
+model_metrics <- function(mods, obs, na.rm = TRUE, extended = FALSE, digits = NULL) {
   mods <- prepare_models(mods, obs, na.rm)
+  check_flag(extended, "extended")
   if (!is.null(digits)) {
     check_number(digits, "digits")
     if (digits < 0 || digits != floor(digits) || digits > 22) {
@@ -71,6 +74,12 @@ model_metrics <- function(mods, obs, na.rm = TRUE, digits = NULL) {
     ME = canonical$bias, MAE = canonical$mae, RMSE = canonical$rmse,
     r = canonical$correlation, NSE = canonical$nse, rhoC = canonical$ccc,
     Cb = canonical$cb, check.names = FALSE)
+  result$MEC <- result$nse
+  result$R2 <- result$nse
+  if (extended) {
+    extra <- do.call(rbind, lapply(mods, function(pred) extended_components(obs, pred, na.rm)))
+    result <- cbind(result, as.data.frame(extra))
+  }
   rownames(result) <- names(mods)
   numeric <- vapply(result, is.numeric, logical(1))
   if (any(is.infinite(as.matrix(result[, numeric, drop = FALSE])))) {

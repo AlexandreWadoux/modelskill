@@ -10,8 +10,23 @@ test_that("individual prediction metrics have known values", {
   expect_equal(correlation(obs, pred), 0.5)
   expect_equal(r2(obs, pred), 0.25)
   expect_equal(nse(obs, pred), 0)
+  expect_equal(mec(obs, pred), nse(obs, pred))
+  expect_equal(R2(obs, pred), nse(obs, pred))
   expect_equal(sd_ratio(obs, pred), 1)
   expect_equal(ccc(obs, pred), 0.5)
+})
+
+test_that("extended prediction metrics have expected values", {
+  obs <- c(1, 2, 3); pred <- c(1, 3, 2)
+  expect_equal(mdae(obs, pred), 1)
+  expect_equal(rpd(obs, pred), 1 / nrmse(obs, pred))
+  expect_equal(rpiq(obs, pred), stats::IQR(obs) / rmse(obs, pred))
+  expect_equal(sep(obs, pred), 1)
+  expect_equal(rae(obs, pred), 1)
+  expect_equal(pinball_loss(obs, pred, .5), mae(obs, pred) / 2)
+  expect_true(is.finite(kge(obs, pred)))
+  expect_true(is.na(mape(c(0, 1), c(0, 1))))
+  expect_true(is.na(msle(c(-1, 1), c(0, 1))))
 })
 
 test_that("prediction metrics handle perfect, biased and missing predictions", {
@@ -41,4 +56,6 @@ test_that("model_metrics exposes canonical and legacy columns", {
   expect_equal(got$RMSE, got$rmse)
   expect_equal(got$NSE, got$nse)
   expect_equal(got$rhoC, got$ccc)
+  extended <- model_metrics(list(a = 1:3), 1:3, extended = TRUE)
+  expect_true(all(c("mdae", "rpd", "rpiq", "sep", "rer", "mape", "smape", "msle", "rmsle", "rae", "MEC", "R2") %in% names(extended)))
 })

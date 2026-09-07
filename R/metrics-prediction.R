@@ -92,6 +92,27 @@ r2 <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "r2")
 #' @export
 nse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "nse")
 
+#' Model efficiency coefficient
+#'
+#' Alias for [nse()]. MEC, NSE, and the uppercase R-squared efficiency `R2()`
+#' are the same statistic. They must not be confused with lowercase `r2()`,
+#' the squared Pearson correlation.
+#' @inheritParams bias
+#' @return One numeric value.
+#' @examples mec(1:3, c(1, 3, 2))
+#' @export
+mec <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
+
+#' Coefficient of determination / efficiency R-squared
+#'
+#' Alias for [nse()] and `mec()`. This uppercase `R2()` is the model-efficiency
+#' coefficient; lowercase `r2()` remains squared Pearson correlation.
+#' @inheritParams bias
+#' @return One numeric value.
+#' @examples R2(1:3, c(1, 3, 2))
+#' @export
+R2 <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
+
 #' Prediction-to-observation standard deviation ratio
 #'
 #' Sample standard deviation of predictions divided by sample standard deviation
@@ -113,6 +134,85 @@ sd_ratio <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "sd
 #' @examples ccc(1:3, c(1, 3, 2))
 #' @export
 ccc <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "ccc")
+
+extended_components <- function(obs, pred, na.rm = TRUE) {
+  x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
+  if (is.null(x) || !length(x$obs)) return(stats::setNames(rep(NA_real_, 10), c("mdae", "rpd", "rpiq", "sep", "rer", "mape", "smape", "msle", "rmsle", "rae")))
+  error <- x$obs - x$pred; root <- sqrt(mean(error^2)); n <- length(error)
+  out <- c(mdae = stats::median(abs(error)),
+    rpd = if (n < 2 || root == 0) NA_real_ else stats::sd(x$obs) / root,
+    rpiq = if (root == 0) NA_real_ else stats::IQR(x$obs) / root,
+    sep = if (n < 2) NA_real_ else sqrt(sum((error - mean(error))^2) / (n - 1)),
+    rer = if (root == 0) NA_real_ else diff(range(x$obs)) / root,
+    mape = if (any(x$obs == 0)) NA_real_ else mean(abs(error / x$obs)),
+    smape = mean(ifelse(x$obs == 0 & x$pred == 0, 0, 2 * abs(error) / (abs(x$obs) + abs(x$pred))), na.rm = TRUE),
+    msle = if (any(x$obs < 0 | x$pred < 0)) NA_real_ else mean((log1p(x$obs) - log1p(x$pred))^2),
+    rmsle = NA_real_,
+    rae = if (sum(abs(x$obs - mean(x$obs))) == 0) NA_real_ else sum(abs(error)) / sum(abs(x$obs - mean(x$obs))))
+  out["rmsle"] <- sqrt(out["msle"])
+  out
+}
+
+#' Extended continuous-prediction metrics
+#'
+#' These metrics complement the core error and agreement statistics. MAPE is
+#' undefined for zero observations; log metrics require non-negative values.
+#' @inheritParams bias
+#' @return One numeric value.
+#' @name extended_prediction_metrics
+NULL
+
+#' @rdname extended_prediction_metrics
+#' @export
+mdae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mdae"])
+#' @rdname extended_prediction_metrics
+#' @export
+rpd <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rpd"])
+#' @rdname extended_prediction_metrics
+#' @export
+rpiq <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rpiq"])
+#' @rdname extended_prediction_metrics
+#' @export
+sep <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["sep"])
+#' @rdname extended_prediction_metrics
+#' @export
+rer <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rer"])
+#' @rdname extended_prediction_metrics
+#' @export
+mape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mape"])
+#' @rdname extended_prediction_metrics
+#' @export
+smape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["smape"])
+#' @rdname extended_prediction_metrics
+#' @export
+msle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["msle"])
+#' @rdname extended_prediction_metrics
+#' @export
+rmsle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rmsle"])
+#' @rdname extended_prediction_metrics
+#' @export
+rae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rae"])
+
+#' Quantile (pinball) loss
+#' @inheritParams bias
+#' @param level Quantile level strictly between zero and one.
+#' @return One numeric loss; lower is better.
+#' @export
+pinball_loss <- function(obs, pred, level = .5, na.rm = TRUE) {
+  check_probability(level, "level"); x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
+  if (is.null(x)) return(NA_real_); error <- x$obs - x$pred
+  mean(ifelse(error >= 0, level * error, (level - 1) * error))
+}
+
+#' Kling-Gupta efficiency
+#' @inheritParams bias
+#' @return One numeric value; one is ideal.
+#' @export
+kge <- function(obs, pred, na.rm = TRUE) {
+  x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
+  if (is.null(x) || length(x$obs) < 2 || mean(x$obs) == 0 || stats::sd(x$obs) == 0 || stats::sd(x$pred) == 0) return(NA_real_)
+  1 - sqrt((stats::cor(x$obs, x$pred) - 1)^2 + (stats::sd(x$pred) / stats::sd(x$obs) - 1)^2 + (mean(x$pred) / mean(x$obs) - 1)^2)
+}
 
 metric_value <- function(obs, pred, na.rm, name) {
   values <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
