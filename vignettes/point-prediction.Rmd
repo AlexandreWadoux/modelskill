@@ -54,12 +54,12 @@ performance to a single number.
 
 | Category | `modelskill` metrics | Main question |
 |:--|:--|:--|
-| **Error magnitude** | RMSE, MAE, MSE, MdAE | How large are the errors? |
-| **Bias** | ME / `bias()`, MPE | Are predictions systematically high or low? |
-| **Association** | `r`, `r2()` | Do predictions track variation in observations? |
-| **Agreement** | Willmott `d`, CCC | How closely do predictions agree in correlation, location, and scale? |
-| **Efficiency / skill** | NSE / MEC / `R2()`, KGE | How good are predictions relative to a reference? |
-| **Relative / scaled error** | NRMSE, RRMSE, RPD, RPIQ, RER | How large is error relative to the data scale? |
+| **Error magnitude** | [`rmse()`](../reference/rmse.html), [`mae()`](../reference/mae.html), [`mse()`](../reference/mse.html), [`mdae()`](../reference/extended_prediction_metrics.html) | How large are the errors? |
+| **Bias** | [`bias()`](../reference/bias.html), [`mpe()`](../reference/extended_prediction_metrics.html) | Are predictions systematically high or low? |
+| **Association** | [`correlation()`](../reference/correlation.html), [`r2()`](../reference/r2.html) | Do predictions track variation in observations? |
+| **Agreement** | [`willmott_d()`](../reference/extended_prediction_metrics.html), [`ccc()`](../reference/ccc.html) | How closely do predictions agree in correlation, location, and scale? |
+| **Efficiency / skill** | [`R2()`](../reference/efficiency_r2.html) / [`nse()`](../reference/nse.html) / [`mec()`](../reference/mec.html), [`kge()`](../reference/kge.html) | How good are predictions relative to a reference? |
+| **Relative / scaled error** | [`nrmse()`](../reference/nrmse.html), [`rrmse()`](../reference/extended_prediction_metrics.html), [`rpd()`](../reference/extended_prediction_metrics.html), [`rpiq()`](../reference/extended_prediction_metrics.html), [`rer()`](../reference/extended_prediction_metrics.html) | How large is error relative to the data scale? |
 
 MPE and RRMSE are expressed as percentages. Both are undefined when the
 observed value or observed mean used as their denominator is zero, respectively.
