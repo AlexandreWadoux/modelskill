@@ -89,7 +89,8 @@ Two complete pairs with non-zero observation SD are required.
 By default, point colour represents the model-efficiency coefficient
 (uppercase R-squared), equivalent to NSE and MEC in modelskill. This must
 not be confused with squared Pearson correlation, available with
-\code{colour_by = "r2"}.
+\code{colour_by = "r2"}. The default legend title for the efficiency colour
+scale is simply \code{R²}.
 
 The function returns an ordinary ggplot2 object. Styling that belongs to
 the ggplot2 ecosystem can therefore be applied after the function call.
