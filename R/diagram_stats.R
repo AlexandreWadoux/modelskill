@@ -18,13 +18,23 @@
 #' Plot functions can therefore draw them without reporting a defined
 #' correlation. Correlation-coloured points are grey when r is NA.
 #'
-#' Sample SDs use divisor n - 1, preserving the research code. Thus sde equals
-#' sd(obs - pred) / sd(obs), and also the square root of
-#' 1 + sd_ratio^2 - 2 * sd_ratio * r. It is evaluated from centred errors
-#' to avoid cancellation near perfect agreement. Mean error uses divisor n.
-#' Consequently nME^2 + sde^2 is not exactly RMSE^2 / sd(obs)^2 for finite
-#' samples. The paper describes population moments; this finite sample
-#' convention is retained explicitly for compatibility.
+#' Let `s_p` and `s_o` denote sample standard deviations of predictions and
+#' observations, respectively. The standard-deviation ratio is
+#' \deqn{\sigma^* = \frac{s_p}{s_o}.}
+#' Mean error is calculated with divisor `n`, and its diagram coordinate is
+#' \deqn{\mathrm{nME} = \frac{\overline{obs-pred}}{s_o}
+#' \sqrt{\frac{n-1}{n}}.}
+#' The standardized centred error is evaluated directly from centred errors to
+#' avoid cancellation near perfect agreement:
+#' \deqn{\mathrm{SDE}^* = \frac{\sqrt{n^{-1}\sum_{i=1}^n
+#' [(obs_i-pred_i)-\overline{obs-pred}]^2}}{s_o}.}
+#' Thus, with sample SDs (divisor `n - 1`),
+#' \deqn{\mathrm{SDE}^* = \sqrt{\frac{n-1}{n}
+#' [1 + \sigma^{*2} - 2\sigma^*r]}.}
+#' This finite-sample convention preserves the original research code. It
+#' differs by the factor `sqrt((n - 1) / n)` from the population-moment form
+#' often shown for Taylor diagrams. Consequently `nME^2 + sde^2` is not
+#' exactly `RMSE^2 / sd(obs)^2` for finite samples.
 #'
 #' Equal prediction and observation SDs receive a positive sign in signed_sde,
 #' as in the original code. Positive nME means underprediction.
