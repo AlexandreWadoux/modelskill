@@ -14,18 +14,24 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: "Get started: model evaluation"
-          href: articles/modelskill-introduction.html
+        - text: "Point-prediction evaluation"
+          href: articles/point-prediction.html
+        - text: "Predictive-uncertainty evaluation"
+          href: articles/predictive-uncertainty.html
+        - text: "Summary diagrams"
+          href: articles/summary-diagrams.html
     github:
       icon: fa-github
       href: https://github.com/AlexandreWadoux/modelskill
       aria-label: GitHub repository
 
 articles:
-  - title: "Model evaluation guide"
-    navbar: "Get started"
+  - title: "Model evaluation guides"
+    navbar: "Articles"
     contents:
-      - modelskill-introduction
+      - point-prediction
+      - predictive-uncertainty
+      - summary-diagrams
 
 reference:
   - title: Point-prediction evaluation

@@ -1,0 +1,81 @@
+---
+title: "Predictive-uncertainty evaluation"
+author: "Alexandre M.J.-C. Wadoux"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Predictive-uncertainty evaluation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+```
+
+This article evaluates *quantified predictive uncertainty*. The same principles
+apply to uncertainty estimates from machine learning (such as quantile
+regression, ensembles, and conformal intervals), Bayesian models,
+geostatistics, and process-based models.
+
+Two properties should be assessed together:
+
+* **Calibration** (or reliability): stated probabilities agree with empirical
+  frequencies.
+* **Sharpness**: intervals or distributions are sufficiently concentrated.
+  Sharpness is valuable only when calibration is adequate.
+
+```{r data}
+library(modelskill)
+set.seed(123)
+obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
+pred <- obs + rnorm(100, sd = 0.5)
+predictive_sd <- rep(0.8, length(obs))
+lower95 <- pred - 1.96 * predictive_sd
+upper95 <- pred + 1.96 * predictive_sd
+```
+
+## Prediction intervals
+
+```{r intervals}
+uncertainty_metrics(obs, lower = lower95, upper = upper95, level = .95)
+```
+
+PICP is between 0 and 1 and is ideal when it equals the nominal level. PICP
+error is ideal at zero: negative values indicate under-coverage, while positive
+values indicate over-coverage. PIW is average interval width in response units;
+smaller means sharper intervals, conditional on good calibration. Interval
+score combines width and penalties for misses; lower is better and scores are
+comparable only for the same data, response scale, and interval level.
+
+## Reliability across interval levels
+
+```{r coverage}
+gg_coverage(obs, pred = pred, predictive_sd = predictive_sd)
+accuracy_plot_metrics(obs, pred = pred, predictive_sd = predictive_sd)
+```
+
+This PICP reliability plot is also called an *accuracy plot* in geostatistical
+uncertainty validation. A curve near the 1:1 line is desirable. Its area-based
+summaries have ideal value zero.
+
+## Quantiles, PIT, and proper scores
+
+```{r distribution}
+qhat <- cbind(`0.1` = pred - 1.282 * predictive_sd,
+              `0.5` = pred,
+              `0.9` = pred + 1.282 * predictive_sd)
+gg_qcp(obs, qhat, c(.1, .5, .9))
+gg_pit(pit(stats::pnorm(obs, mean = pred, sd = predictive_sd)))
+crps(obs, pred = pred, predictive_sd = predictive_sd)
+```
+
+At quantile probability \(p\), QCP is ideal when it equals \(p\). PIT values
+should be uniformly distributed across validation cases. CRPS jointly rewards
+calibration and sharpness; zero is ideal and lower values are better. For
+predictive samples, `crps_decomposition()` reports the non-negative RELI
+component, ideal at zero. `log_score()` is also lower-is-better but strongly
+penalizes observations assigned very low density.
+
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+predictions in digital soil mapping. *Geoderma*, 437, 116585.
+<https://doi.org/10.1016/j.geoderma.2023.116585>

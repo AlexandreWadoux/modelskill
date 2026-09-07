@@ -1,0 +1,78 @@
+---
+title: "Point-prediction evaluation"
+author: "Alexandre M.J.-C. Wadoux"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Point-prediction evaluation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+```
+
+Continuous predictions can come from machine learning, statistical models, or
+physical models. `modelskill` evaluates the paired predictions and observations,
+not the algorithm that produced them. Use an independent validation set or an
+appropriate resampling scheme.
+
+```{r data}
+library(modelskill)
+set.seed(123)
+obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
+models <- list(
+  Good = obs + rnorm(100, sd = 0.5),
+  Biased = obs + 1,
+  Noisy = obs + rnorm(100, sd = 2)
+)
+```
+
+## Start with observed versus predicted values
+
+```{r scatter}
+plot_data <- data.frame(
+  observed = rep(obs, times = length(models)),
+  predicted = unlist(models, use.names = FALSE),
+  model = rep(names(models), each = length(obs))
+)
+ggplot2::ggplot(plot_data, ggplot2::aes(observed, predicted, colour = model)) +
+  ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  ggplot2::geom_point(alpha = 0.7, size = 1.5) +
+  ggplot2::coord_equal() + ggplot2::theme_classic() +
+  ggplot2::labs(x = "Observed", y = "Predicted", colour = "Model")
+```
+
+The equality line represents perfect predictions. The `Good` model stays close
+to it, `Biased` is shifted upward, and `Noisy` is more dispersed.
+
+## Complementary metrics
+
+```{r metrics}
+model_metrics(models, obs)
+```
+
+No single metric is sufficient. Mean error (ME) describes signed systematic
+error under the package convention `obs - pred`; negative ME indicates
+overprediction. MAE and RMSE describe error magnitude in response units; RMSE
+gives greater weight to large errors. Pearson correlation describes pattern
+association, not agreement in level.
+
+`nse()`, `mec()`, and uppercase `R2()` are aliases for the same
+mean-benchmark efficiency coefficient. Lowercase `r2()` is squared Pearson
+correlation and must not be interpreted as the efficiency coefficient.
+Concordance (`ccc()`) combines correlation with level and spread agreement.
+
+For specialised workflows, request robust, relative, percentage, and quantile
+loss metrics explicitly:
+
+```{r extended}
+model_metrics(models, obs, extended = TRUE)
+```
+
+## Next steps
+
+Use the [uncertainty-validation article](predictive-uncertainty.html) when
+models provide intervals or predictive distributions, and the
+[summary-diagrams article](summary-diagrams.html) for graphical comparison of
+multiple models.

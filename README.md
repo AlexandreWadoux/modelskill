@@ -125,14 +125,14 @@ gg_coverage(
 
 ## Documentation
 
-A more complete introduction to the package, including interpretation of the validation statistics and graphical diagnostics, is available in the package vignette:
+A set of focused guides covers point-prediction evaluation, predictive-uncertainty validation, and summary diagrams:
 
-**[Evaluating quantitative models with modelskill](vignettes/modelskill-introduction.Rmd)**
+**[Read the online documentation](https://alexandrewadoux.github.io/modelskill/articles/point-prediction.html)**
 
 After installation, it can also be opened directly from R:
 
 ```r
-vignette("modelskill-introduction", package = "modelskill")
+vignette(package = "modelskill")
 ```
 
 Individual functions are documented through the standard R help system. For example:

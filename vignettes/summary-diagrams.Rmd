@@ -1,0 +1,74 @@
+---
+title: "Summary diagrams and diagnostic plots"
+author: "Alexandre M.J.-C. Wadoux"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Summary diagrams and diagnostic plots}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 6)
+```
+
+Taylor, solar, and target diagrams provide complementary graphical summaries
+for comparing continuous prediction models. They return ordinary `ggplot2`
+objects and are most informative when interpreted alongside numerical metrics.
+
+```{r data}
+library(modelskill)
+set.seed(123)
+obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
+models <- list(Good = obs + rnorm(100, sd = 0.5),
+               Biased = obs + 1,
+               Noisy = obs + rnorm(100, sd = 2))
+```
+
+## Taylor diagram
+
+The radial coordinate is the standard-deviation ratio
+\(\sigma^*=\mathrm{sd}(pred)/\mathrm{sd}(obs)\), the polar angle is
+\(\arccos(r)\), and the reference point is \((\sigma^*=1,r=1)\).
+`Good` should lie closest to that reference. A constant offset does not affect
+correlation or standard deviation, so `Biased` can still be near it.
+
+```{r taylor}
+gg_taylor(models, obs, label = TRUE)
+```
+
+## Solar diagram
+
+The solar diagram displays standardized mean error (ME*) horizontally and
+standardized centred error (SDE*) vertically. Under the `obs - pred`
+convention, points to the left overpredict and points to the right underpredict.
+Distance from the origin is standardized RMSE. Thus the biased model is
+displaced mainly by ME*, whereas the noisy model is higher on SDE*.
+
+```{r solar}
+gg_solar(models, obs, label = TRUE, x.axis_begin = -1.5,
+         x.axis_end = 1.5, y.axis_end = 2, by = 0.25)
+```
+
+## Target diagram
+
+The target diagram uses the same error decomposition but gives SDE a sign, so
+it distinguishes predictions that are smoother than observations from those
+that are too variable. Distance from the origin remains standardized RMSE.
+
+```{r target}
+gg_target(models, obs, label = TRUE, axis_begin = -2, axis_end = 2, by = 0.5)
+```
+
+## Customisation
+
+```{r customise}
+gg_taylor(models, obs) +
+  ggplot2::labs(title = "Model comparison") +
+  ggplot2::theme_minimal()
+```
+
+Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
+integrated approach for the evaluation of quantitative soil maps through
+Taylor and solar diagrams. *Geoderma*, 405, 115332.
+<https://doi.org/10.1016/j.geoderma.2021.115332>
