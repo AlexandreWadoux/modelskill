@@ -15,6 +15,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height
 Taylor, solar, and target diagrams provide complementary graphical summaries
 for comparing continuous prediction models. They return ordinary `ggplot2`
 objects and are most informative when interpreted alongside numerical metrics.
+They deliberately show different aspects of predictive performance, so one
+diagram should not be used as a substitute for the others.
 
 ```{r data}
 library(modelskill)
@@ -27,11 +29,29 @@ models <- list(Good = obs + rnorm(100, sd = 0.5),
 
 ## Taylor diagram
 
-The radial coordinate is the standard-deviation ratio
-\(\sigma^*=\mathrm{sd}(pred)/\mathrm{sd}(obs)\), the polar angle is
-\(\arccos(r)\), and the reference point is \((\sigma^*=1,r=1)\).
-`Good` should lie closest to that reference. A constant offset does not affect
-correlation or standard deviation, so `Biased` can still be near it.
+The Taylor diagram combines correlation, relative spread, and centred error.
+Its radial coordinate is the standard-deviation ratio, its polar angle is the
+inverse cosine of Pearson correlation, and its reference point represents a
+perfectly matching prediction:
+
+\[
+\sigma^* = \frac{\mathrm{sd}(pred)}{\mathrm{sd}(obs)},\qquad
+\theta = \arccos(r),\qquad (\sigma^*, r) = (1, 1).
+\]
+
+The distance from a model point to this reference is the standardized centred
+root mean square difference (SDE\*):
+
+\[
+\mathrm{SDE}^* = \sqrt{1 + \sigma^{*2} - 2\sigma^*r}.
+\]
+
+`Good` should be near the reference point. `Noisy` should be farther away and
+at a larger polar angle because it has weaker pattern agreement. A radius below
+one indicates smoothing (too little variation); a radius above one indicates
+too much variation. A Taylor diagram does **not** show mean error: `Biased`
+can be near the reference point because its constant offset leaves correlation
+and spread unchanged.
 
 ```{r taylor}
 gg_taylor(models, obs, label = TRUE)
@@ -39,11 +59,22 @@ gg_taylor(models, obs, label = TRUE)
 
 ## Solar diagram
 
-The solar diagram displays standardized mean error (ME*) horizontally and
-standardized centred error (SDE*) vertically. Under the `obs - pred`
-convention, points to the left overpredict and points to the right underpredict.
-Distance from the origin is standardized RMSE. Thus the biased model is
-displaced mainly by ME*, whereas the noisy model is higher on SDE*.
+The solar diagram makes explicit the mean error omitted by a Taylor diagram.
+It uses the standardized decomposition:
+
+\[
+\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2}.
+\]
+
+Horizontal position is normalized mean error (ME\*) and vertical position is
+SDE\*. Distance from the origin is RMSE\*. Under the package convention
+`obs - pred`, points to the left overpredict and points to the right
+underpredict. Thus `Biased` falls to the left, `Good` should be near the
+origin, and `Noisy` should lie higher on the SDE\* axis.
+
+The outer circle at \(\mathrm{RMSE}^*=1\) marks the mean-prediction benchmark:
+points inside it have positive model efficiency (MEC/NSE/uppercase R2). The
+pale regions are lower bounds on correlation, not exact correlation values.
 
 ```{r solar}
 gg_solar(models, obs, label = TRUE, x.axis_begin = -1.5,
@@ -52,15 +83,33 @@ gg_solar(models, obs, label = TRUE, x.axis_begin = -1.5,
 
 ## Target diagram
 
-The target diagram uses the same error decomposition but gives SDE a sign, so
-it distinguishes predictions that are smoother than observations from those
-that are too variable. Distance from the origin remains standardized RMSE.
+The target diagram uses the same RMSE* decomposition:
+
+\[
+\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2}.
+\]
+
+It additionally gives SDE\* a sign according to whether prediction variability
+is lower or higher than observed variability. The signed SDE coordinate thus
+distinguishes smoother predictions from predictions that are too variable,
+while ME* distinguishes overprediction from underprediction. Distance from the
+origin remains RMSE\*, so `Good` should be nearest the origin. `Biased` is
+chiefly displaced by mean error, whereas a model displaced along signed SDE\*
+chiefly differs in variation or pattern.
+
+The displayed axis titles preserve the original diagram orientation. Consult
+the function documentation for the exact coordinate definitions when
+interpreting horizontal and vertical position.
 
 ```{r target}
 gg_target(models, obs, label = TRUE, axis_begin = -2, axis_end = 2, by = 0.5)
 ```
 
 ## Customisation
+
+All three functions return normal ggplot objects. Their defaults retain the
+scientific reference geometry and visual style, but standard ggplot additions
+remain available:
 
 ```{r customise}
 gg_taylor(models, obs) +
