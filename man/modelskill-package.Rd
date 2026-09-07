@@ -8,8 +8,9 @@
 \description{
 Compare numeric predictions against paired observations with
 \code{\link[=model_metrics]{model_metrics()}} and individual metrics such as \code{\link[=rmse]{rmse()}} and \code{\link[=ccc]{ccc()}}.
-Validate predictive uncertainty using \code{\link[=uncertainty_metrics]{uncertainty_metrics()}} and visualize
-interval calibration with \code{\link[=gg_coverage]{gg_coverage()}}. Complementary graphical
+Validate predictive uncertainty using \code{\link[=uncertainty_metrics]{uncertainty_metrics()}}, \code{\link[=qcp]{qcp()}},
+\code{\link[=pit]{pit()}}, and \code{\link[=crps]{crps()}}. Visualize interval and quantile calibration with
+\code{\link[=gg_coverage]{gg_coverage()}} and \code{\link[=gg_qcp]{gg_qcp()}}. Complementary graphical
 diagnostics include \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}} and \code{\link[=gg_target]{gg_target()}}. All plots
 return ordinary ggplot objects. No spatial data class is required.
 }

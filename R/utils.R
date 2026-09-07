@@ -191,3 +191,43 @@ prepare_predictive_sd_vectors <- function(obs, pred, predictive_sd,
   prepare_metric_vectors(obs = obs, pred = pred, predictive_sd = predictive_sd,
                          na.rm = na.rm)
 }
+
+prepare_distribution_matrix <- function(obs, distribution, na.rm = TRUE,
+                                        min_columns = 1L) {
+  if (!is_numeric_vector(obs)) stop("`obs` must be a numeric vector.", call. = FALSE)
+  if (!(is.matrix(distribution) || is.data.frame(distribution)) ||
+      !all(vapply(as.data.frame(distribution), is.numeric, logical(1)))) {
+    stop("`distribution` must be a numeric matrix or data frame with one row per observation.", call. = FALSE)
+  }
+  distribution <- as.matrix(distribution)
+  storage.mode(distribution) <- "double"
+  if (nrow(distribution) != length(obs)) {
+    stop("`obs` and `distribution` must have the same number of rows.", call. = FALSE)
+  }
+  if (ncol(distribution) < min_columns) {
+    stop("`distribution` has too few predictive-distribution values.", call. = FALSE)
+  }
+  if (any(!is.na(distribution) & !is.finite(distribution)) ||
+      any(!is.na(obs) & !is.finite(obs))) {
+    stop("Inputs must not contain infinite values.", call. = FALSE)
+  }
+  keep <- !is.na(obs) & stats::complete.cases(distribution)
+  if (!na.rm && !all(keep)) return(NULL)
+  list(obs = obs[keep], distribution = distribution[keep, , drop = FALSE])
+}
+
+prepare_quantiles <- function(obs, quantiles, levels, na.rm = TRUE) {
+  if (!is_numeric_vector(levels) || !length(levels) || any(!is.finite(levels)) ||
+      any(levels <= 0 | levels >= 1) || is.unsorted(levels, strictly = TRUE)) {
+    stop("`levels` must be strictly increasing finite probabilities between zero and one.", call. = FALSE)
+  }
+  x <- prepare_distribution_matrix(obs, quantiles, na.rm)
+  if (ncol(as.matrix(quantiles)) != length(levels)) {
+    stop("`levels` must have one value for every quantile column.", call. = FALSE)
+  }
+  if (is.null(x)) return(NULL)
+  if (nrow(x$distribution) && any(apply(x$distribution, 1, is.unsorted))) {
+    stop("Each row of `quantiles` must be non-decreasing across `levels`.", call. = FALSE)
+  }
+  x
+}

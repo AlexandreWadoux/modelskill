@@ -108,11 +108,15 @@ interval; for a 95% interval, a calibrated model has PICP close to 0.95.
 uncertainty_metrics(obs, lower = lower95, upper = upper95, level = .95)
 ```
 
-When uncertainty is expressed as a predictive mean and a predictive standard
-deviation, standardized errors assess whether that spread is calibrated.
+For complete predictive distributions, use QCP and PIT to assess calibration,
+and CRPS to compare competing probabilistic models. Lower CRPS is better.
 
-```{r predictive-sd-metrics}
-uncertainty_metrics(obs, pred = mods$Good, predictive_sd = predictive_sd)
+```{r distribution-metrics}
+qhat <- cbind(`0.1` = mods$Good - 1.282 * predictive_sd,
+              `0.5` = mods$Good,
+              `0.9` = mods$Good + 1.282 * predictive_sd)
+qcp(obs, qhat, c(.1, .5, .9))
+crps(obs, pred = mods$Good, predictive_sd = predictive_sd)
 ```
 
 The calibration curve compares PICP at multiple nominal levels. It is a PICP
@@ -130,6 +134,11 @@ gg_coverage(
 )
 
 accuracy_plot_metrics(obs, pred = mods$Good, predictive_sd = predictive_sd)
+```
+
+```{r qcp-pit}
+gg_qcp(obs, qhat, c(.1, .5, .9))
+gg_pit(pit(stats::pnorm(obs, mean = mods$Good, sd = predictive_sd)))
 ```
 
 ## Taylor diagram

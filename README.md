@@ -71,12 +71,17 @@ models remain drawable and use grey when coloured by correlation.
 See `?diagram_stats` for interpretation and finite-sample conventions.
 
 Prediction intervals should be assessed for both calibration and sharpness.
-Use `uncertainty_metrics()` for interval or predictive-standard-deviation
-validation, and `gg_coverage()` to compare nominal coverage with prediction
+Use `uncertainty_metrics()` for prediction-interval validation, and `gg_coverage()` to compare nominal coverage with prediction
 interval coverage probability (PICP). This PICP reliability plot is also known as an **accuracy plot**
 in geostatistics (Goovaerts, 2001); with predictive means and predictive SDs it
 can draw every nominal level from 1% to 99%. `accuracy_plot_metrics()` reports
 integrated absolute, over-, and under-uncertainty deviation from its 1:1 line.
+
+For predictive distributions, `qcp()` and `gg_qcp()` assess quantile
+calibration, `pit()` and `gg_pit()` diagnose distributional calibration, and
+`crps()` / `median_crps()` support relative model comparison. Use
+`crps_decomposition()` when predictive distributions are supplied as equally
+weighted samples and a reliability component is required.
 
 ## Diagram defaults
 

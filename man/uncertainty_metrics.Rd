@@ -8,8 +8,6 @@ uncertainty_metrics(
   obs,
   lower = NULL,
   upper = NULL,
-  pred = NULL,
-  predictive_sd = NULL,
   level = 0.95,
   na.rm = TRUE
 )
@@ -19,28 +17,19 @@ uncertainty_metrics(
 
 \item{lower, upper}{Numeric prediction-interval bounds, supplied together.}
 
-\item{pred}{Numeric predictive-mean vector.}
-
-\item{predictive_sd}{Numeric predictive standard deviation vector.}
-
 \item{level}{Nominal central interval coverage in interval mode.}
 
 \item{na.rm}{Logical; remove incomplete paired inputs?}
 }
 \value{
 A one-row base data frame. Interval mode returns \code{picp},
-\code{picp_error}, \code{interval_width}, and \code{interval_score}. Predictive-SD
-mode returns \code{standardized_error_mean}, \code{standardized_error_sd},
-\code{within_1sd}, and \code{within_1.96sd}.
+\code{picp_error}, \code{interval_width}, and \code{interval_score}.
 }
 \description{
-Calculates uncertainty diagnostics in one unambiguous mode. Supply either
-\code{lower} and \code{upper} for a central prediction interval, or \code{pred} and
-\code{predictive_sd} for predictive means and predictive standard deviations.
-Interval mode assesses calibration and sharpness; predictive-SD mode assesses
-standardized-error calibration.
+Calculates prediction-interval diagnostics. Supply both \code{lower} and \code{upper}
+for a central prediction interval. For quantile and full-distribution
+diagnostics, see \code{\link[=qcp]{qcp()}}, \code{\link[=pit]{pit()}}, \code{\link[=crps]{crps()}}, and \code{\link[=crps_decomposition]{crps_decomposition()}}.
 }
 \examples{
 uncertainty_metrics(1:3, lower = c(0, 1, 2), upper = c(2, 3, 4), level = .8)
-uncertainty_metrics(1:3, pred = c(1, 2, 4), predictive_sd = c(1, 1, 2))
 }

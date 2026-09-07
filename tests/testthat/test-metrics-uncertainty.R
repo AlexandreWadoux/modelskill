@@ -18,25 +18,27 @@ test_that("interval metrics validate bounds, levels and missing pairs", {
   expect_equal(interval_width(c(1, NA, 3), c(0, 0, 2), c(2, 2, 4)), 2)
 })
 
-test_that("predictive-SD metrics have known values", {
-  obs <- c(-1, 0, 1)
-  pred <- c(0, 0, 0)
-  predictive_sd <- c(1, 1, 1)
-  expect_equal(standardized_error(obs, pred, predictive_sd), c(-1, 0, 1))
-  expect_equal(standardized_error_mean(obs, pred, predictive_sd), 0)
-  expect_equal(standardized_error_sd(obs, pred, predictive_sd), 1)
-  expect_equal(within_sd(obs, pred, predictive_sd, k = 1), 1)
-  expect_equal(within_sd(obs, pred, predictive_sd, k = .5), 1 / 3)
+test_that("QCP, PIT and log score have known values", {
+  expect_equal(qcp(1:3, cbind(c(0, 1, 2), c(1, 2, 3)), c(.25, .75)), c(`0.25` = 0, `0.75` = 1))
+  expect_equal(pit(c(0, .5, 1)), c(0, .5, 1))
+  expect_equal(log_score(1:2, c(.5, .5)), log(2))
+  expect_error(qcp(1:3, cbind(1:3, 0:2), c(.25, .75)), "non-decreasing")
+  expect_error(pit(c(-.1, .5)), "between")
+  expect_error(log_score(1:2, c(1, 0)), "positive")
 })
 
-test_that("uncertainty wrappers choose one clear mode", {
+test_that("CRPS supports ensembles and normal distributions", {
+  draws <- matrix(c(-1, 1, 0, 2), nrow = 2)
+  expect_equal(crps(c(0, 1), distribution = draws), .25)
+  expect_equal(median_crps(c(0, 1), distribution = draws), .25)
+  expect_equal(crps(0, pred = 0, predictive_sd = 1), 2 / sqrt(2 * pi) - 1 / sqrt(pi))
+  decomposition <- crps_decomposition(c(.2, 1.2), draws)
+  expect_equal(decomposition$crps, crps(c(.2, 1.2), distribution = draws))
+  expect_equal(decomposition$crps, decomposition$reliability + decomposition$potential_crps)
+})
+
+test_that("uncertainty wrapper is interval-only", {
   interval <- uncertainty_metrics(1:3, lower = 0:2, upper = 2:4, level = .8)
   expect_equal(names(interval), c("picp", "picp_error", "interval_width", "interval_score"))
-  sd_mode <- uncertainty_metrics(1:3, pred = 1:3, predictive_sd = rep(1, 3))
-  expect_equal(names(sd_mode), c("standardized_error_mean", "standardized_error_sd", "within_1sd", "within_1.96sd"))
   expect_error(uncertainty_metrics(1:3, lower = 0:2), "both")
-  expect_error(uncertainty_metrics(1:3, pred = 1:3), "both")
-  expect_error(uncertainty_metrics(1:3, lower = 0:2, upper = 2:4,
-                                   pred = 1:3, predictive_sd = 1), "not both")
-  expect_error(within_sd(1:3, 1:3, c(1, 0, 1)), "positive")
 })
