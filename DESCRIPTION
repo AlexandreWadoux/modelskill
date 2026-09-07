@@ -2,9 +2,11 @@ Package: modelskill
 Type: Package
 Title: Assessing and Visualising Predictive Model and Map Quality
 Version: 0.0.0.9000
-Authors@R: person("Alexandre M.J.-C.", "Wadoux",
-    email = "alexandre.wadoux@yahoo.fr",
-    role = c("aut", "cre", "cph"))
+Authors@R: c(
+    person("Alexandre M.J.-C.", "Wadoux",
+      email = "alexandre.wadoux@yahoo.fr",
+      role = c("aut", "cre", "cph"))
+    )
 Description: Evaluates quantitative prediction models using point-prediction
     and predictive-uncertainty validation metrics together with Taylor, solar,
     target, and coverage diagrams. The diagram implementation follows Wadoux,

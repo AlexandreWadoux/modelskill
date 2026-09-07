@@ -107,6 +107,7 @@ mec <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
 #'
 #' Alias for [nse()] and `mec()`. This uppercase `R2()` is the model-efficiency
 #' coefficient; lowercase `r2()` remains squared Pearson correlation.
+#' @rdname efficiency_r2
 #' @inheritParams bias
 #' @return One numeric value.
 #' @examples R2(1:3, c(1, 3, 2))
