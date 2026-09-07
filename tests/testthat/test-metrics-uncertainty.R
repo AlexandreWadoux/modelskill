@@ -2,6 +2,7 @@ test_that("interval metrics have known calibration, width and score", {
   obs <- c(0, 1, 3)
   lower <- c(-1, 0, 0)
   upper <- c(1, 2, 2)
+  expect_equal(picp(obs, lower, upper), 2 / 3)
   expect_equal(coverage(obs, lower, upper), 2 / 3)
   expect_equal(coverage_error(obs, lower, upper, level = .8), 2 / 3 - .8)
   expect_equal(interval_width(obs, lower, upper), 2)
@@ -30,7 +31,7 @@ test_that("predictive-SD metrics have known values", {
 
 test_that("uncertainty wrappers choose one clear mode", {
   interval <- uncertainty_metrics(1:3, lower = 0:2, upper = 2:4, level = .8)
-  expect_equal(names(interval), c("coverage", "coverage_error", "interval_width", "interval_score"))
+  expect_equal(names(interval), c("picp", "picp_error", "interval_width", "interval_score"))
   sd_mode <- uncertainty_metrics(1:3, pred = 1:3, predictive_sd = rep(1, 3))
   expect_equal(names(sd_mode), c("standardized_error_mean", "standardized_error_sd", "within_1sd", "within_1.96sd"))
   expect_error(uncertainty_metrics(1:3, lower = 0:2), "both")

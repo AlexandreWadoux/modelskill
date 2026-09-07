@@ -28,8 +28,8 @@ uncertainty_metrics(
 \item{na.rm}{Logical; remove incomplete paired inputs?}
 }
 \value{
-A one-row base data frame. Interval mode returns \code{coverage},
-\code{coverage_error}, \code{interval_width}, and \code{interval_score}. Predictive-SD
+A one-row base data frame. Interval mode returns \code{picp},
+\code{picp_error}, \code{interval_width}, and \code{interval_score}. Predictive-SD
 mode returns \code{standardized_error_mean}, \code{standardized_error_sd},
 \code{within_1sd}, and \code{within_1.96sd}.
 }

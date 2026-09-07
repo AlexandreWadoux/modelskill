@@ -99,8 +99,10 @@ lower95 <- mods$Good - 1.96 * predictive_sd
 upper95 <- mods$Good + 1.96 * predictive_sd
 ```
 
-Interval validation returns empirical coverage, departure from nominal
-coverage, average width, and the proper interval score (lower is better).
+Interval validation returns prediction interval coverage probability (PICP),
+its departure from nominal coverage, average width, and the proper interval
+score (lower is better). PICP is the proportion of test observations inside an
+interval; for a 95% interval, a calibrated model has PICP close to 0.95.
 
 ```{r interval-metrics}
 uncertainty_metrics(obs, lower = lower95, upper = upper95, level = .95)
@@ -113,10 +115,14 @@ deviation, standardized errors assess whether that spread is calibrated.
 uncertainty_metrics(obs, pred = mods$Good, predictive_sd = predictive_sd)
 ```
 
-The calibration curve compares multiple nominal levels with empirical coverage.
-It is also called an **accuracy plot** in geostatistical uncertainty validation
-(Goovaerts, 2001). When predictive means and predictive standard deviations are
-available, `gg_coverage()` can calculate every 1%--99% normal interval directly.
+The calibration curve compares PICP at multiple nominal levels. It is a PICP
+**reliability plot**, also called an **accuracy plot** in geostatistical
+uncertainty validation (Goovaerts, 2001): it extends a single PICP across the
+predictive distribution. When predictive means and predictive standard
+deviations are available, `gg_coverage()` can calculate every 1%--99% normal
+interval directly. Central PICP does not by itself reveal asymmetric lower- and
+upper-tail misses, so it should be complemented by residual and tail-specific
+checks when a one-sided bias is relevant.
 
 ```{r coverage}
 gg_coverage(

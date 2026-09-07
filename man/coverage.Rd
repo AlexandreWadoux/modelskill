@@ -14,11 +14,11 @@ coverage(obs, lower, upper, na.rm = TRUE)
 \item{na.rm}{Logical; remove incomplete triplets?}
 }
 \value{
-One numeric value.
+One numeric value on the probability scale from zero to one.
 }
 \description{
-Proportion of observations satisfying \verb{lower <= obs <= upper}. Endpoints are
-included. Missing triplets are removed when \code{na.rm = TRUE}.
+Backward-compatible alias for \code{\link[=picp]{picp()}}. New code should prefer \code{picp()}, the
+conventional abbreviation for prediction interval coverage probability.
 }
 \examples{
 coverage(1:3, c(0, 1, 2), c(2, 3, 4))

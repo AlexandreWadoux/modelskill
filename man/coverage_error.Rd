@@ -19,8 +19,9 @@ coverage_error(obs, lower, upper, level = 0.95, na.rm = TRUE)
 One numeric value.
 }
 \description{
-Empirical \code{\link[=coverage]{coverage()}} minus nominal coverage \code{level}. Positive values mean
-over-coverage and negative values mean under-coverage.
+Empirical \code{\link[=picp]{picp()}} minus nominal coverage \code{level}. Positive values mean
+over-coverage and negative values mean under-coverage. The result is on the
+probability scale; multiply by 100 for percentage points.
 }
 \examples{
 coverage_error(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)

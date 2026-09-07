@@ -12,8 +12,8 @@
 #' @param predictive_sd Numeric predictive standard deviation vector.
 #' @param level Nominal central interval coverage in interval mode.
 #' @param na.rm Logical; remove incomplete paired inputs?
-#' @return A one-row base data frame. Interval mode returns `coverage`,
-#'   `coverage_error`, `interval_width`, and `interval_score`. Predictive-SD
+#' @return A one-row base data frame. Interval mode returns `picp`,
+#'   `picp_error`, `interval_width`, and `interval_score`. Predictive-SD
 #'   mode returns `standardized_error_mean`, `standardized_error_sd`,
 #'   `within_1sd`, and `within_1.96sd`.
 #' @examples
@@ -33,8 +33,8 @@ uncertainty_metrics <- function(obs, lower = NULL, upper = NULL, pred = NULL,
       stop("Interval mode requires both `lower` and `upper`.", call. = FALSE)
     }
     check_probability(level, "level")
-    return(data.frame(coverage = coverage(obs, lower, upper, na.rm),
-      coverage_error = coverage_error(obs, lower, upper, level, na.rm),
+    return(data.frame(picp = picp(obs, lower, upper, na.rm),
+      picp_error = coverage_error(obs, lower, upper, level, na.rm),
       interval_width = interval_width(obs, lower, upper, na.rm),
       interval_score = interval_score(obs, lower, upper, level, na.rm)))
   }

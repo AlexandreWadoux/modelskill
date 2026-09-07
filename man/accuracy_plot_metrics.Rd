@@ -38,8 +38,9 @@ every percentage from 1\% to 99\%.}
 One-row data frame with absolute and directional calibration areas.
 }
 \description{
-Derives calibration summaries from a prediction-interval coverage plot, also
-called an accuracy plot. \code{absolute_deviation} is the trapezoidal integral of
+Derives calibration summaries from a PICP reliability plot, also called an
+accuracy plot. It summarizes PICP evaluated over multiple nominal interval
+levels. \code{absolute_deviation} is the trapezoidal integral of
 the absolute vertical distance from the 1:1 line. \code{over_uncertainty} and
 \code{under_uncertainty} are the corresponding areas above and below the line;
 their percentages partition absolute deviation when it is non-zero. For a

@@ -8,6 +8,7 @@ test_that("gg_coverage is composable for one or several levels", {
   expect_equal(one$data$nominal, .8)
   expect_equal(many$data$nominal, c(.5, .8))
   expect_true(inherits(many + ggplot2::labs(title = "Calibration"), "ggplot"))
+  expect_equal(one$data$picp, 1)
 })
 
 test_that("gg_coverage rejects malformed intervals", {

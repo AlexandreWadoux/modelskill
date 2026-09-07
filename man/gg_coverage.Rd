@@ -2,7 +2,7 @@
 % Please edit documentation in R/gg_coverage.R
 \name{gg_coverage}
 \alias{gg_coverage}
-\title{Plot prediction-interval coverage calibration (accuracy plot)}
+\title{Plot PICP calibration (reliability or accuracy plot)}
 \usage{
 gg_coverage(
   obs,
@@ -41,17 +41,28 @@ every percentage from 1\% to 99\%.}
 \item{line_width}{Positive numeric reference-line width.}
 }
 \value{
-A \code{ggplot2} object with \code{nominal} and \code{empirical} data columns.
+A \code{ggplot2} object with \code{nominal} and \code{picp} data columns.
 }
 \description{
-Compares empirical coverage with nominal central prediction-interval
-coverage. Points on the dashed 1:1 line are calibrated; points below it
-under-cover observations. This diagnostic is also called an \emph{accuracy plot}
-in geostatistical uncertainty validation (Goovaerts, 2001). The result is an
-ordinary ggplot object.
+Compares prediction interval coverage probability (PICP) at multiple nominal
+central prediction-interval levels. Points on the dashed 1:1 line are
+calibrated; points below it under-cover observations. This is a PICP
+reliability plot, also called an \emph{accuracy plot} in geostatistical
+uncertainty validation (Goovaerts, 2001). It is therefore an extension of a
+single PICP to multiple interval levels. The result is an ordinary ggplot
+object.
+}
+\details{
+Central PICP curves assess overall interval reliability, but cannot by
+themselves identify asymmetric lower- versus upper-tail non-coverage caused
+by a one-sided bias.
 }
 \examples{
 obs <- c(1, 2, 3)
 gg_coverage(obs, lower = list(`0.8` = c(0, 1, 2)),
             upper = list(`0.8` = c(2, 3, 4)))
+}
+\references{
+Goovaerts, P. (2001). Geostatistical modelling of uncertainty in
+soil science. \emph{Geoderma}, 103, 3-26. \url{doi:10.1016/S0016-7061(01)00067-2}
 }

@@ -1,31 +1,54 @@
-#' Empirical prediction-interval coverage
+#' Prediction interval coverage probability (PICP)
 #'
-#' Proportion of observations satisfying `lower <= obs <= upper`. Endpoints are
-#' included. Missing triplets are removed when `na.rm = TRUE`.
+#' PICP is the empirical proportion of observations satisfying
+#' `lower <= obs <= upper`; endpoints are included. It is returned on the
+#' probability scale from zero to one, so multiply by 100 to report a percent.
+#' For a well-calibrated central interval, `picp()` should be close to its
+#' nominal level. Missing triplets are removed when `na.rm = TRUE`.
+#'
+#' A single PICP does not reveal whether non-coverage is balanced between the
+#' lower and upper tails. Use [gg_coverage()] to inspect PICP across interval
+#' levels; assess tail-specific calibration separately when directional bias is
+#' scientifically important.
 #' @param obs Numeric observation vector.
 #' @param lower,upper Numeric lower and upper prediction-interval bounds.
 #' @param na.rm Logical; remove incomplete triplets?
 #' @return One numeric value.
-#' @examples coverage(1:3, c(0, 1, 2), c(2, 3, 4))
+#' @references Goovaerts, P. (2001). Geostatistical modelling of uncertainty in
+#'   soil science. *Geoderma*, 103, 3-26. <doi:10.1016/S0016-7061(01)00067-2>
+#' @examples picp(1:3, c(0, 1, 2), c(2, 3, 4))
 #' @export
-coverage <- function(obs, lower, upper, na.rm = TRUE) {
+picp <- function(obs, lower, upper, na.rm = TRUE) {
   x <- prepare_interval_vectors(obs, lower, upper, na.rm)
   if (is.null(x) || !length(x$obs)) return(NA_real_)
   mean(x$obs >= x$lower & x$obs <= x$upper)
 }
 
+#' Empirical prediction-interval coverage
+#'
+#' Backward-compatible alias for [picp()]. New code should prefer `picp()`, the
+#' conventional abbreviation for prediction interval coverage probability.
+#' @inheritParams picp
+#' @return One numeric value on the probability scale from zero to one.
+#' @examples coverage(1:3, c(0, 1, 2), c(2, 3, 4))
+#' @export
+coverage <- function(obs, lower, upper, na.rm = TRUE) {
+  picp(obs, lower, upper, na.rm = na.rm)
+}
+
 #' Prediction-interval coverage error
 #'
-#' Empirical [coverage()] minus nominal coverage `level`. Positive values mean
-#' over-coverage and negative values mean under-coverage.
-#' @inheritParams coverage
+#' Empirical [picp()] minus nominal coverage `level`. Positive values mean
+#' over-coverage and negative values mean under-coverage. The result is on the
+#' probability scale; multiply by 100 for percentage points.
+#' @inheritParams picp
 #' @param level Nominal central interval coverage, strictly between zero and one.
 #' @return One numeric value.
 #' @examples coverage_error(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
 #' @export
 coverage_error <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
   check_probability(level, "level")
-  coverage(obs, lower, upper, na.rm = na.rm) - level
+  picp(obs, lower, upper, na.rm = na.rm) - level
 }
 
 #' Average prediction-interval width

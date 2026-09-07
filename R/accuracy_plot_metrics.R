@@ -1,7 +1,8 @@
 #' Summarize accuracy-plot calibration
 #'
-#' Derives calibration summaries from a prediction-interval coverage plot, also
-#' called an accuracy plot. `absolute_deviation` is the trapezoidal integral of
+#' Derives calibration summaries from a PICP reliability plot, also called an
+#' accuracy plot. It summarizes PICP evaluated over multiple nominal interval
+#' levels. `absolute_deviation` is the trapezoidal integral of
 #' the absolute vertical distance from the 1:1 line. `over_uncertainty` and
 #' `under_uncertainty` are the corresponding areas above and below the line;
 #' their percentages partition absolute deviation when it is non-zero. For a
@@ -22,8 +23,8 @@ accuracy_plot_metrics <- function(obs, lower = NULL, upper = NULL, level = NULL,
                               pred, predictive_sd, levels)
   curve <- curve[order(curve$nominal), ]
   x <- c(0, curve$nominal, 1)
-  d <- c(0, curve$empirical - curve$nominal, 0)
-  area <- function(y) sum(diff(x) * (head(y, -1) + tail(y, -1)) / 2)
+  d <- c(0, curve$picp - curve$nominal, 0)
+  area <- function(y) sum(diff(x) * (utils::head(y, -1) + utils::tail(y, -1)) / 2)
   absolute <- area(abs(d))
   over <- area(pmax(d, 0))
   under <- area(pmax(-d, 0))
