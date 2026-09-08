@@ -837,22 +837,21 @@ Calibration diagnostics such as PICP, QCP, and PIT ask whether a predictive
 distribution is statistically reliable.
 
 When several probabilistic models must be compared, it is also useful to have a
-single numerical criterion that rewards both calibration and sharpness.
-**Proper scoring rules** are designed for this purpose.
+single numerical criterion that evaluates the predictive distribution as a
+whole, accounting for both calibration and sharpness. **Proper scoring rules**
+are designed for this purpose.
 
-A proper scoring rule does not reward a model for deliberately reporting a
-predictive distribution different from the distribution it actually represents
-[@gneitingraftery2007].
+A proper scoring rule encourages honest probabilistic predictions: its expected
+value is optimized when the reported predictive distribution is the true
+predictive distribution [@gneitingraftery2007].
 
 #### 5.7.1 Continuous ranked probability score
 
 The **continuous ranked probability score (CRPS)** compares the complete
 predictive CDF with the realised observation.
 
-[`crps()`](../reference/crps.html) supports two important input formats in
-`modelskill`.
-
-For a normal predictive distribution:
+For a normal predictive distribution, [`crps()`](../reference/crps.html) can be
+supplied with the predictive mean and standard deviation:
 
 ```{r}
 crps(
@@ -860,7 +859,6 @@ crps(
   pred = pred,
   predictive_sd = predictive_sd
 )
-
 ```
 
 CRPS has the same units as the response variable. Zero is ideal and lower
@@ -880,11 +878,10 @@ crps(
   pred = pred,
   predictive_sd = sd_too_small
 )
-
 ```
 
-CRPS simultaneously reflects the location of the predictive distribution and
-its spread.
+CRPS penalizes predictive distributions that are poorly centred on the
+observation or unnecessarily dispersed.
 
 #### 5.7.2 Median CRPS
 
@@ -900,7 +897,6 @@ median_crps(
   pred = pred,
   predictive_sd = predictive_sd
 )
-
 ```
 
 Mean and median CRPS answer slightly different questions. Mean CRPS is usually
@@ -911,7 +907,8 @@ Median aggregation is a descriptive summary, not itself a proper scoring rule.
 #### 5.7.3 Logarithmic score
 
 The [`log_score()`](../reference/log_score.html) is another proper score. It
-uses the predictive density assigned to the observed value:
+uses the predictive density assigned to the observed value. The mean
+logarithmic score is
 
 \[
 \mathrm{Log\ score} =
@@ -933,7 +930,6 @@ log_score(
   obs,
   density_at_obs
 )
-
 ```
 
 Lower values are better.
@@ -942,19 +938,23 @@ The logarithmic score strongly penalizes observations that were assigned very
 low predictive density. It can therefore be particularly sensitive to failures
 in the tails of the predictive distribution.
 
-## 6. Case B: full predictive distributions supplied as samples
+## 6. Case B: predictive distributions represented by samples
 
-Many probabilistic models do not return only a predictive mean and standard
-deviation. Instead, they provide a set of possible values from the predictive
-distribution for every validation case.
+Some probabilistic models represent the predictive distribution for each
+validation case by a set of sampled possible values, rather than by parameters
+such as a predictive mean and standard deviation.
 
-Typical examples include:
+For each observation, these samples provide an empirical representation of the
+predictive distribution and can be used directly to evaluate predictive
+uncertainty.
+
+Typical examples are:
 
 - posterior predictive draws from Bayesian models;
 - simulation-based models;
 - ensemble predictions;
 - bootstrap predictive distributions;
-- some machine-learning methods;
+- some machine-learning methods like quantile regression forests;
 - Monte Carlo uncertainty propagation.
 
 `modelskill` represents this type of prediction as a matrix with:
