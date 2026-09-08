@@ -189,12 +189,18 @@ correlation <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, 
 #' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2\sum_{i=1}^{n}(pred_i-\bar{pred})^2}.}
 #'
 #' It ranges from zero to one and summarizes the strength, but not the sign, of
-#' linear association. A value of one can occur despite additive bias or
-#' proportional scale differences, so it is not a measure of agreement or
-#' prediction accuracy. Do not confuse lowercase `r2()` with [nse()], [mec()],
-#' or uppercase `R2()`, which are aliases for model efficiency. It returns
-#' `NA` with a warning when fewer than two valid pairs remain or either vector
-#' has zero variance.
+#' linear association. It describes the dispersion of predictions and
+#' observations around their fitted linear relationship rather than their
+#' departure from the 1:1 line. Consequently, `r2()` is insensitive to additive
+#' bias and proportional scaling: a value of one can occur even when predictions
+#' are systematically biased or have a different scale from the observations.
+#' It should therefore not be interpreted as a general measure of predictive
+#' agreement or accuracy.
+#'
+#' Do not confuse lowercase `r2()` with [nse()], [mec()], or uppercase [R2()],
+#' which are model-efficiency statistics and are sensitive to departures from
+#' the line of equality. It returns `NA` with a warning when fewer than two
+#' valid pairs remain or either vector has zero variance.
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Willmott, C. J. (1984). On the evaluation of model performance
@@ -263,19 +269,87 @@ mec <- function(obs, pred, na.rm = TRUE) {
   metric_value(obs, pred, na.rm, "nse", metric = "MEC")
 }
 
-#' Coefficient of determination / efficiency R-squared
+#' Model-efficiency R-squared
 #'
-#' Alias for [nse()] and `mec()`. This uppercase `R2()` is the model-efficiency
-#' coefficient; lowercase `r2()` remains squared Pearson correlation. Its
-#' interpretation and references are given in [nse()]. It returns `NA` with a
-#' warning under the same undefined conditions as [nse()].
+#' `R2()` is the model-efficiency coefficient and is identical to [nse()] and
+#' [mec()] in this package. It compares the squared prediction error with the
+#' squared deviation of the observations from their mean:
 #'
-#' \deqn{R^2=1-\frac{\sum_{i=1}^{n}(obs_i-pred_i)^2}
-#' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}.}
+#' \deqn{
+#' R^2 =
+#' 1 -
+#' \frac{
+#' \sum_{i=1}^{n}(obs_i-pred_i)^2
+#' }{
+#' \sum_{i=1}^{n}(obs_i-\bar{obs})^2
+#' }.
+#' }
+#'
+#' The statistic has a direct benchmark interpretation. A value of 1 indicates
+#' perfect agreement between observations and predictions. A value of 0 means
+#' that predicting the observed mean for every observation performs equally
+#' well according to squared error. Negative values indicate that the observed
+#' mean provides a better prediction than the model.
+#'
+#' Uppercase `R2()` must not be confused with lowercase [r2()], which is the
+#' squared Pearson correlation coefficient. Squared Pearson correlation
+#' measures the strength of linear association and is insensitive to additive
+#' and proportional differences between observations and predictions. It can
+#' therefore equal one even for strongly biased predictions. In contrast,
+#' `R2()` is sensitive to deviations from the line of equality and therefore
+#' measures predictive performance rather than linear association alone.
+#'
+#' Because `R2()` is based on squared errors, individual large prediction
+#' errors can have a disproportionate influence on its value. It should
+#' therefore generally be interpreted together with complementary measures
+#' such as [bias()], [mae()], [rmse()], and [r2()] rather than as a standalone
+#' measure of predictive performance.
+#'
+#' `R2()` returns `NA` with a warning when fewer than two valid observation-
+#' prediction pairs remain or when the observations have zero variance.
+#' Missing-value handling follows [bias()].
+#'
 #' @rdname efficiency_r2
 #' @inheritParams bias
-#' @return One numeric value.
-#' @examples R2(1:3, c(1, 3, 2))
+#' @return One numeric value. The optimum is 1; values may be negative and are
+#'   not bounded below.
+#'
+#' @references
+#' Wadoux, A. M. J.-C., Walvoort, D. J. J. and Brus, D. J. (2022).
+#' An integrated approach for the evaluation of quantitative soil maps through
+#' Taylor and solar diagrams. *Geoderma*, 405, 115332.
+#' <doi:10.1016/j.geoderma.2021.115332>
+#'
+#' Janssen, P. H. M. and Heuberger, P. S. C. (1995). Calibration of
+#' process-oriented models. *Ecological Modelling*, 83, 55-66.
+#' <doi:10.1016/0304-3800(95)00084-9>
+#'
+#' Nash, J. E. and Sutcliffe, J. V. (1970). River flow forecasting through
+#' conceptual models part I: A discussion of principles. *Journal of
+#' Hydrology*, 10, 282-290.
+#' <doi:10.1016/0022-1694(70)90255-6>
+#'
+#' Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of
+#' goodness-of-fit measures in hydrologic and hydroclimatic model validation.
+#' *Water Resources Research*, 35(1), 233-241.
+#' <doi:10.1029/1998WR900018>
+#'
+#' @seealso [r2()], [nse()], [mec()], [bias()], [mae()], [rmse()]
+#'
+#' @examples
+#' obs <- c(1, 2, 3, 4, 5)
+#'
+#' # Perfect predictions
+#' R2(obs, obs)
+#'
+#' # Additive bias: r2 remains 1, whereas R2 decreases
+#' pred <- obs + 1
+#' r2(obs, pred)
+#' R2(obs, pred)
+#'
+#' # Predictions can perform worse than using the observed mean
+#' R2(obs, rev(obs))
+#'
 #' @export
 R2 <- function(obs, pred, na.rm = TRUE) {
   metric_value(obs, pred, na.rm, "nse", metric = "R2")
@@ -306,28 +380,91 @@ sd_ratio <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "sd
 
 #' Lin's concordance correlation coefficient
 #'
-#' Lin's concordance correlation coefficient (CCC) combines Pearson correlation
-#' with agreement in location and scale.
+#' Lin's concordance correlation coefficient (CCC; \eqn{\rho_c}) measures
+#' agreement between observations and predictions by combining Pearson
+#' correlation with differences in location and scale. Unlike Pearson
+#' correlation alone, CCC evaluates how closely paired values approach the
+#' line of equality.
 #'
-#' \deqn{\rho_c=\frac{2\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})}
-#' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2+
-#' \sum_{i=1}^{n}(pred_i-\bar{pred})^2+n(\bar{obs}-\bar{pred})^2}.}
+#' \deqn{
+#' \rho_c =
+#' \frac{
+#' 2\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})
+#' }{
+#' \sum_{i=1}^{n}(obs_i-\bar{obs})^2+
+#' \sum_{i=1}^{n}(pred_i-\bar{pred})^2+
+#' n(\bar{obs}-\bar{pred})^2
+#' }.
+#' }
 #'
-#' CCC ranges from -1 to one and equals one for perfect agreement. Values near
-#' zero indicate little concordance; negative values indicate discordant linear
-#' association. Unlike Pearson correlation, CCC is reduced by mean and scale
-#' differences. Population variances (divisor n) are used, matching the
-#' established package convention. The package returns `NA` with a warning for
-#' constant observations or fewer than two pairs, and zero for constant predictions
-#' with varying observations. Missing-value handling follows [bias()].
+#' CCC ranges from -1 to 1, with 1 indicating perfect agreement. Values
+#' decrease as observations and predictions differ in linear association,
+#' mean, or scale. Negative values indicate negative concordance.
+#'
+#' CCC can also be expressed as
+#'
+#' \deqn{\rho_c = r C_b,}
+#'
+#' where \eqn{r} is the Pearson correlation coefficient and \eqn{C_b} is a
+#' bias-correction factor that accounts for departures from the line of
+#' equality. Consequently, CCC incorporates both association and agreement
+#' into a single statistic.
+#'
+#' When CCC is used to evaluate predictive models, its value is most
+#' informative when considered together with complementary statistics.
+#' Different combinations of correlation, mean bias, and scale differences
+#' can produce similar CCC values, so the coefficient alone does not identify
+#' which component is responsible for disagreement between observations and
+#' predictions. In addition, CCC depends partly on the variability of the
+#' reference observations. Direct comparison of CCC values obtained from
+#' substantially different datasets or target populations should therefore
+#' be made with caution.
+#'
+#' For prediction-model evaluation, CCC can usefully be reported alongside
+#' measures describing individual aspects of predictive performance, such as
+#' [bias()], [mae()], [rmse()], [correlation()], or [R2()]. This allows the
+#' overall concordance indicated by CCC to be interpreted together with the
+#' magnitude and sources of prediction error.
+#'
+#' Population variances (divisor \eqn{n}) are used, matching the package
+#' convention. The function returns `NA` with a warning when fewer than two
+#' valid observation-prediction pairs remain or when the observations have
+#' zero variance. It returns zero for constant predictions when observations
+#' vary. Missing-value handling follows [bias()].
+#'
 #' @inheritParams bias
-#' @return One numeric value.
-#' @references Lin, L. I.-K. (1989). A concordance correlation coefficient to
-#'   evaluate reproducibility. *Biometrics*, 45, 255-268.
-#'   <doi:10.2307/2532051>
-#' @examples ccc(1:3, c(1, 3, 2))
+#' @return One numeric value between -1 and 1, with 1 indicating perfect
+#'   agreement.
+#'
+#' @references
+#' Lin, L. I.-K. (1989). A concordance correlation coefficient to evaluate
+#' reproducibility. *Biometrics*, 45, 255-268.
+#' <doi:10.2307/2532051>
+#'
+#' Wadoux, A. M. J.-C. and Minasny, B. (2024). Some limitations of the
+#' concordance correlation coefficient to characterise model accuracy.
+#' *Ecological Informatics*, 83, 102820.
+#' <doi:10.1016/j.ecoinf.2024.102820>
+#'
+#' @seealso [correlation()], [bias()], [mae()], [rmse()], [R2()]
+#'
+#' @examples
+#' obs <- c(1, 2, 3, 4, 5)
+#'
+#' # Perfect agreement
+#' ccc(obs, obs)
+#'
+#' # Systematic bias reduces concordance
+#' ccc(obs, obs + 1)
+#'
+#' # Compare with Pearson correlation
+#' correlation(obs, obs + 1)
+#' ccc(obs, obs + 1)
+#'
 #' @export
-ccc <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "ccc")
+ccc <- function(obs, pred, na.rm = TRUE) {
+  metric_value(obs, pred, na.rm, "ccc")
+}
 
 extended_components <- function(obs, pred, na.rm = TRUE) {
   x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
