@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Why use several prediction metrics?
+## 1. Why use several prediction metrics?
 
 Continuous predictions can come from machine learning, statistical models,
 geostatistics, or process-based models. `modelskill` evaluates the agreement
@@ -35,7 +35,7 @@ metrics rather than a single number.
 Validation metrics should be calculated from independent validation data or an
 appropriate resampling procedure.
 
-## Example data
+## 2. Example data
 
 We create three deliberately different prediction models.
 
@@ -66,7 +66,7 @@ The models have simple characteristics:
 * `Biased` systematically overpredicts by one unit;
 * `Noisy` has larger random errors.
 
-## Start by looking at the predictions
+## 3. Start by looking at the predictions
 
 Before calculating summary statistics, it is useful to inspect observed versus
 predicted values.
@@ -108,7 +108,7 @@ The dashed 1:1 line represents perfect agreement. `Good` remains relatively
 close to this line, `Biased` is systematically shifted upward, and `Noisy` is
 more dispersed.
 
-# Calculate individual metrics
+# 4. Calculate individual metrics
 
 Every prediction metric in `modelskill` can be calculated separately. This is
 useful when only a few specific aspects of performance are required.
@@ -122,7 +122,7 @@ metric(obs, pred)
 where `obs` is the vector of observations and `pred` is the corresponding
 prediction vector.
 
-## RMSE: overall error magnitude
+## 4.1 RMSE: overall error magnitude
 
 The **root mean squared error (RMSE)** measures the overall magnitude of
 prediction errors:
@@ -168,7 +168,7 @@ rmse(obs, models$Noisy)
 mae(obs, models$Noisy)
 ```
 
-## Bias: systematic overprediction or underprediction
+## 4.2 Bias: systematic overprediction or underprediction
 
 `modelskill` defines prediction error as
 
@@ -208,12 +208,12 @@ A bias close to zero does not necessarily mean that predictions are accurate.
 Positive and negative errors can cancel. Bias should therefore be interpreted
 with an unsigned error metric such as MAE or RMSE.
 
-# A particularly important distinction: `r2()` versus `R2()`
+# 5. A particularly important distinction: `r2()` versus `R2()`
 
 `modelskill` contains two statistics whose names differ only by capitalization,
 but they measure different things.
 
-### Lowercase `r2()`
+### 5.1 Lowercase `r2()`
 
 [`r2()`](../reference/r2.html) is **squared Pearson correlation**:
 
@@ -233,7 +233,7 @@ r^2
 
 It measures the strength of linear association.
 
-### Uppercase `R2()`
+### 5.2 Uppercase `R2()`
 
 [`R2()`](../reference/efficiency_r2.html) is the **model-efficiency
 coefficient**:
@@ -296,7 +296,7 @@ For this statistic:
 * **negative values** mean that predicting the observed mean would perform
   better.
 
-## Correlation is not agreement
+## 5.3 Correlation is not agreement
 
 The same issue can be illustrated by comparing Pearson correlation with
 Lin's concordance correlation coefficient.
@@ -320,7 +320,7 @@ It is insensitive to a constant shift.
 predictions differ from observations in their mean or variability. It therefore
 measures agreement more directly than Pearson correlation.
 
-# Compare several models at once
+# 6. Compare several models at once
 
 When several models are being evaluated, [`model_metrics()`](../reference/model_metrics.html)
 calculates the main prediction metrics together.
@@ -347,7 +347,7 @@ For the example data, no single column should be used to identify the "best"
 model without considering what aspect of prediction quality matters for the
 application.
 
-# Categories of prediction performance metrics
+# 7. Categories of prediction performance metrics
 
 The following classification is intended as a practical guide. Some metrics
 are mathematically related and should not be interpreted as independent
@@ -369,7 +369,7 @@ There is no universally best metric. The appropriate combination depends on
 the scientific objective and the consequences of different types of prediction
 error.
 
-# Core metrics
+# 8. Core metrics
 
 The default output of `model_metrics()` contains the principal metrics used for
 continuous prediction evaluation.
@@ -400,7 +400,7 @@ population variances and covariance used by the package.
 The ranges and special cases of each metric are described in its linked
 reference page.
 
-# Extended metrics
+# 9. Extended metrics
 
 Additional metrics are available when a more specialised evaluation is
 required.
@@ -439,7 +439,7 @@ kge(
 )
 ```
 
-## Extended metric reference
+## 9.1 Extended metric reference
 
 | Metric / function | Equation | Ideal | Simple interpretation | Reference |
 |:--|:--|:--|:--|:--|
@@ -464,7 +464,7 @@ percentage is required. `MPE` and `RRMSE` are returned directly as percentages.
 Percentage-based metrics require particular care when observations or their
 mean are zero or close to zero.
 
-# Quantile predictions
+# 10. Quantile predictions
 
 [`pinball_loss()`](../reference/pinball_loss.html) is not included in
 `model_metrics(extended = TRUE)` because it requires a specific quantile level.
@@ -497,7 +497,7 @@ pinball_loss(
 The quantile level should be chosen according to the prediction being
 evaluated.
 
-# How should metrics be combined?
+# 11. How should metrics be combined?
 
 A useful general-purpose evaluation of continuous predictions should usually
 contain metrics from different categories.
@@ -528,7 +528,7 @@ The precise set should depend on the application. There is no universal
 threshold at which RMSE, correlation, CCC, KGE, or another metric automatically
 becomes "good".
 
-# Related and redundant metrics
+# 12. Related and redundant metrics
 
 Several available statistics are mathematically related.
 
@@ -556,7 +556,7 @@ These functions remain available because different scientific communities use
 different conventions, but reporting several mathematically equivalent metrics
 does not provide independent evidence about model performance.
 
-# Missing values and special cases
+# 13. Missing values and special cases
 
 By default, `modelskill` removes incomplete observation-prediction pairs
 separately for each model.
@@ -590,7 +590,7 @@ Some metrics are undefined in particular situations:
 
 The individual function documentation describes these cases in detail.
 
-# Practical recommendations
+# 14. Practical recommendations
 
 For most prediction-validation analyses:
 
@@ -618,7 +618,7 @@ For most prediction-validation analyses:
 7. **Do not select a model from one metric alone.**  
    Different metrics describe different aspects of prediction quality.
 
-# References
+# 15. References
 
 * Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger, J.-M., and
   McBratney, A. (2010). Critical review of chemometric indicators commonly
@@ -678,7 +678,7 @@ For most prediction-validation analyses:
   model performance. *Climate Research*, 30, 79-82.
   <https://doi.org/10.3354/cr030079>
 
-# Next steps
+# 16. Next steps
 
 Use the
 [predictive-uncertainty evaluation](predictive-uncertainty.html)
