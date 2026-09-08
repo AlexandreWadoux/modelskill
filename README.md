@@ -7,6 +7,8 @@ output: github_document
 [![pkgdown](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 
+*Last update: 2026-09-08*
+
 **Alexandre M.J.-C. Wadoux**
 
 ## About
