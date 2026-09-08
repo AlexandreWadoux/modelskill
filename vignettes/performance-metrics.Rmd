@@ -292,7 +292,7 @@ For this statistic:
 * **negative values** mean that predicting the observed mean would perform
   better.
 
-The distinction between \(r^2\) and \(R^2\) (also referred to as NSE or MEC) has been highlighted on many occasions (e.g., Legates et al.; Wadoux et al., 2021). It is also discussed on the [Wikipedia page on the coefficient of determination](https://en.wikipedia.org/wiki/Coefficient_of_determination), which notes that \(r^2\) quantifies the strength of the linear relationship between observed and predicted values, whereas evaluation of predictive goodness-of-fit should concern the specific 1:1 relationship,
+The distinction between \(r^2\) and \(R^2\) (also referred to as NSE or MEC) has been highlighted on many occasions [e.g., @legates1999; @wadoux2022]. It is also discussed on the [Wikipedia page on the coefficient of determination](https://en.wikipedia.org/wiki/Coefficient_of_determination), which notes that \(r^2\) quantifies the strength of the linear relationship between observed and predicted values, whereas evaluation of predictive goodness-of-fit should concern the specific 1:1 relationship,
 
 $$
 obs = 1 \times pred + 0.
