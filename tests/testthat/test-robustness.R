@@ -84,14 +84,15 @@ test_that("constant predictions have an explicit finite convention", {
   expect_equal(d$signed_sde, -1)
 })
 
-test_that("diagram coordinates match original complete-data equations", {
+test_that("diagram coordinates match complete-data equations", {
   obs <- 1:5
   pred <- c(1, 2, 2, 5, 4)
   d <- diagram_stats(pred, obs)
   expected <- sqrt(1 + (sd(pred) / sd(obs))^2 -
                      2 * sd(pred) / sd(obs) * cor(pred, obs))
+  obs_sd_pop <- sqrt(mean((obs - mean(obs))^2))
   expect_equal(d$sde, expected, tolerance = 1e-12)
-  expect_equal(d$nME, mean(obs - pred) / sd(obs))
+  expect_equal(d$nME, mean(obs - pred) / obs_sd_pop, tolerance = 1e-12)
   expect_equal(d$signed_sde, expected * sign(sd(pred) - sd(obs)))
   expect_equal(d$n, 5L)
   expect_equal(gg_solar(pred, obs)$data$uRMSDnorm_sigmaD, d$sde)
@@ -201,12 +202,31 @@ test_that("equal variance retains the original positive target sign", {
   expect_equal(d$sde, c(0, 0), tolerance = 1e-14)
 })
 
-test_that("documented sample normalization is distinct from population RMSE", {
-  obs <- 1:5
-  pred <- c(1, 2, 2, 5, 4)
-  d <- diagram_stats(pred, obs)
-  m <- model_metrics(pred, obs)
-  expect_equal(m$rmse^2 / sd(obs)^2, d$nME^2 + (4 / 5) * d$sde^2)
+test_that("diagram normalization gives exact finite-sample RMSE geometry", {
+  for (case in list(
+    list(obs = 1:5, pred = c(1, 2, 2, 5, 4)),
+    list(obs = c(1, 3), pred = c(1, 4))
+  )) {
+    d <- diagram_stats(case$pred, case$obs)
+    m <- model_metrics(case$pred, case$obs)
+    obs_sd_pop <- sqrt(mean((case$obs - mean(case$obs))^2))
+
+    expect_equal(
+      d$nME^2 + d$sde^2,
+      m$rmse^2 / obs_sd_pop^2,
+      tolerance = 1e-12
+    )
+    expect_equal(
+      sqrt(d$nME^2 + d$sde^2),
+      m$rmse / obs_sd_pop,
+      tolerance = 1e-12
+    )
+    expect_equal(
+      1 - d$nME^2 - d$sde^2,
+      m$R2,
+      tolerance = 1e-12
+    )
+  }
 })
 
 test_that("custom axes preserve their specified reference endpoints", {
