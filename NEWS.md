@@ -2,6 +2,12 @@
 
 ## Submission preparation
 
+* Accept predictive means and standard deviations (normal distributions), or
+  equally weighted predictive samples, directly in interval and calibration
+  diagnostics. Preserve explicit bounds and quantiles, use shared complete-row
+  filtering and type-7 empirical quantiles, and support empirical PIT values.
+* Document these input alternatives and test their numerical equivalence,
+  validation, missing values, and compatibility with standard ggplot additions.
 * Replace the verification-derived CRPS decomposition routine with a new
   implementation from the documented mathematical equations. Test the score
   and components against independent mathematical references, including ties,
@@ -45,8 +51,9 @@
 * Fix missing-observation handling and reject degenerate paired plot subsets.
 * Evaluate centred error directly and scale intermediate calculations to avoid
   cancellation and overflow. Regular complete-data definitions remain unchanged.
-* Constant inputs now warn about the existing r = 0 convention. Constant
-  predictions have concordance zero; fewer than two pairs give NA correlations.
+* Replace the earlier r = 0 convention for constant inputs with NA and an
+  informative warning. CCC is zero when its denominator is positive and one
+  input is constant, and NA when both inputs are identical constants.
 * Keep original palettes, radii, sample SD normalization and axis-title placement.
 * Replace repeated constant graphical layers with annotations, update legend
   syntax, expose Taylor point data, and remove redundant ggthemes dependency.

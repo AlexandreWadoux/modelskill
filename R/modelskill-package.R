@@ -19,7 +19,8 @@
 #' transform with [pit()] and [gg_pit()]. [pit()] can use predictive CDF values
 #' evaluated at the observations or calculate PIT values directly from
 #' predictive means and standard deviations under a normal-distribution
-#' assumption. Proper scoring rules and distributional summaries include
+#' assumption, or from equally weighted predictive samples using their empirical
+#' CDF. Proper scoring rules and distributional summaries include
 #' [crps()], [median_crps()], [crps_decomposition()], and [log_score()].
 #'
 #' Complementary graphical summaries of point-prediction performance are

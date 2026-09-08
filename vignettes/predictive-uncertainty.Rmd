@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
 ## 1. Why validate predictive uncertainty?
 
 Point-prediction metrics assess how close predictions are to observations, but
-many models also quantify how uncertain each prediction is. This inFpitformation may
+many models also quantify how uncertain each prediction is. This information may
 be supplied as prediction intervals, predicted quantiles, a predictive mean and
 standard deviation, or a complete predictive distribution.
 
@@ -84,7 +84,7 @@ The main `modelskill` functions used below are:
 | [`accuracy_plot_metrics()`](../reference/accuracy_plot_metrics.html) | Summarizes deviations between the empirical coverage curve and the ideal 1:1 reliability line.                                         | [@goovaerts2001; @schmidinger2023]            |
 | [`qcp()`](../reference/qcp.html)                                     | Calculates quantile coverage probability, the proportion of observations below each predicted quantile.                                | [@schmidinger2023]                              |
 | [`gg_qcp()`](../reference/gg_qcp.html)                               | Produces a quantile calibration plot comparing nominal quantile probabilities with empirical quantile coverage.                        | [@schmidinger2023]                              |
-| [`pit()`](../reference/pit.html) | Calculates probability integral transform values from predictive CDF values or directly from predictive means and standard deviations under a normal predictive-distribution assumption. | [@gneiting2007; @schmidinger2023] |
+| [`pit()`](../reference/pit.html) | Calculates probability integral transform values from predictive CDF values, predictive means and standard deviations under a normal assumption, or equally weighted predictive samples using their empirical CDF. | [@gneiting2007; @schmidinger2023] |
 | [`gg_pit()`](../reference/gg_pit.html)                               | Produces a PIT histogram for assessing the calibration of complete predictive distributions.                                           | [@gneitingraftery2007; @schmidinger2023] |
 | [`crps()`](../reference/crps.html)                                   | Calculates the continuous ranked probability score, a proper score that evaluates the full predictive distribution.                    | [@hersbach2000; @gneitingraftery2007]                  |
 | [`median_crps()`](../reference/median_crps.html)                     | Calculates the median case-wise CRPS, providing a robust summary of typical probabilistic prediction performance.                      | [@gneitingraftery2007]                                   |

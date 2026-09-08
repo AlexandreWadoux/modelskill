@@ -26,7 +26,8 @@ probability with \code{\link[=qcp]{qcp()}} and \code{\link[=gg_qcp]{gg_qcp()}}, 
 transform with \code{\link[=pit]{pit()}} and \code{\link[=gg_pit]{gg_pit()}}. \code{\link[=pit]{pit()}} can use predictive CDF values
 evaluated at the observations or calculate PIT values directly from
 predictive means and standard deviations under a normal-distribution
-assumption. Proper scoring rules and distributional summaries include
+assumption, or from equally weighted predictive samples using their empirical
+CDF. Proper scoring rules and distributional summaries include
 \code{\link[=crps]{crps()}}, \code{\link[=median_crps]{median_crps()}}, \code{\link[=crps_decomposition]{crps_decomposition()}}, and \code{\link[=log_score]{log_score()}}.
 
 Complementary graphical summaries of point-prediction performance are
