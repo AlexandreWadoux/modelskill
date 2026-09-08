@@ -117,11 +117,11 @@ the normalization assumptions documented in \code{\link[=diagram_stats]{diagram_
 The solar diagram uses the error decomposition
 \deqn{\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2},}
 where ME*, SDE*, and RMSE* are respectively mean error, centred root mean
-square difference, and RMSE divided by the observation standard deviation.
-The distance from the origin is RMSE*. The origin is perfect prediction;
-points on the vertical axis have no mean error; negative ME* indicates
-overprediction under the package convention \code{obs - pred}; and positive ME*
-indicates underprediction.
+square difference, and RMSE divided by the population-moment observation
+standard deviation. The distance from the origin is RMSE*. The origin is
+perfect prediction; points on the vertical axis have no mean error; negative
+ME* indicates overprediction under the package convention \code{obs - pred}; and
+positive ME* indicates underprediction.
 
 Points inside the outer RMSE* = 1 circle improve on predicting the observed
 mean (equivalently, MEC/NSE/R2 is positive). The pale-yellow regions give
