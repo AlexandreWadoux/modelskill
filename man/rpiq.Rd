@@ -27,8 +27,10 @@ interquartile range of observations.
 
 RPIQ is non-negative and larger values indicate lower error relative to the
 middle 50 percent of observed values. It is less influenced by extremes than
-\code{\link[=rpd]{rpd()}}. R uses default type-7 quartiles. It is NA for perfect predictions.
-Missing-value handling follows \code{\link[=bias]{bias()}}.
+\code{\link[=rpd]{rpd()}}. R uses default type-7 quartiles. For perfect predictions with a
+nonzero interquartile range it returns \code{Inf}; it returns \code{NA} with a warning
+for the indeterminate zero-over-zero case. Missing-value handling follows
+\code{\link[=bias]{bias()}}.
 }
 \references{
 Bellon-Maurel et al. (2010). See \code{\link[=rpd]{rpd()}}.

@@ -25,8 +25,9 @@ each observation.
 \left|\frac{obs_i-pred_i}{obs_i}\right|.}
 
 MAPE is a non-negative fraction; zero is ideal, and multiplying by 100 gives
-percent. It is NA for zero observations and can disproportionately weight
-errors near zero. Missing-value handling follows \code{\link[=bias]{bias()}}.
+percent. It returns \code{NA} with a warning when any observation is zero and can
+disproportionately weight errors near zero. Missing-value handling follows
+\code{\link[=bias]{bias()}}.
 }
 \references{
 Hyndman and Koehler (2006). See \code{\link[=mdae]{mdae()}}.

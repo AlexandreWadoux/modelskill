@@ -30,7 +30,7 @@ With quantile level \code{tau}, it is
 It is non-negative and zero is ideal. Underprediction is penalized more when
 \code{level} is high; overprediction is penalized more when \code{level} is low. At
 \code{level = 0.5}, it equals one-half of \code{\link[=mae]{mae()}}. Missing-value handling follows
-\code{\link[=bias]{bias()}}.
+\code{\link[=bias]{bias()}}. It returns \code{NA} with a warning when no valid pairs remain.
 }
 \references{
 Koenker, R. and Bassett, G. (1978). Regression quantiles.

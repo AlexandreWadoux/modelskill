@@ -27,7 +27,8 @@ the observed mean as a constant prediction.
 
 One is ideal; zero means the predictions are no better than predicting the
 observed mean; negative values indicate worse performance than that
-benchmark. NSE is undefined for constant observations. It is sensitive to
+benchmark. NSE returns \code{NA} with a warning when fewer than two valid pairs
+remain or the observations have zero variance. It is sensitive to
 large errors because it uses squared differences. NSE, \code{\link[=mec]{mec()}}, and uppercase
 \code{R2()} are identical in this package; they are not lowercase \code{\link[=r2]{r2()}}.
 }

@@ -19,7 +19,8 @@ One numeric value.
 \description{
 Alias for \code{\link[=nse]{nse()}} and \code{mec()}. This uppercase \code{R2()} is the model-efficiency
 coefficient; lowercase \code{r2()} remains squared Pearson correlation. Its
-interpretation and references are given in \code{\link[=nse]{nse()}}.
+interpretation and references are given in \code{\link[=nse]{nse()}}. It returns \code{NA} with a
+warning under the same undefined conditions as \code{\link[=nse]{nse()}}.
 }
 \details{
 \deqn{R^2=1-\frac{\sum_{i=1}^{n}(obs_i-pred_i)^2}

@@ -28,7 +28,9 @@ It ranges from zero to one and summarizes the strength, but not the sign, of
 linear association. A value of one can occur despite additive bias or
 proportional scale differences, so it is not a measure of agreement or
 prediction accuracy. Do not confuse lowercase \code{r2()} with \code{\link[=nse]{nse()}}, \code{\link[=mec]{mec()}},
-or uppercase \code{R2()}, which are aliases for model efficiency.
+or uppercase \code{R2()}, which are aliases for model efficiency. It returns
+\code{NA} with a warning when fewer than two valid pairs remain or either vector
+has zero variance.
 }
 \examples{
 r2(1:3, c(1, 3, 2))

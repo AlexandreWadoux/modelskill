@@ -24,7 +24,8 @@ Root mean squared logarithmic error (RMSLE) is the square root of \code{\link[=m
 [\log(1+obs_i)-\log(1+pred_i)]^2}.}
 
 RMSLE is non-negative and zero is ideal. It has the same non-negative input
-requirement and log1p convention as \code{\link[=msle]{msle()}}. Missing-value handling follows
+requirement and log1p convention as \code{\link[=msle]{msle()}}, returning \code{NA} with a warning
+when either input contains a negative value. Missing-value handling follows
 \code{\link[=bias]{bias()}}.
 }
 \references{

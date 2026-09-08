@@ -37,11 +37,11 @@ test_that("all columns use the same retained pairs and edge-case policies", {
   missing <- model_metrics(c(p, NA), c(o, 0), extended = TRUE, na.rm = FALSE)
   expect_true(all(is.na(missing[-1])))
   expect_true(all(is.na(model_metrics(NA_real_, NA_real_, extended = TRUE)[-1])))
-  expect_true(is.na(willmott_d(rep(2, 3), rep(2, 3))))
+  expect_warning(expect_true(is.na(willmott_d(rep(2, 3), rep(2, 3)))), "denominator is zero")
   expect_equal(willmott_d(1:3, 3:1), 0)
   expect_equal(mpe(c(1, 2), c(2, 4)), -100)
   expect_equal(smape(c(0, 1), c(0, -1)), 1)
-  expect_true(is.na(kge(1:3, rep(2, 3))))
+  expect_warning(expect_true(is.na(kge(1:3, rep(2, 3)))), "predictions have zero variance")
   for (f in list(mpe, rrmse, willmott_d)) {
     expect_error(f(1:2, 1:3), "same length")
     expect_error(f(1:2, c(1, Inf)), "infinite")

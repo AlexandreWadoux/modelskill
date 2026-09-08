@@ -24,8 +24,10 @@ Range-to-RMSE ratio (RER) scales RMSE by the observed range.
 {\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 
 RER is non-negative and larger values indicate smaller error relative to the
-observed range. It is sensitive to extreme observations and is NA for perfect
-predictions. Missing-value handling follows \code{\link[=bias]{bias()}}.
+observed range. It is sensitive to extreme observations. For perfect
+predictions with a nonzero range it returns \code{Inf}; it returns \code{NA} with a
+warning for the indeterminate zero-over-zero case. Missing-value handling
+follows \code{\link[=bias]{bias()}}.
 }
 \references{
 Bellon-Maurel et al. (2010). See \code{\link[=rpd]{rpd()}}.

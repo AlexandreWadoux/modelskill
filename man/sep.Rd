@@ -25,8 +25,8 @@ prediction errors after removing their mean error (ME).
 \left[(obs_i-pred_i)-\frac{1}{n}\sum_{j=1}^{n}(obs_j-pred_j)\right]^2}.}
 
 SEP has response units, is non-negative, and zero is ideal. Unlike RMSE, it
-removes constant bias. At least two retained pairs are required. Missing-value
-handling follows \code{\link[=bias]{bias()}}.
+removes constant bias. It returns \code{NA} with a warning when fewer than two
+retained pairs remain. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \references{
 Bellon-Maurel et al. (2010). See \code{\link[=rpd]{rpd()}}.

@@ -25,7 +25,8 @@ Pearson product-moment correlation between observations and predictions.
 
 Correlation ranges from -1 to 1: one indicates a perfect increasing linear
 association, minus one a perfect decreasing linear association, and zero no
-linear association. It is undefined for a constant vector. Correlation is
+linear association. It returns \code{NA} with a warning when fewer than two valid
+pairs remain or either vector has zero variance. Correlation is
 unaffected by additive bias and proportional scaling, so it measures pattern
 association rather than agreement or prediction accuracy. Interpret it with
 \code{\link[=bias]{bias()}}, \code{\link[=rmse]{rmse()}}, and an agreement measure such as \code{\link[=ccc]{ccc()}}.

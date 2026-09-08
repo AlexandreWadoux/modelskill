@@ -25,8 +25,9 @@ absolute error from predicting the observed mean.
 {\sum_{i=1}^n|obs_i-\bar{obs}|}.}
 
 RAE is non-negative and zero is ideal. One equals the observed-mean
-absolute-error benchmark; values above one are worse. It is NA for constant
-observations. Missing-value handling follows \code{\link[=bias]{bias()}}.
+absolute-error benchmark; values above one are worse. It returns \code{NA} with a
+warning for constant observations, whose benchmark denominator is zero.
+Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \references{
 Hyndman and Koehler (2006). See \code{\link[=mdae]{mdae()}}.

@@ -26,9 +26,11 @@ deviation of observations.
 {\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 
 RPD is non-negative and larger values indicate lower error relative to
-observed variation. It returns NA for perfect predictions rather than
-infinity, and with fewer than two retained pairs. Missing-value handling
-follows \code{\link[=bias]{bias()}}.
+observed variation. For perfect predictions with nonzero observed variation
+it returns \code{Inf}, the mathematically defined ratio with zero RMSE, without a
+warning. It returns \code{NA} with a warning for fewer than two retained pairs or
+for the indeterminate zero-over-zero case. Missing-value handling follows
+\code{\link[=bias]{bias()}}.
 }
 \references{
 Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger,

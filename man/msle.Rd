@@ -25,9 +25,9 @@ log1p scale.
 [\log(1+obs_i)-\log(1+pred_i)]^2.}
 
 MSLE is non-negative and zero is ideal. It emphasizes relative differences
-and requires non-negative observations and predictions; otherwise it is NA.
-The log1p convention is a package choice. Missing-value handling follows
-\code{\link[=bias]{bias()}}.
+and requires non-negative observations and predictions; otherwise it returns
+\code{NA} with a warning. The log1p convention is a package choice. Missing-value
+handling follows \code{\link[=bias]{bias()}}.
 }
 \references{
 Hodson, T. O. (2022). Root mean square error (RMSE) or mean

@@ -33,7 +33,7 @@ One is ideal. Values closer to one indicate agreement in linear association,
 spread, and mean. The range is unbounded below and at most one. Zero is
 not the observed-mean benchmark used for NSE. KGE is undefined when the
 observed mean or either vector's standard deviation is zero, or fewer than
-two pairs remain. As with NSE, avoid treating KGE as the only measure of model
+two pairs remain; it returns \code{NA} with a warning in those cases. As with NSE, avoid treating KGE as the only measure of model
 quality; inspect its components and complementary error metrics.
 }
 \references{

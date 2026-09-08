@@ -25,7 +25,8 @@ the squared Pearson correlation.
 \deqn{\mathrm{MEC}=1-\frac{\sum_{i=1}^{n}(obs_i-pred_i)^2}
 {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}.}
 
-Its interpretation and references are given in \code{\link[=nse]{nse()}}.
+Its interpretation and references are given in \code{\link[=nse]{nse()}}. It returns \code{NA}
+with a warning under the same undefined conditions as \code{\link[=nse]{nse()}}.
 }
 \examples{
 mec(1:3, c(1, 3, 2))

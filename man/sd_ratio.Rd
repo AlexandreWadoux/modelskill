@@ -28,8 +28,8 @@ predictions with that of observations.
 The ratio is non-negative and one indicates equal spread. Values below one
 indicate under-dispersed predictions; values above one indicate
 over-dispersed predictions. It assesses spread, not mean bias or association,
-and is undefined for constant observations. Missing-value handling follows
-\code{\link[=bias]{bias()}}.
+and returns \code{NA} with a warning when fewer than two valid pairs remain or
+the observations have zero variance. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 sd_ratio(1:3, c(1, 3, 2))

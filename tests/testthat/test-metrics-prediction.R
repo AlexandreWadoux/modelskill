@@ -28,10 +28,10 @@ test_that("extended prediction metrics have expected values", {
   expect_equal(willmott_d(obs, obs), 1)
   expect_equal(pinball_loss(obs, pred, .5), mae(obs, pred) / 2)
   expect_true(is.finite(kge(obs, pred)))
-  expect_true(is.na(mape(c(0, 1), c(0, 1))))
-  expect_true(is.na(mpe(c(0, 1), c(0, 1))))
-  expect_true(is.na(rrmse(c(-1, 1), c(-1, 1))))
-  expect_true(is.na(msle(c(-1, 1), c(0, 1))))
+  expect_warning(expect_true(is.na(mape(c(0, 1), c(0, 1)))), "zero values")
+  expect_warning(expect_true(is.na(mpe(c(0, 1), c(0, 1)))), "zero values")
+  expect_warning(expect_true(is.na(rrmse(c(-1, 1), c(-1, 1)))), "mean of the observations is zero")
+  expect_warning(expect_true(is.na(msle(c(-1, 1), c(0, 1)))), "negative values")
 })
 
 test_that("prediction metrics handle perfect, biased and missing predictions", {
@@ -51,9 +51,9 @@ test_that("prediction metrics handle perfect, biased and missing predictions", {
 test_that("prediction metric validation and edge cases are explicit", {
   expect_error(rmse(1:2, 1:3), "same length")
   expect_error(rmse(1:3, c(1, Inf, 3)), "infinite")
-  expect_true(is.na(correlation(1:3, rep(2, 3))))
-  expect_true(is.na(nrmse(rep(1, 3), 1:3)))
-  expect_true(is.na(nse(rep(1, 3), 1:3)))
+  expect_warning(expect_true(is.na(correlation(1:3, rep(2, 3)))), "predictions have zero variance")
+  expect_warning(expect_true(is.na(nrmse(rep(1, 3), 1:3))), "observations have zero variance")
+  expect_warning(expect_true(is.na(nse(rep(1, 3), 1:3))), "observations have zero variance")
 })
 
 test_that("model_metrics exposes one column per statistic", {

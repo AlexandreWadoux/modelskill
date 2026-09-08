@@ -24,8 +24,8 @@ the absolute observed mean.
 \deqn{\mathrm{RRMSE}=100\,
 \frac{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}{|\bar{obs}|}.}
 
-RRMSE is non-negative and zero is ideal. It is NA for a zero observed mean
-and unstable when that mean is near zero. This mean-normalized convention
+RRMSE is non-negative and zero is ideal. It returns \code{NA} with a warning for
+a zero observed mean and is unstable when that mean is near zero. This mean-normalized convention
 differs from the standard-deviation normalization in \code{\link[=nrmse]{nrmse()}}. Missing-value
 handling follows \code{\link[=bias]{bias()}}.
 }

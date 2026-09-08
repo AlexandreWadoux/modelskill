@@ -90,7 +90,8 @@ model_metrics <- function(mods, obs, na.rm = TRUE, extended = FALSE, digits = NU
   }
   rownames(result) <- names(mods)
   numeric <- vapply(result, is.numeric, logical(1))
-  if (any(is.infinite(as.matrix(result[, numeric, drop = FALSE])))) {
+  overflow_columns <- setdiff(names(result)[numeric], c("rpd", "rpiq", "rer"))
+  if (length(overflow_columns) && any(is.infinite(as.matrix(result[, overflow_columns, drop = FALSE])))) {
     warning("Some metrics exceed numeric precision; consider rescaling the input units.", call. = FALSE)
   }
   if (!is.null(digits)) result[numeric] <- lapply(result[numeric], round, digits = digits)

@@ -28,8 +28,9 @@ observations.
 NRMSE is unitless and zero is ideal. Smaller values indicate less error
 relative to the observed variation. A value of one means RMSE equals one
 observed sample standard deviation. This package uses this normalization to
-remain consistent with its diagram statistics. NRMSE is undefined for
-constant observations. Missing-value handling follows \code{\link[=bias]{bias()}}.
+remain consistent with its diagram statistics. It returns \code{NA} with a
+warning when fewer than two valid pairs remain or the observations have zero
+variance. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 nrmse(1:3, c(1, 3, 2))

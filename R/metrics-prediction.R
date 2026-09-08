@@ -119,8 +119,9 @@ rmse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "rmse")
 #' NRMSE is unitless and zero is ideal. Smaller values indicate less error
 #' relative to the observed variation. A value of one means RMSE equals one
 #' observed sample standard deviation. This package uses this normalization to
-#' remain consistent with its diagram statistics. NRMSE is undefined for
-#' constant observations. Missing-value handling follows [bias()].
+#' remain consistent with its diagram statistics. It returns `NA` with a
+#' warning when fewer than two valid pairs remain or the observations have zero
+#' variance. Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Taylor, K. E. (2001). Summarizing multiple aspects of model
@@ -160,7 +161,8 @@ crmse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "crmse
 #'
 #' Correlation ranges from -1 to 1: one indicates a perfect increasing linear
 #' association, minus one a perfect decreasing linear association, and zero no
-#' linear association. It is undefined for a constant vector. Correlation is
+#' linear association. It returns `NA` with a warning when fewer than two valid
+#' pairs remain or either vector has zero variance. Correlation is
 #' unaffected by additive bias and proportional scaling, so it measures pattern
 #' association rather than agreement or prediction accuracy. Interpret it with
 #' [bias()], [rmse()], and an agreement measure such as [ccc()].
@@ -190,7 +192,9 @@ correlation <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, 
 #' linear association. A value of one can occur despite additive bias or
 #' proportional scale differences, so it is not a measure of agreement or
 #' prediction accuracy. Do not confuse lowercase `r2()` with [nse()], [mec()],
-#' or uppercase `R2()`, which are aliases for model efficiency.
+#' or uppercase `R2()`, which are aliases for model efficiency. It returns
+#' `NA` with a warning when fewer than two valid pairs remain or either vector
+#' has zero variance.
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Willmott, C. J. (1984). On the evaluation of model performance
@@ -216,7 +220,8 @@ r2 <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "r2")
 #'
 #' One is ideal; zero means the predictions are no better than predicting the
 #' observed mean; negative values indicate worse performance than that
-#' benchmark. NSE is undefined for constant observations. It is sensitive to
+#' benchmark. NSE returns `NA` with a warning when fewer than two valid pairs
+#' remain or the observations have zero variance. It is sensitive to
 #' large errors because it uses squared differences. NSE, [mec()], and uppercase
 #' `R2()` are identical in this package; they are not lowercase [r2()].
 #' @inheritParams bias
@@ -235,7 +240,9 @@ r2 <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "r2")
 #'   <doi:10.1029/1998WR900018>
 #' @examples nse(1:3, c(1, 3, 2))
 #' @export
-nse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "nse")
+nse <- function(obs, pred, na.rm = TRUE) {
+  metric_value(obs, pred, na.rm, "nse", metric = "NSE")
+}
 
 #' Model efficiency coefficient
 #'
@@ -246,18 +253,22 @@ nse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "nse")
 #' \deqn{\mathrm{MEC}=1-\frac{\sum_{i=1}^{n}(obs_i-pred_i)^2}
 #' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}.}
 #'
-#' Its interpretation and references are given in [nse()].
+#' Its interpretation and references are given in [nse()]. It returns `NA`
+#' with a warning under the same undefined conditions as [nse()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @examples mec(1:3, c(1, 3, 2))
 #' @export
-mec <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
+mec <- function(obs, pred, na.rm = TRUE) {
+  metric_value(obs, pred, na.rm, "nse", metric = "MEC")
+}
 
 #' Coefficient of determination / efficiency R-squared
 #'
 #' Alias for [nse()] and `mec()`. This uppercase `R2()` is the model-efficiency
 #' coefficient; lowercase `r2()` remains squared Pearson correlation. Its
-#' interpretation and references are given in [nse()].
+#' interpretation and references are given in [nse()]. It returns `NA` with a
+#' warning under the same undefined conditions as [nse()].
 #'
 #' \deqn{R^2=1-\frac{\sum_{i=1}^{n}(obs_i-pred_i)^2}
 #' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}.}
@@ -266,7 +277,9 @@ mec <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
 #' @return One numeric value.
 #' @examples R2(1:3, c(1, 3, 2))
 #' @export
-R2 <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
+R2 <- function(obs, pred, na.rm = TRUE) {
+  metric_value(obs, pred, na.rm, "nse", metric = "R2")
+}
 
 #' Prediction-to-observation standard deviation ratio
 #'
@@ -280,8 +293,8 @@ R2 <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
 #' The ratio is non-negative and one indicates equal spread. Values below one
 #' indicate under-dispersed predictions; values above one indicate
 #' over-dispersed predictions. It assesses spread, not mean bias or association,
-#' and is undefined for constant observations. Missing-value handling follows
-#' [bias()].
+#' and returns `NA` with a warning when fewer than two valid pairs remain or
+#' the observations have zero variance. Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Taylor, K. E. (2001). Summarizing multiple aspects of model
@@ -304,8 +317,8 @@ sd_ratio <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "sd
 #' zero indicate little concordance; negative values indicate discordant linear
 #' association. Unlike Pearson correlation, CCC is reduced by mean and scale
 #' differences. Population variances (divisor n) are used, matching the
-#' established package convention. The package returns NA for constant
-#' observations or fewer than two pairs, and zero for constant predictions
+#' established package convention. The package returns `NA` with a warning for
+#' constant observations or fewer than two pairs, and zero for constant predictions
 #' with varying observations. Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
@@ -320,11 +333,14 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
   x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
   if (is.null(x) || !length(x$obs)) return(stats::setNames(rep(NA_real_, 13), c("mdae", "rpd", "rpiq", "sep", "rer", "mape", "mpe", "smape", "msle", "rmsle", "rae", "rrmse", "willmott_d")))
   error <- x$obs - x$pred; root <- sqrt(mean(error^2)); n <- length(error)
+  obs_sd <- if (n < 2L) NA_real_ else stats::sd(x$obs)
+  obs_iqr <- stats::IQR(x$obs)
+  obs_range <- diff(range(x$obs))
   out <- c(mdae = stats::median(abs(error)),
-    rpd = if (n < 2 || root == 0) NA_real_ else stats::sd(x$obs) / root,
-    rpiq = if (root == 0) NA_real_ else stats::IQR(x$obs) / root,
+    rpd = if (n < 2) NA_real_ else if (root == 0) if (obs_sd == 0) NA_real_ else Inf else obs_sd / root,
+    rpiq = if (root == 0) if (obs_iqr == 0) NA_real_ else Inf else obs_iqr / root,
     sep = if (n < 2) NA_real_ else sqrt(sum((error - mean(error))^2) / (n - 1)),
-    rer = if (root == 0) NA_real_ else diff(range(x$obs)) / root,
+    rer = if (root == 0) if (obs_range == 0) NA_real_ else Inf else obs_range / root,
     mape = if (any(x$obs == 0)) NA_real_ else mean(abs(error / x$obs)),
     mpe = if (any(x$obs == 0)) NA_real_ else 100 * mean(error / x$obs),
     smape = mean(ifelse(x$obs == 0 & x$pred == 0, 0, 2 * abs(error) / (abs(x$obs) + abs(x$pred))), na.rm = TRUE),
@@ -337,6 +353,54 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
   potential_error <- sum((abs(x$pred - mean(x$obs)) + abs(x$obs - mean(x$obs)))^2)
   out["willmott_d"] <- if (potential_error == 0) NA_real_ else 1 - sum(error^2) / potential_error
   out
+}
+
+extended_metric_label <- function(name) {
+  labels <- c(mdae = "MdAE", rpd = "RPD", rpiq = "RPIQ", sep = "SEP",
+    rer = "RER", mape = "MAPE", mpe = "MPE", smape = "sMAPE",
+    msle = "MSLE", rmsle = "RMSLE", rae = "RAE", rrmse = "RRMSE",
+    willmott_d = "Willmott's d")
+  unname(labels[[name]])
+}
+
+extended_metric_undefined_reason <- function(x, name) {
+  n <- length(x$obs)
+  error <- x$obs - x$pred
+  root <- sqrt(mean(error^2))
+  if (name == "sep" && n < 2L) return("fewer than two valid observation-prediction pairs remain")
+  if (name %in% c("mape", "mpe") && any(x$obs == 0)) return("observations contain zero values")
+  if (name %in% c("msle", "rmsle") && any(x$obs < 0 | x$pred < 0)) {
+    return("observations or predictions contain negative values")
+  }
+  if (name == "rrmse" && mean(x$obs) == 0) return("the mean of the observations is zero")
+  if (name == "rae" && sum(abs(x$obs - mean(x$obs))) == 0) return("the observations are constant, giving a zero denominator")
+  if (name == "willmott_d") {
+    denominator <- sum((abs(x$pred - mean(x$obs)) + abs(x$obs - mean(x$obs)))^2)
+    if (denominator == 0) return("the potential-error denominator is zero")
+  }
+  if (name == "rpd") {
+    if (n < 2L) return("fewer than two valid observation-prediction pairs remain")
+    if (root == 0 && stats::sd(x$obs) == 0) return("the observations have zero variance and RMSE is zero")
+  }
+  if (name == "rpiq" && root == 0 && stats::IQR(x$obs) == 0) {
+    return("the observation interquartile range and RMSE are both zero")
+  }
+  if (name == "rer" && root == 0 && diff(range(x$obs)) == 0) {
+    return("the observation range and RMSE are both zero")
+  }
+  NULL
+}
+
+extended_metric_value <- function(obs, pred, na.rm, name) {
+  x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
+  metric <- extended_metric_label(name)
+  if (is.null(x)) return(undefined_metric(metric, missing_pair_reason(na.rm)))
+  if (!length(x$obs)) {
+    return(undefined_metric(metric, "no valid observation-prediction pairs remain after missing-value handling"))
+  }
+  reason <- extended_metric_undefined_reason(x, name)
+  if (!is.null(reason)) return(undefined_metric(metric, reason))
+  unname(extended_components(x$obs, x$pred, na.rm = FALSE)[[name]])
 }
 
 #' Median absolute error
@@ -355,7 +419,9 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
 #'   679-688. <doi:10.1016/j.ijforecast.2006.03.001>
 #' @family prediction metrics
 #' @export
-mdae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mdae"])
+mdae <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "mdae")
+}
 
 #' Ratio of performance to deviation
 #'
@@ -367,9 +433,11 @@ mdae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, 
 #' {\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 #'
 #' RPD is non-negative and larger values indicate lower error relative to
-#' observed variation. It returns NA for perfect predictions rather than
-#' infinity, and with fewer than two retained pairs. Missing-value handling
-#' follows [bias()].
+#' observed variation. For perfect predictions with nonzero observed variation
+#' it returns `Inf`, the mathematically defined ratio with zero RMSE, without a
+#' warning. It returns `NA` with a warning for fewer than two retained pairs or
+#' for the indeterminate zero-over-zero case. Missing-value handling follows
+#' [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger,
@@ -379,7 +447,9 @@ mdae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, 
 #'   1073-1081. <doi:10.1016/j.trac.2010.05.006>
 #' @family prediction metrics
 #' @export
-rpd <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rpd"])
+rpd <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "rpd")
+}
 
 #' Ratio of performance to interquartile distance
 #'
@@ -392,14 +462,18 @@ rpd <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #'
 #' RPIQ is non-negative and larger values indicate lower error relative to the
 #' middle 50 percent of observed values. It is less influenced by extremes than
-#' [rpd()]. R uses default type-7 quartiles. It is NA for perfect predictions.
-#' Missing-value handling follows [bias()].
+#' [rpd()]. R uses default type-7 quartiles. For perfect predictions with a
+#' nonzero interquartile range it returns `Inf`; it returns `NA` with a warning
+#' for the indeterminate zero-over-zero case. Missing-value handling follows
+#' [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Bellon-Maurel et al. (2010). See [rpd()].
 #' @family prediction metrics
 #' @export
-rpiq <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rpiq"])
+rpiq <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "rpiq")
+}
 
 #' Standard error of prediction
 #'
@@ -410,14 +484,16 @@ rpiq <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, 
 #' \left[(obs_i-pred_i)-\frac{1}{n}\sum_{j=1}^{n}(obs_j-pred_j)\right]^2}.}
 #'
 #' SEP has response units, is non-negative, and zero is ideal. Unlike RMSE, it
-#' removes constant bias. At least two retained pairs are required. Missing-value
-#' handling follows [bias()].
+#' removes constant bias. It returns `NA` with a warning when fewer than two
+#' retained pairs remain. Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Bellon-Maurel et al. (2010). See [rpd()].
 #' @family prediction metrics
 #' @export
-sep <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["sep"])
+sep <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "sep")
+}
 
 #' Range-to-RMSE ratio
 #'
@@ -427,14 +503,18 @@ sep <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #' {\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 #'
 #' RER is non-negative and larger values indicate smaller error relative to the
-#' observed range. It is sensitive to extreme observations and is NA for perfect
-#' predictions. Missing-value handling follows [bias()].
+#' observed range. It is sensitive to extreme observations. For perfect
+#' predictions with a nonzero range it returns `Inf`; it returns `NA` with a
+#' warning for the indeterminate zero-over-zero case. Missing-value handling
+#' follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Bellon-Maurel et al. (2010). See [rpd()].
 #' @family prediction metrics
 #' @export
-rer <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rer"])
+rer <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "rer")
+}
 
 #' Mean absolute percentage error
 #'
@@ -445,14 +525,17 @@ rer <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #' \left|\frac{obs_i-pred_i}{obs_i}\right|.}
 #'
 #' MAPE is a non-negative fraction; zero is ideal, and multiplying by 100 gives
-#' percent. It is NA for zero observations and can disproportionately weight
-#' errors near zero. Missing-value handling follows [bias()].
+#' percent. It returns `NA` with a warning when any observation is zero and can
+#' disproportionately weight errors near zero. Missing-value handling follows
+#' [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Hyndman and Koehler (2006). See [mdae()].
 #' @family prediction metrics
 #' @export
-mape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mape"])
+mape <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "mape")
+}
 
 #' Mean percentage error
 #'
@@ -463,14 +546,16 @@ mape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, 
 #'
 #' MPE is unbounded and zero is ideal. For strictly positive observations,
 #' positive values indicate underprediction. Relative errors can cancel; MPE is
-#' NA for zero observations and unstable near zero. Missing-value handling
-#' follows [bias()].
+#' undefined for zero observations, returning `NA` with a warning, and unstable
+#' near zero. Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Hyndman and Koehler (2006). See [mdae()].
 #' @family prediction metrics
 #' @export
-mpe <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mpe"])
+mpe <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "mpe")
+}
 
 #' Symmetric mean absolute percentage error
 #'
@@ -487,7 +572,9 @@ mpe <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #' @references Hyndman and Koehler (2006). See [mdae()].
 #' @family prediction metrics
 #' @export
-smape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["smape"])
+smape <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "smape")
+}
 
 #' Mean squared logarithmic error
 #'
@@ -498,9 +585,9 @@ smape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred,
 #' [\log(1+obs_i)-\log(1+pred_i)]^2.}
 #'
 #' MSLE is non-negative and zero is ideal. It emphasizes relative differences
-#' and requires non-negative observations and predictions; otherwise it is NA.
-#' The log1p convention is a package choice. Missing-value handling follows
-#' [bias()].
+#' and requires non-negative observations and predictions; otherwise it returns
+#' `NA` with a warning. The log1p convention is a package choice. Missing-value
+#' handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Hodson, T. O. (2022). Root mean square error (RMSE) or mean
@@ -508,7 +595,9 @@ smape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred,
 #'   Development*, 15, 5481-5487. <doi:10.5194/gmd-15-5481-2022>
 #' @family prediction metrics
 #' @export
-msle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["msle"])
+msle <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "msle")
+}
 
 #' Root mean squared logarithmic error
 #'
@@ -518,14 +607,17 @@ msle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, 
 #' [\log(1+obs_i)-\log(1+pred_i)]^2}.}
 #'
 #' RMSLE is non-negative and zero is ideal. It has the same non-negative input
-#' requirement and log1p convention as [msle()]. Missing-value handling follows
+#' requirement and log1p convention as [msle()], returning `NA` with a warning
+#' when either input contains a negative value. Missing-value handling follows
 #' [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Hodson (2022). See [msle()].
 #' @family prediction metrics
 #' @export
-rmsle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rmsle"])
+rmsle <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "rmsle")
+}
 
 #' Relative absolute error
 #'
@@ -536,14 +628,17 @@ rmsle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred,
 #' {\sum_{i=1}^n|obs_i-\bar{obs}|}.}
 #'
 #' RAE is non-negative and zero is ideal. One equals the observed-mean
-#' absolute-error benchmark; values above one are worse. It is NA for constant
-#' observations. Missing-value handling follows [bias()].
+#' absolute-error benchmark; values above one are worse. It returns `NA` with a
+#' warning for constant observations, whose benchmark denominator is zero.
+#' Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Hyndman and Koehler (2006). See [mdae()].
 #' @family prediction metrics
 #' @export
-rae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rae"])
+rae <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "rae")
+}
 
 #' Relative root mean squared error
 #'
@@ -553,8 +648,8 @@ rae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #' \deqn{\mathrm{RRMSE}=100\,
 #' \frac{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}{|\bar{obs}|}.}
 #'
-#' RRMSE is non-negative and zero is ideal. It is NA for a zero observed mean
-#' and unstable when that mean is near zero. This mean-normalized convention
+#' RRMSE is non-negative and zero is ideal. It returns `NA` with a warning for
+#' a zero observed mean and is unstable when that mean is near zero. This mean-normalized convention
 #' differs from the standard-deviation normalization in [nrmse()]. Missing-value
 #' handling follows [bias()].
 #' @inheritParams bias
@@ -566,7 +661,9 @@ rae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #'   <doi:10.1029/JC090iC05p08995>
 #' @family prediction metrics
 #' @export
-rrmse <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rrmse"])
+rrmse <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "rrmse")
+}
 
 #' Willmott's index of agreement
 #'
@@ -577,15 +674,17 @@ rrmse <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred,
 #' {\sum_{i=1}^n(|pred_i-\bar{obs}|+|obs_i-\bar{obs}|)^2}.}
 #'
 #' For finite inputs, d ranges from zero to one and one is ideal. The index can
-#' be strongly influenced by large errors. It is NA when its denominator is zero,
-#' including identical constant observations and predictions. Missing-value
+#' be strongly influenced by large errors. It returns `NA` with a warning when
+#' its denominator is zero, including identical constant observations and predictions. Missing-value
 #' handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Willmott et al. (1985). See [rrmse()].
 #' @family prediction metrics
 #' @export
-willmott_d <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["willmott_d"])
+willmott_d <- function(obs, pred, na.rm = TRUE) {
+  extended_metric_value(obs, pred, na.rm, "willmott_d")
+}
 
 #' Quantile (pinball) loss
 #'
@@ -599,7 +698,7 @@ willmott_d <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, 
 #' It is non-negative and zero is ideal. Underprediction is penalized more when
 #' `level` is high; overprediction is penalized more when `level` is low. At
 #' `level = 0.5`, it equals one-half of [mae()]. Missing-value handling follows
-#' [bias()].
+#' [bias()]. It returns `NA` with a warning when no valid pairs remain.
 #' @inheritParams bias
 #' @param level Quantile level strictly between zero and one.
 #' @return One numeric loss; lower is better.
@@ -607,8 +706,11 @@ willmott_d <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, 
 #'   *Econometrica*, 46, 33-50. <doi:10.2307/1913643>
 #' @export
 pinball_loss <- function(obs, pred, level = .5, na.rm = TRUE) {
-  check_probability(level, "level"); x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
-  if (is.null(x)) return(NA_real_); error <- x$obs - x$pred
+  check_probability(level, "level")
+  x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
+  if (is.null(x)) return(undefined_metric("Pinball loss", missing_pair_reason(na.rm)))
+  if (!length(x$obs)) return(undefined_metric("Pinball loss", "no valid observation-prediction pairs remain after missing-value handling"))
+  error <- x$obs - x$pred
   mean(ifelse(error >= 0, level * error, (level - 1) * error))
 }
 
@@ -629,7 +731,7 @@ pinball_loss <- function(obs, pred, level = .5, na.rm = TRUE) {
 #' spread, and mean. The range is unbounded below and at most one. Zero is
 #' not the observed-mean benchmark used for NSE. KGE is undefined when the
 #' observed mean or either vector's standard deviation is zero, or fewer than
-#' two pairs remain. As with NSE, avoid treating KGE as the only measure of model
+#' two pairs remain; it returns `NA` with a warning in those cases. As with NSE, avoid treating KGE as the only measure of model
 #' quality; inspect its components and complementary error metrics.
 #' @inheritParams bias
 #' @return One numeric value; one is ideal.
@@ -640,13 +742,64 @@ pinball_loss <- function(obs, pred, level = .5, na.rm = TRUE) {
 #' @export
 kge <- function(obs, pred, na.rm = TRUE) {
   x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
-  if (is.null(x) || length(x$obs) < 2 || mean(x$obs) == 0 || stats::sd(x$obs) == 0 || stats::sd(x$pred) == 0) return(NA_real_)
+  if (is.null(x)) return(undefined_metric("KGE", missing_pair_reason(na.rm)))
+  reason <- kge_undefined_reason(x)
+  if (!is.null(reason)) return(undefined_metric("KGE", reason))
   1 - sqrt((stats::cor(x$obs, x$pred) - 1)^2 + (stats::sd(x$pred) / stats::sd(x$obs) - 1)^2 + (mean(x$pred) / mean(x$obs) - 1)^2)
 }
 
-metric_value <- function(obs, pred, na.rm, name) {
+kge_undefined_reason <- function(x) {
+  if (length(x$obs) < 2L) return("fewer than two valid observation-prediction pairs remain")
+  if (mean(x$obs) == 0) return("the mean of the observations is zero")
+  if (is_constant(x$obs)) return("the observations have zero variance")
+  if (is_constant(x$pred)) return("the predictions have zero variance")
+  NULL
+}
+
+undefined_metric <- function(metric, reason) {
+  warning(sprintf("%s is undefined because %s.", metric, reason), call. = FALSE)
+  NA_real_
+}
+
+missing_pair_reason <- function(na.rm) {
+  if (na.rm) {
+    "no valid observation-prediction pairs remain after missing-value handling"
+  } else {
+    "inputs contain missing values and `na.rm = FALSE`"
+  }
+}
+
+metric_label <- function(name) {
+  labels <- c(bias = "ME", mae = "MAE", mse = "MSE", rmse = "RMSE",
+    nrmse = "NRMSE", crmse = "cRMSE", correlation = "Correlation",
+    r2 = "r2", nse = "NSE", sd_ratio = "SD ratio", ccc = "CCC")
+  unname(labels[[name]])
+}
+
+is_constant <- function(x) length(x) > 0L && all(x == x[[1L]])
+
+core_metric_undefined_reason <- function(x, name) {
+  n <- length(x$obs)
+  if (name %in% c("nrmse", "nse", "sd_ratio", "correlation", "r2", "ccc") && n < 2L) {
+    return("fewer than two valid observation-prediction pairs remain")
+  }
+  if (name %in% c("nrmse", "nse", "sd_ratio", "correlation", "r2", "ccc") && is_constant(x$obs)) {
+    return("the observations have zero variance")
+  }
+  if (name %in% c("correlation", "r2") && is_constant(x$pred)) {
+    return("the predictions have zero variance")
+  }
+  NULL
+}
+
+metric_value <- function(obs, pred, na.rm, name, metric = metric_label(name)) {
   values <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
-  if (is.null(values)) return(NA_real_)
+  if (is.null(values)) return(undefined_metric(metric, missing_pair_reason(na.rm)))
+  if (!length(values$obs)) {
+    return(undefined_metric(metric, "no valid observation-prediction pairs remain after missing-value handling"))
+  }
+  reason <- core_metric_undefined_reason(values, name)
+  if (!is.null(reason)) return(undefined_metric(metric, reason))
   metric_components(values$obs, values$pred)[[name]]
 }
 

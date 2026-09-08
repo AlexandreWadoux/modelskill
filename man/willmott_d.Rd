@@ -25,8 +25,8 @@ potential-error denominator based on the observed mean.
 {\sum_{i=1}^n(|pred_i-\bar{obs}|+|obs_i-\bar{obs}|)^2}.}
 
 For finite inputs, d ranges from zero to one and one is ideal. The index can
-be strongly influenced by large errors. It is NA when its denominator is zero,
-including identical constant observations and predictions. Missing-value
+be strongly influenced by large errors. It returns \code{NA} with a warning when
+its denominator is zero, including identical constant observations and predictions. Missing-value
 handling follows \code{\link[=bias]{bias()}}.
 }
 \references{

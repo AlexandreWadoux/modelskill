@@ -25,8 +25,8 @@ reported in percent.
 
 MPE is unbounded and zero is ideal. For strictly positive observations,
 positive values indicate underprediction. Relative errors can cancel; MPE is
-NA for zero observations and unstable near zero. Missing-value handling
-follows \code{\link[=bias]{bias()}}.
+undefined for zero observations, returning \code{NA} with a warning, and unstable
+near zero. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \references{
 Hyndman and Koehler (2006). See \code{\link[=mdae]{mdae()}}.
