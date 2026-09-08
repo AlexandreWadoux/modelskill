@@ -16,7 +16,7 @@ navbar:
       text: Articles
       menu:
         - text: "Prediction performance metrics"
-          href: articles/point-prediction.html
+          href: articles/performance-metrics.html
         - text: "Predictive-uncertainty evaluation"
           href: articles/predictive-uncertainty.html
         - text: "Summary diagrams"
@@ -30,7 +30,7 @@ articles:
   - title: "Model evaluation guides"
     navbar: "Articles"
     contents:
-      - point-prediction
+      - performance-metrics
       - predictive-uncertainty
       - summary-diagrams
 

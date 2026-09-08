@@ -127,7 +127,7 @@ gg_coverage(
 
 A set of focused guides covers prediction performance metrics, predictive-uncertainty validation, and summary diagrams:
 
-**[Read the online documentation](https://alexandrewadoux.github.io/modelskill/articles/point-prediction.html)**
+**[Read the online documentation](https://alexandrewadoux.github.io/modelskill/articles/performance-metrics.html)**
 
 After installation, it can also be opened directly from R:
 
