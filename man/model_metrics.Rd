@@ -18,7 +18,7 @@ be removed. The default is \code{TRUE}. If \code{FALSE}, incomplete pairs result
 missing statistics rather than being silently removed.}
 
 \item{extended}{Logical; include additional robust, scale-normalised,
-percentage, agreement, and KGE metrics?}
+percentage, agreement, and KGE (2009) metrics?}
 
 \item{digits}{Integer or \code{NULL}. If supplied, round numeric results to this
 many digits (0 to 22). \code{NULL} retains full numerical precision.}
@@ -28,7 +28,7 @@ A base data frame with one row per model and canonical columns
 \code{model}, \code{bias}, \code{mae}, \code{mse}, \code{rmse}, \code{nrmse}, \code{crmse}, \code{correlation},
 \code{r2}, \code{R2}, \code{sd_ratio}, \code{ccc}, and \code{Cb}. With \code{extended = TRUE}, adds
 \code{mdae}, \code{rpd}, \code{rpiq}, \code{sep}, \code{rer}, \code{mape}, \code{mpe}, \code{smape}, \code{msle},
-\code{rmsle}, \code{rae}, \code{rrmse}, \code{willmott_d}, and \code{kge}.
+\code{rmsle}, \code{rae}, \code{rrmse}, \code{willmott_d}, and \code{kge} (KGE (2009)).
 Duplicate columns ME, MAE, RMSE, r, nse, NSE, MEC, and rhoC have been
 removed; use bias, mae, rmse, correlation, R2, and ccc instead.
 }
