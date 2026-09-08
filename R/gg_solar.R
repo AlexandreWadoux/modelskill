@@ -60,9 +60,9 @@
 #' @section Coordinates and labels:
 #' The horizontal coordinate is normalized mean error (nME; ME*) and the
 #' vertical coordinate is standardized unbiased root mean square difference
-#' (sde; SDE*). The reference regions retain the rounded radii from the
-#' original implementation; their interpretation requires the normalization
-#' assumptions documented in [diagram_stats()].
+#' (sde; SDE*). Correlation-region radii are calculated exactly from their
+#' correlation thresholds as `sqrt(1 - r^2)`; their interpretation requires
+#' the normalization assumptions documented in [diagram_stats()].
 #'
 #' @section Interpretation:
 #' The solar diagram uses the error decomposition
@@ -203,9 +203,9 @@ gg_solar <- function(
   }
 
   circle2 <- circle(1)
-  circle095 <- circle(0.31); circle095$lab <- "r>0.95"
-  circle09 <- circle(0.44); circle09$lab <- "r>0.9"
-  circle07 <- circle(0.71); circle07$lab <- "r>0.7"
+  circle095 <- circle(sqrt(1 - 0.95^2)); circle095$lab <- "r>0.95"
+  circle09 <- circle(sqrt(1 - 0.9^2)); circle09$lab <- "r>0.9"
+  circle07 <- circle(sqrt(1 - 0.7^2)); circle07$lab <- "r>0.7"
   circle0 <- circle(1); circle0$lab <- "r>0"
   circ_pol <- rbind(circle0, circle07, circle09, circle095)
 
