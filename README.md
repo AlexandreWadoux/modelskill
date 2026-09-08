@@ -1,13 +1,11 @@
 ---
 output: github_document
 ---
-# modelskill
+# `modelskill`: Assessing and Visualising the Performance of Continuous Prediction Models
 
 [![R-CMD-check](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
-
-### Assessing and Visualising Continuous Prediction Model Performance
 
 ## About
 
