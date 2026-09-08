@@ -9,9 +9,12 @@ interval_score(obs, lower, upper, level = 0.95, na.rm = TRUE)
 \arguments{
 \item{obs}{Numeric observation vector.}
 
-\item{lower, upper}{Numeric lower and upper prediction-interval bounds.}
+\item{lower, upper}{Numeric bounds of the central prediction interval. For the
+usual proper-score interpretation, these must be the equal-tailed
+predictive quantiles corresponding to \code{level}.}
 
-\item{level}{Nominal central interval coverage, strictly between zero and one.}
+\item{level}{Nominal central interval coverage, strictly between zero and one;
+determines the required predictive quantiles for \code{lower} and \code{upper}.}
 
 \item{na.rm}{Logical; remove incomplete triplets?}
 }
@@ -25,6 +28,13 @@ interval and \code{upper - lower + 2 / alpha * (obs - upper)} above it, where
 indicate sharper, well-calibrated intervals.
 }
 \details{
+For the usual proper-scoring interpretation, \code{lower} and \code{upper} must be the
+central (equal-tailed) predictive quantiles corresponding to \code{level}: the
+predictive quantiles at probabilities \code{(1 - level) / 2} and
+\code{(1 + level) / 2}, respectively. Supplying arbitrary interval bounds together
+with a nominal \code{level} still evaluates the formula below, but does not in
+general give the same proper interval-score interpretation.
+
 \deqn{\mathrm{IS}_\tau = \frac{1}{n}\sum_{i=1}^{n}[upper_i-lower_i+
 \frac{2}{1-\tau}\max(lower_i-obs_i,0)+
 \frac{2}{1-\tau}\max(obs_i-upper_i,0)]}
