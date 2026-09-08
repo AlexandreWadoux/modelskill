@@ -104,6 +104,13 @@ interval_width <- function(obs, lower, upper, na.rm = TRUE) {
 #' `alpha = 1 - level`; there is no penalty inside the interval. Lower scores
 #' indicate sharper, well-calibrated intervals.
 #'
+#' For the usual proper-scoring interpretation, `lower` and `upper` must be the
+#' central (equal-tailed) predictive quantiles corresponding to `level`: the
+#' predictive quantiles at probabilities `(1 - level) / 2` and
+#' `(1 + level) / 2`, respectively. Supplying arbitrary interval bounds together
+#' with a nominal `level` still evaluates the formula below, but does not in
+#' general give the same proper interval-score interpretation.
+#'
 #' \deqn{\mathrm{IS}_\tau = \frac{1}{n}\sum_{i=1}^{n}[upper_i-lower_i+
 #' \frac{2}{1-\tau}\max(lower_i-obs_i,0)+
 #' \frac{2}{1-\tau}\max(obs_i-upper_i,0)]}
@@ -111,8 +118,13 @@ interval_width <- function(obs, lower, upper, na.rm = TRUE) {
 #' The score has response units and lower values are better. It rewards narrow
 #' intervals but penalizes observations outside them by their distance from the
 #' nearest bound.
-#' @inheritParams coverage
-#' @param level Nominal central interval coverage, strictly between zero and one.
+#' @param obs Numeric observation vector.
+#' @param lower,upper Numeric bounds of the central prediction interval. For the
+#'   usual proper-score interpretation, these must be the equal-tailed
+#'   predictive quantiles corresponding to `level`.
+#' @param level Nominal central interval coverage, strictly between zero and one;
+#'   determines the required predictive quantiles for `lower` and `upper`.
+#' @param na.rm Logical; remove incomplete triplets?
 #' @return One numeric value.
 #' @references Gneiting, T. and Raftery, A. E. (2007). Strictly proper scoring
 #'   rules, prediction, and estimation. *Journal of the American Statistical
