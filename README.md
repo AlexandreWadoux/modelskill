@@ -9,6 +9,22 @@ output: github_document
 
 **Alexandre M.J.-C. Wadoux**
 
+## About
+
+`modelskill` is an R package for the **evaluation of continuous predictions and their quantified uncertainty**.
+
+It can be used with predictions from machine-learning, statistical, geostatistical, physical, and process-based models. The package evaluates the predictions themselves rather than the algorithm that produced them.
+
+`modelskill` brings together three complementary components:
+
+- **prediction performance metrics**, from RMSE and bias to correlation, agreement, and model efficiency;
+- **predictive-uncertainty diagnostics**, for prediction intervals, quantiles, and full predictive distributions;
+- **summary diagrams and diagnostic plots**, including solar, target, Taylor, coverage, PIT, and quantile-calibration plots.
+
+All plotting functions return standard `ggplot2` objects and can therefore be customised with the usual `ggplot2` syntax.
+
+---
+
 ## Citation
 
 If you use `modelskill` in your work, please cite the package as:
@@ -32,22 +48,6 @@ The citation can also be retrieved directly from R with:
 ```r
 citation("modelskill")
 ```
-
----
-
-## About
-
-`modelskill` is an R package for the **evaluation of continuous predictions and their quantified uncertainty**.
-
-It can be used with predictions from machine-learning, statistical, geostatistical, physical, and process-based models. The package evaluates the predictions themselves rather than the algorithm that produced them.
-
-`modelskill` brings together three complementary components:
-
-- **prediction performance metrics**, from RMSE and bias to correlation, agreement, and model efficiency;
-- **predictive-uncertainty diagnostics**, for prediction intervals, quantiles, and full predictive distributions;
-- **summary diagrams and diagnostic plots**, including solar, target, Taylor, coverage, PIT, and quantile-calibration plots.
-
-All plotting functions return standard `ggplot2` objects and can therefore be customised with the usual `ggplot2` syntax.
 
 ---
 
