@@ -206,6 +206,17 @@ gg_coverage(
 )
 ```
 
+```r
+
+pit_values <- pit(
+  obs = obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+gg_pit(pit_values)
+```
+
 ### Predictive samples
 
 When complete predictive samples are available, retain the full distributions:
