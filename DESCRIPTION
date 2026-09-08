@@ -1,6 +1,6 @@
 Package: modelskill
 Type: Package
-Title: Assessing and Visualising the Performance of Continuous Prediction Models
+Title: Assessing and Visualising the Performance of Prediction Models
 Version: 0.0.0.9000
 Authors@R: c(
     person("Alexandre M.J.-C.", "Wadoux",

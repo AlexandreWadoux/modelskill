@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use modelskill, please cite it using the metadata below."
-title: "modelskill: Assessing and Visualising the Performance of Continuous Prediction Models"
+title: "modelskill: Assessing and Visualising the Performance of Prediction Models"
 type: software
 version: 0.0.0.9000
 authors:

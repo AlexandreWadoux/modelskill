@@ -1,6 +1,6 @@
 bibentry(
   bibtype = "Manual",
-  title = "modelskill: Assessing and Visualising the Performance of Continuous Prediction Models",
+  title = "modelskill: Assessing and Visualising the Performance of Prediction Models",
   author = person(
     given = "A.M.J.-C.",
     family = "Wadoux"
@@ -10,7 +10,7 @@ bibentry(
   url = "https://github.com/AlexandreWadoux/modelskill",
   textVersion = paste(
     "Wadoux, A.M.J.-C. (2026).",
-    "modelskill: Assessing and Visualising the Performance of Continuous Prediction Models.",
+    "modelskill: Assessing and Visualising the Performance of Prediction Models.",
     "R package version 0.0.0.9000.",
     "https://github.com/AlexandreWadoux/modelskill"
   )

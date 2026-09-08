@@ -1,7 +1,7 @@
 ---
 output: github_document
 ---
-# `modelskill`: Assessing and Visualising the Performance of Continuous Prediction Models
+# `modelskill`: Assessing and Visualising the Performance of Prediction Models
 
 [![R-CMD-check](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml)
@@ -29,13 +29,13 @@ All plotting functions return standard `ggplot2` objects and can therefore be cu
 
 If you use `modelskill` in your work, please cite the package as:
 
-> Wadoux, A.M.J.-C. (2026). *modelskill: Assessing and Visualising the Performance of Continuous Prediction Models*. R package version 0.0.0.9000. <https://github.com/AlexandreWadoux/modelskill>
+> Wadoux, A.M.J.-C. (2026). *modelskill: Assessing and Visualising the Performance of Prediction Models*. R package version 0.0.0.9000. <https://github.com/AlexandreWadoux/modelskill>
 
 **BibTeX**
 
 ```bibtex
 @Manual{wadoux2026modelskill,
-  title  = {modelskill: Assessing and Visualising the Performance of Continuous Prediction Models},
+  title  = {modelskill: Assessing and Visualising the Performance of Prediction Models},
   author = {Wadoux, A.M.J.-C.},
   year   = {2026},
   note   = {R package version 0.0.0.9000},
