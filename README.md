@@ -268,8 +268,11 @@ gg_taylor(
 )
 ```
 
+This half-diagram view is useful when negative correlations are not relevant to
+the comparison, giving the positive-correlation region more visual space.
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/taylor-options.png" width="55%" alt="Half Taylor diagram" />
+  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/taylor-options.png" width="55%" alt="Half Taylor diagram showing positive correlations only" />
 </p>
 
 See the **[summary-diagram tutorial](https://alexandrewadoux.github.io/modelskill/articles/summary-diagrams.html)** for interpretation and additional options.
