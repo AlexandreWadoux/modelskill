@@ -1,7 +1,10 @@
 bibentry(
   bibtype = "Manual",
   title = "modelskill: Assessing and Visualising Continuous Prediction Model Performance",
-  author = "Alexandre M.J.-C., Wadoux",
+  author = person(
+    given = "A.M.J.-C.",
+    family = "Wadoux"
+  ),
   year = "2026",
   note = "R package version 0.0.0.9000",
   url = "https://github.com/AlexandreWadoux/modelskill"
