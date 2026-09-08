@@ -42,16 +42,28 @@ reference:
       - mae
       - mse
       - rmse
+      - mdae
       - nrmse
       - crmse
+      - rrmse
+      - rae
       - correlation
       - r2
       - R2
-      - mec
       - nse
+      - mec
       - sd_ratio
       - ccc
-      - extended_prediction_metrics
+      - willmott_d
+      - rpd
+      - rpiq
+      - rer
+      - sep
+      - mape
+      - mpe
+      - smape
+      - msle
+      - rmsle
       - pinball_loss
       - kge
   - title: Predictive-uncertainty evaluation

@@ -325,141 +325,245 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
   out
 }
 
-#' Extended continuous-prediction metrics
+#' Median absolute error
 #'
-#' These metrics complement the core error and agreement statistics. Let
-#' `e_i = obs_i - pred_i`, and let RMSE denote [rmse()].
+#' Median absolute error (MdAE) is the median absolute prediction error.
 #'
-#' \describe{
-#' \item{`mdae()`}{Median absolute error:
-#' \deqn{\mathrm{MdAE} = \mathrm{median}(|e_i|).}
-#' It has response units; zero is ideal. It describes a typical absolute error
-#' robustly, so large outliers have less influence than on MAE or RMSE.}
-#' \item{`rpd()`}{Ratio of performance to deviation:
-#' \deqn{\mathrm{RPD} = s_{obs} / \mathrm{RMSE}.}
-#' Larger values indicate error small relative to observed variation; it is
-#' undefined for perfect predictions in this implementation rather than
-#' returning infinity.}
-#' \item{`rpiq()`}{Ratio of performance to interquartile distance:
-#' \deqn{\mathrm{RPIQ} = \mathrm{IQR}(obs) / \mathrm{RMSE}.}
-#' Larger values are better; it is less affected by extreme observations than
-#' RPD.}
-#' \item{`sep()`}{Bias-corrected standard error of prediction:
-#' \deqn{\mathrm{SEP} = \sqrt{\sum(e_i - \mathrm{ME})^2/(n-1)}.}
-#' It has response units; zero is ideal and constant bias is removed.}
-#' \item{`rer()`}{Range-to-RMSE ratio:
-#' \deqn{\mathrm{RER} = (\max(obs)-\min(obs))/\mathrm{RMSE}.}
-#' Larger values are better, but the observed range makes it sensitive to
-#' extremes.}
-#' \item{`mape()`}{Mean absolute percentage error:
-#' \deqn{\mathrm{MAPE} = n^{-1}\sum|e_i / obs_i|.}
-#' It is unitless; zero is ideal. It is undefined when any observation is zero
-#' and can overemphasize errors at small observed values.}
-#' \item{`mpe()`}{Mean percentage error:
-#' \deqn{\mathrm{MPE} = 100n^{-1}\sum e_i/obs_i.}
-#' It is reported in percent; zero is ideal. Positive values indicate
-#' underprediction when observations are strictly positive. For negative
-#' observations the relative-error sign reverses. Its range is unbounded;
-#' opposite relative errors can cancel. It is NA when any retained observation
-#' is zero and unstable near zero.}
-#' \item{`smape()`}{Symmetric mean absolute percentage error:
-#' \deqn{\mathrm{sMAPE} = n^{-1}\sum 2|e_i|/(|obs_i|+|pred_i|).}
-#' It ranges from zero to two; zero is ideal. A pair of zeros contributes zero.
-#' Multiply by 100 to express it as a percentage.}
-#' \item{`msle()`}{Mean squared logarithmic error:
-#' \deqn{\mathrm{MSLE} = n^{-1}\sum[\log(1+obs_i)-\log(1+pred_i)]^2.}
-#' It is non-negative; zero is ideal and emphasizes relative differences. It
-#' requires non-negative observations and predictions.}
-#' \item{`rmsle()`}{Root mean squared logarithmic error:
-#' \deqn{\mathrm{RMSLE} = \sqrt{\mathrm{MSLE}}.}
-#' It is non-negative; zero is ideal and has the log-scale interpretation of
-#' MSLE.}
-#' \item{`rae()`}{Relative absolute error:
-#' \deqn{\mathrm{RAE} = \sum|e_i| / \sum|obs_i-\bar{obs}|.}
-#' Zero is ideal; one equals the absolute-error benchmark from predicting the
-#' observed mean; values above one are worse.}
-#' \item{`rrmse()`}{Relative root mean square error:
-#' \deqn{\mathrm{RRMSE} = 100\,\mathrm{RMSE}/|\bar{obs}|.}
-#' It is reported in percent; zero is ideal and it is undefined for a zero
-#' observed mean. Its range is zero to infinity; values near a zero mean are
-#' unstable. This is a mean-normalized convention, distinct from [nrmse()].}
-#' \item{`willmott_d()`}{Willmott's original index of agreement:
-#' \deqn{d = 1 - \frac{\sum e_i^2}{\sum(|pred_i-\bar{obs}|+|obs_i-\bar{obs}|)^2}.}
-#' It ranges from zero to one for finite inputs, with one indicating perfect
-#' agreement; it can be strongly influenced by large errors. A zero denominator
-#' (identical constant observations and predictions) returns NA, not one.}
-#' }
+#' \deqn{\mathrm{MdAE} = \mathrm{median}_{i=1,\ldots,n}(|obs_i-pred_i|).}
 #'
-#' MAPE is undefined for zero observations; log metrics require non-negative
-#' values. MAPE and sMAPE return fractions, whereas MPE and RRMSE return
-#' percentages; this preserves existing behaviour. RPD, RPIQ, and RER return
-#' NA when RMSE is zero. SEP requires two pairs. RAE requires nonconstant
-#' observations. IQR uses R's default type-7 quantiles. Missing-value handling
-#' follows [bias()]. MdAE, RPD, RPIQ, SEP, RER, MAPE, and RAE have
-#' non-negative ranges with no universal acceptable-performance thresholds.
-#' The log1p convention for MSLE is an explicit package
-#' choice; percentage metrics need a meaningful zero on the response scale.
+#' MdAE has response units, is non-negative, and zero is ideal. It describes a
+#' typical error while being less sensitive to extreme errors than [mae()] or
+#' [rmse()]. Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
-#' @references Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean
-#'   absolute error (MAE) over the root mean square error (RMSE) in assessing
-#'   average model performance. *Climate Research*, 30, 79-82.
-#'   <doi:10.3354/cr030079>
-#'
-#'   Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger, J.-M., and
-#'   McBratney, A. (2010). Critical review of chemometric indicators commonly
-#'   used for assessing the quality of the prediction of soil attributes by NIR
-#'   spectroscopy. *Trends in Analytical Chemistry*, 29, 1073-1081.
-#'   <doi:10.1016/j.trac.2010.05.006>
-#'
-#'   Hyndman, R. J. and Koehler, A. B. (2006). Another look at measures of
-#'   forecast accuracy. *International Journal of Forecasting*, 22, 679-688.
-#'   <doi:10.1016/j.ijforecast.2006.03.001>
-#'
-#'   Willmott, C. J., Ackleson, S. G., Davis, R. E., Feddema, J. J., Klink,
-#'   K. M., Legates, D. R., O'Donnell, J., and Rowe, C. M. (1985). Statistics
-#'   for the evaluation and comparison of models. *Journal of Geophysical
-#'   Research*, 90, 8995-9005. <doi:10.1029/JC090iC05p08995>
-#' @name extended_prediction_metrics
-NULL
-
-#' @rdname extended_prediction_metrics
+#' @references Hyndman, R. J. and Koehler, A. B. (2006). Another look at
+#'   measures of forecast accuracy. *International Journal of Forecasting*, 22,
+#'   679-688. <doi:10.1016/j.ijforecast.2006.03.001>
+#' @family prediction metrics
 #' @export
 mdae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mdae"])
-#' @rdname extended_prediction_metrics
+
+#' Ratio of performance to deviation
+#'
+#' Ratio of performance to deviation (RPD) scales RMSE by the sample standard
+#' deviation of observations.
+#'
+#' \deqn{\mathrm{RPD}=s_{obs}/\mathrm{RMSE}.}
+#'
+#' RPD is non-negative and larger values indicate lower error relative to
+#' observed variation. It returns NA for perfect predictions rather than
+#' infinity, and with fewer than two retained pairs. Missing-value handling
+#' follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger,
+#'   J.-M., and McBratney, A. (2010). Critical review of chemometric indicators
+#'   commonly used for assessing the quality of the prediction of soil
+#'   attributes by NIR spectroscopy. *Trends in Analytical Chemistry*, 29,
+#'   1073-1081. <doi:10.1016/j.trac.2010.05.006>
+#' @family prediction metrics
 #' @export
 rpd <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rpd"])
-#' @rdname extended_prediction_metrics
+
+#' Ratio of performance to interquartile distance
+#'
+#' Ratio of performance to interquartile distance (RPIQ) scales RMSE by the
+#' interquartile range of observations.
+#'
+#' \deqn{\mathrm{RPIQ}=\mathrm{IQR}(obs)/\mathrm{RMSE}.}
+#'
+#' RPIQ is non-negative and larger values indicate lower error relative to the
+#' middle 50 percent of observed values. It is less influenced by extremes than
+#' [rpd()]. R uses default type-7 quartiles. It is NA for perfect predictions.
+#' Missing-value handling follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Bellon-Maurel et al. (2010). See [rpd()].
+#' @family prediction metrics
 #' @export
 rpiq <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rpiq"])
-#' @rdname extended_prediction_metrics
+
+#' Standard error of prediction
+#'
+#' Standard error of prediction (SEP) is the sample standard deviation of
+#' prediction errors after removing their mean error (ME).
+#'
+#' \deqn{\mathrm{SEP}=\sqrt{\frac{\sum_{i=1}^n(e_i-\mathrm{ME})^2}{n-1}},
+#' \quad e_i=obs_i-pred_i.}
+#'
+#' SEP has response units, is non-negative, and zero is ideal. Unlike RMSE, it
+#' removes constant bias. At least two retained pairs are required. Missing-value
+#' handling follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Bellon-Maurel et al. (2010). See [rpd()].
+#' @family prediction metrics
 #' @export
 sep <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["sep"])
-#' @rdname extended_prediction_metrics
+
+#' Range-to-RMSE ratio
+#'
+#' Range-to-RMSE ratio (RER) scales RMSE by the observed range.
+#'
+#' \deqn{\mathrm{RER}=[\max(obs)-\min(obs)]/\mathrm{RMSE}.}
+#'
+#' RER is non-negative and larger values indicate smaller error relative to the
+#' observed range. It is sensitive to extreme observations and is NA for perfect
+#' predictions. Missing-value handling follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Bellon-Maurel et al. (2010). See [rpd()].
+#' @family prediction metrics
 #' @export
 rer <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rer"])
-#' @rdname extended_prediction_metrics
+
+#' Mean absolute percentage error
+#'
+#' Mean absolute percentage error (MAPE) averages absolute error relative to
+#' each observation.
+#'
+#' \deqn{\mathrm{MAPE}=\frac{1}{n}\sum_{i=1}^n
+#' \left|\frac{obs_i-pred_i}{obs_i}\right|.}
+#'
+#' MAPE is a non-negative fraction; zero is ideal, and multiplying by 100 gives
+#' percent. It is NA for zero observations and can disproportionately weight
+#' errors near zero. Missing-value handling follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Hyndman and Koehler (2006). See [mdae()].
+#' @family prediction metrics
 #' @export
 mape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mape"])
-#' @rdname extended_prediction_metrics
+
+#' Mean percentage error
+#'
+#' Mean percentage error (MPE) is signed mean error relative to observations,
+#' reported in percent.
+#'
+#' \deqn{\mathrm{MPE}=\frac{100}{n}\sum_{i=1}^n\frac{obs_i-pred_i}{obs_i}.}
+#'
+#' MPE is unbounded and zero is ideal. For strictly positive observations,
+#' positive values indicate underprediction. Relative errors can cancel; MPE is
+#' NA for zero observations and unstable near zero. Missing-value handling
+#' follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Hyndman and Koehler (2006). See [mdae()].
+#' @family prediction metrics
 #' @export
 mpe <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["mpe"])
-#' @rdname extended_prediction_metrics
+
+#' Symmetric mean absolute percentage error
+#'
+#' Symmetric mean absolute percentage error (sMAPE) scales absolute error by
+#' absolute observation and prediction sizes.
+#'
+#' \deqn{\mathrm{sMAPE}=\frac{1}{n}\sum_{i=1}^n
+#' \frac{2|obs_i-pred_i|}{|obs_i|+|pred_i|}.}
+#'
+#' sMAPE ranges from zero to two; zero is ideal. Multiply by 100 for percent.
+#' A pair of zeros contributes zero. Missing-value handling follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Hyndman and Koehler (2006). See [mdae()].
+#' @family prediction metrics
 #' @export
 smape <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["smape"])
-#' @rdname extended_prediction_metrics
+
+#' Mean squared logarithmic error
+#'
+#' Mean squared logarithmic error (MSLE) averages squared differences on the
+#' log1p scale.
+#'
+#' \deqn{\mathrm{MSLE}=\frac{1}{n}\sum_{i=1}^n
+#' [\log(1+obs_i)-\log(1+pred_i)]^2.}
+#'
+#' MSLE is non-negative and zero is ideal. It emphasizes relative differences
+#' and requires non-negative observations and predictions; otherwise it is NA.
+#' The log1p convention is a package choice. Missing-value handling follows
+#' [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Hodson, T. O. (2022). Root mean square error (RMSE) or mean
+#'   absolute error (MAE): When to use them or not. *Geoscientific Model
+#'   Development*, 15, 5481-5487. <doi:10.5194/gmd-15-5481-2022>
+#' @family prediction metrics
 #' @export
 msle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["msle"])
-#' @rdname extended_prediction_metrics
+
+#' Root mean squared logarithmic error
+#'
+#' Root mean squared logarithmic error (RMSLE) is the square root of [msle()].
+#'
+#' \deqn{\mathrm{RMSLE}=\sqrt{\frac{1}{n}\sum_{i=1}^n
+#' [\log(1+obs_i)-\log(1+pred_i)]^2}.}
+#'
+#' RMSLE is non-negative and zero is ideal. It has the same non-negative input
+#' requirement and log1p convention as [msle()]. Missing-value handling follows
+#' [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Hodson (2022). See [msle()].
+#' @family prediction metrics
 #' @export
 rmsle <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rmsle"])
-#' @rdname extended_prediction_metrics
+
+#' Relative absolute error
+#'
+#' Relative absolute error (RAE) compares total absolute error with total
+#' absolute error from predicting the observed mean.
+#'
+#' \deqn{\mathrm{RAE}=\frac{\sum_{i=1}^n|obs_i-pred_i|}
+#' {\sum_{i=1}^n|obs_i-\bar{obs}|}.}
+#'
+#' RAE is non-negative and zero is ideal. One equals the observed-mean
+#' absolute-error benchmark; values above one are worse. It is NA for constant
+#' observations. Missing-value handling follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Hyndman and Koehler (2006). See [mdae()].
+#' @family prediction metrics
 #' @export
 rae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rae"])
-#' @rdname extended_prediction_metrics
+
+#' Relative root mean squared error
+#'
+#' Relative root mean squared error (RRMSE) expresses RMSE as a percentage of
+#' the absolute observed mean.
+#'
+#' \deqn{\mathrm{RRMSE}=100\,\mathrm{RMSE}/|\bar{obs}|.}
+#'
+#' RRMSE is non-negative and zero is ideal. It is NA for a zero observed mean
+#' and unstable when that mean is near zero. This mean-normalized convention
+#' differs from the standard-deviation normalization in [nrmse()]. Missing-value
+#' handling follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Willmott, C. J., Ackleson, S. G., Davis, R. E., Feddema, J. J.,
+#'   Klink, K. M., Legates, D. R., O'Donnell, J., and Rowe, C. M. (1985).
+#'   Statistics for the evaluation and comparison of models. *Journal of
+#'   Geophysical Research*, 90, 8995-9005.
+#'   <doi:10.1029/JC090iC05p08995>
+#' @family prediction metrics
 #' @export
 rrmse <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["rrmse"])
-#' @rdname extended_prediction_metrics
+
+#' Willmott's index of agreement
+#'
+#' Willmott's original index of agreement, d, compares squared error with a
+#' potential-error denominator based on the observed mean.
+#'
+#' \deqn{d=1-\frac{\sum_{i=1}^n(obs_i-pred_i)^2}
+#' {\sum_{i=1}^n(|pred_i-\bar{obs}|+|obs_i-\bar{obs}|)^2}.}
+#'
+#' For finite inputs, d ranges from zero to one and one is ideal. The index can
+#' be strongly influenced by large errors. It is NA when its denominator is zero,
+#' including identical constant observations and predictions. Missing-value
+#' handling follows [bias()].
+#' @inheritParams bias
+#' @return One numeric value.
+#' @references Willmott et al. (1985). See [rrmse()].
+#' @family prediction metrics
 #' @export
 willmott_d <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, na.rm)["willmott_d"])
 

@@ -54,12 +54,21 @@ performance to a single number.
 
 | Category | `modelskill` metrics | Main question |
 |:--|:--|:--|
-| **Error magnitude** | [`rmse()`](../reference/rmse.html), [`mae()`](../reference/mae.html), [`mse()`](../reference/mse.html), [`mdae()`](../reference/extended_prediction_metrics.html) | How large are the errors? |
-| **Bias** | [`bias()`](../reference/bias.html), [`mpe()`](../reference/extended_prediction_metrics.html) | Are predictions systematically high or low? |
-| **Association** | [`correlation()`](../reference/correlation.html), [`r2()`](../reference/r2.html) | Do predictions track variation in observations? |
-| **Agreement** | [`willmott_d()`](../reference/extended_prediction_metrics.html), [`ccc()`](../reference/ccc.html) | How closely do predictions agree in correlation, location, and scale? |
-| **Efficiency / skill** | [`R2()`](../reference/efficiency_r2.html) / [`nse()`](../reference/nse.html) / [`mec()`](../reference/mec.html), [`kge()`](../reference/kge.html) | How good are predictions relative to a reference? |
-| **Relative / scaled error** | [`nrmse()`](../reference/nrmse.html), [`rrmse()`](../reference/extended_prediction_metrics.html), [`rpd()`](../reference/extended_prediction_metrics.html), [`rpiq()`](../reference/extended_prediction_metrics.html), [`rer()`](../reference/extended_prediction_metrics.html) | How large is error relative to the data scale? |
+| **Error magnitude** | [`rmse()`](../reference/rmse.html), [`mae()`](../reference/mae.html), [`mse()`](../reference/mse.html), [`mdae()`](../reference/mdae.html) | How large are prediction errors? |
+| **Bias** | [`bias()`](../reference/bias.html), [`mpe()`](../reference/mpe.html) | Are predictions systematically high or low? |
+| **Association** | [`correlation()`](../reference/correlation.html), [`r2()`](../reference/r2.html) | Do predictions reproduce variation in observations? |
+| **Agreement** | [`ccc()`](../reference/ccc.html), [`willmott_d()`](../reference/willmott_d.html) | How closely do predictions agree with observations? |
+| **Efficiency / composite skill** | [`nse()`](../reference/nse.html) ([`mec()`](../reference/mec.html) and [`R2()`](../reference/efficiency_r2.html) aliases), [`kge()`](../reference/kge.html) | How well do predictions perform against a benchmark or across multiple performance components? |
+| **Scaled / relative error** | [`nrmse()`](../reference/nrmse.html), [`rrmse()`](../reference/rrmse.html), [`rae()`](../reference/rae.html), [`rpd()`](../reference/rpd.html), [`rpiq()`](../reference/rpiq.html), [`rer()`](../reference/rer.html) | How large is error relative to variation or magnitude of observations? |
+| **Specialised losses** | [`mape()`](../reference/mape.html), [`smape()`](../reference/smape.html), [`msle()`](../reference/msle.html), [`rmsle()`](../reference/rmsle.html), [`pinball_loss()`](../reference/pinball_loss.html) | How does performance look under relative, transformed, or quantile-specific loss? |
+
+This is a practical classification: several metrics are mathematically related,
+so they should not be treated as statistically independent evidence.
+
+> **Do not confuse `r2()` with `R2()`.** Lowercase `r2()` is squared Pearson
+> correlation. Uppercase `R2()` is the model-efficiency coefficient; `R2()`,
+> `nse()`, and `mec()` are aliases in this package. They answer different
+> scientific questions.
 
 MPE and RRMSE are expressed as percentages. Both are undefined when the
 observed value or observed mean used as their denominator is zero, respectively.
@@ -135,20 +144,20 @@ ME and RMSE are defined in the core table above, and $r$ is Pearson's $r$.
 
 | Statistic | Package function | Equation | Range, ideal, and interpretation | Reference / convention |
 |:--|:--|:--|:--|:--|
-| MdAE | `mdae()` | $\mathrm{MdAE}=\mathrm{median}_{i=1,\ldots,n}(\lvert o_i-p_i\rvert)$ | Nonnegative; 0 ideal. Robust typical error, response units. | Hyndman & Koehler (2006) |
-| RPD | `rpd()` | $\mathrm{RPD}=\frac{s_o}{\mathrm{RMSE}}$ | Nonnegative; larger is better. NA at perfect prediction. | Bellon-Maurel et al. (2010) |
-| RPIQ | `rpiq()` | $\mathrm{RPIQ}=\frac{Q_{0.75}(o)-Q_{0.25}(o)}{\mathrm{RMSE}}$ | Nonnegative; larger is better. Type-7 quartiles; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
-| SEP | `sep()` | $\mathrm{SEP}=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}[(o_i-p_i)-\mathrm{ME}]^2}$ | Nonnegative; 0 ideal. Bias removed; at least two pairs. | Bellon-Maurel et al. (2010) |
-| RER | `rer()` | $\mathrm{RER}=\frac{\max_i o_i-\min_i o_i}{\mathrm{RMSE}}$ | Nonnegative; larger is better; sensitive to extremes; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
-| MAPE | `mape()` | $\mathrm{MAPE}=\frac{1}{n}\sum_{i=1}^{n}\left\lvert\frac{o_i-p_i}{o_i}\right\rvert$ | Nonnegative fraction; 0 ideal. Multiply by 100 for percent; NA for any zero observation. | Hyndman & Koehler (2006) |
-| MPE | `mpe()` | $\mathrm{MPE}=\frac{100}{n}\sum_{i=1}^{n}\frac{o_i-p_i}{o_i}$ | Unbounded percent; 0 ideal. Positive means underprediction only for positive observations; NA at zero. | Hyndman & Koehler (2006); obs-minus-pred sign |
-| sMAPE | `smape()` | $\mathrm{sMAPE}=\frac{1}{n}\sum_{i=1}^{n}\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}$ | [0,2] fraction; 0 ideal. Both-zero pair contributes 0; multiply by 100 for percent. | Hyndman & Koehler (2006); absolute-denominator variant |
-| MSLE | `msle()` | $\mathrm{MSLE}=\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2$ | Nonnegative; 0 ideal. NA for negative inputs; target units affect log1p. | Hodson (2022), transformed errors; package log1p convention |
-| RMSLE | `rmsle()` | $\mathrm{RMSLE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2}$ | Nonnegative; 0 ideal. Same domain as MSLE. | Hodson (2022); package log1p convention |
-| RAE | `rae()` | $\mathrm{RAE}=\frac{\sum_{i=1}^{n}\lvert o_i-p_i\rvert}{\sum_{i=1}^{n}\lvert o_i-\bar o\rvert}$ | Nonnegative; 0 ideal, 1 observed-mean absolute-error benchmark; NA if A=0. | Hyndman & Koehler (2006); mean benchmark |
-| RRMSE | `rrmse()` | $\mathrm{RRMSE}=100\frac{\mathrm{RMSE}}{\lvert\bar o\rvert}$ | Nonnegative percent; 0 ideal; NA at zero mean, unstable near zero. | Willmott et al. (1985), RMSE; package absolute-mean normalization |
-| Willmott's $d$ | `willmott_d()` | $d=1-\frac{\sum_{i=1}^{n}(o_i-p_i)^2}{\sum_{i=1}^{n}(\lvert p_i-\bar o\rvert+\lvert o_i-\bar o\rvert)^2}$ | [0,1]; 1 ideal. NA if D=0 (identical constant vectors); sensitive to large errors. | Willmott et al. (1985) |
-| KGE | `kge()` | $\mathrm{KGE}=1-\sqrt{(r-1)^2+\left(\frac{s_p}{s_o}-1\right)^2+\left(\frac{\bar p}{\bar o}-1\right)^2}$ | At most 1; 1 ideal. Zero is not NSE's benchmark. NA for zero observation mean or either constant vector. | Gupta et al. (2009) |
+| MdAE | [`mdae()`](../reference/mdae.html) | $\mathrm{MdAE}=\mathrm{median}_{i=1,\ldots,n}(\lvert o_i-p_i\rvert)$ | Nonnegative; 0 ideal. Robust typical error, response units. | Hyndman & Koehler (2006) |
+| RPD | [`rpd()`](../reference/rpd.html) | $\mathrm{RPD}=\frac{s_o}{\mathrm{RMSE}}$ | Nonnegative; larger is better. NA at perfect prediction. | Bellon-Maurel et al. (2010) |
+| RPIQ | [`rpiq()`](../reference/rpiq.html) | $\mathrm{RPIQ}=\frac{Q_{0.75}(o)-Q_{0.25}(o)}{\mathrm{RMSE}}$ | Nonnegative; larger is better. Type-7 quartiles; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
+| SEP | [`sep()`](../reference/sep.html) | $\mathrm{SEP}=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}[(o_i-p_i)-\mathrm{ME}]^2}$ | Nonnegative; 0 ideal. Bias removed; at least two pairs. | Bellon-Maurel et al. (2010) |
+| RER | [`rer()`](../reference/rer.html) | $\mathrm{RER}=\frac{\max_i o_i-\min_i o_i}{\mathrm{RMSE}}$ | Nonnegative; larger is better; sensitive to extremes; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
+| MAPE | [`mape()`](../reference/mape.html) | $\mathrm{MAPE}=\frac{1}{n}\sum_{i=1}^{n}\left\lvert\frac{o_i-p_i}{o_i}\right\rvert$ | Nonnegative fraction; 0 ideal. Multiply by 100 for percent; NA for any zero observation. | Hyndman & Koehler (2006) |
+| MPE | [`mpe()`](../reference/mpe.html) | $\mathrm{MPE}=\frac{100}{n}\sum_{i=1}^{n}\frac{o_i-p_i}{o_i}$ | Unbounded percent; 0 ideal. Positive means underprediction only for positive observations; NA at zero. | Hyndman & Koehler (2006); obs-minus-pred sign |
+| sMAPE | [`smape()`](../reference/smape.html) | $\mathrm{sMAPE}=\frac{1}{n}\sum_{i=1}^{n}\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}$ | [0,2] fraction; 0 ideal. Both-zero pair contributes 0; multiply by 100 for percent. | Hyndman & Koehler (2006); absolute-denominator variant |
+| MSLE | [`msle()`](../reference/msle.html) | $\mathrm{MSLE}=\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2$ | Nonnegative; 0 ideal. NA for negative inputs; target units affect log1p. | Hodson (2022), transformed errors; package log1p convention |
+| RMSLE | [`rmsle()`](../reference/rmsle.html) | $\mathrm{RMSLE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2}$ | Nonnegative; 0 ideal. Same domain as MSLE. | Hodson (2022); package log1p convention |
+| RAE | [`rae()`](../reference/rae.html) | $\mathrm{RAE}=\frac{\sum_{i=1}^{n}\lvert o_i-p_i\rvert}{\sum_{i=1}^{n}\lvert o_i-\bar o\rvert}$ | Nonnegative; 0 ideal, 1 observed-mean absolute-error benchmark; NA if A=0. | Hyndman & Koehler (2006); mean benchmark |
+| RRMSE | [`rrmse()`](../reference/rrmse.html) | $\mathrm{RRMSE}=100\frac{\mathrm{RMSE}}{\lvert\bar o\rvert}$ | Nonnegative percent; 0 ideal; NA at zero mean, unstable near zero. | Willmott et al. (1985), RMSE; package absolute-mean normalization |
+| Willmott's $d$ | [`willmott_d()`](../reference/willmott_d.html) | $d=1-\frac{\sum_{i=1}^{n}(o_i-p_i)^2}{\sum_{i=1}^{n}(\lvert p_i-\bar o\rvert+\lvert o_i-\bar o\rvert)^2}$ | [0,1]; 1 ideal. NA if D=0 (identical constant vectors); sensitive to large errors. | Willmott et al. (1985) |
+| KGE | [`kge()`](../reference/kge.html) | $\mathrm{KGE}=1-\sqrt{(r-1)^2+\left(\frac{s_p}{s_o}-1\right)^2+\left(\frac{\bar p}{\bar o}-1\right)^2}$ | At most 1; 1 ideal. Zero is not NSE's benchmark. NA for zero observation mean or either constant vector. | Gupta et al. (2009) |
 
 ### Redundancy and comparison conventions
 
