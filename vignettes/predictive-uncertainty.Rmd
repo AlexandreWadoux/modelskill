@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
 ## 1. Why validate predictive uncertainty?
 
 Point-prediction metrics assess how close predictions are to observations, but
-many models also quantify how uncertain each prediction is. This information may
+many models also quantify how uncertain each prediction is. This inFpitformation may
 be supplied as prediction intervals, predicted quantiles, a predictive mean and
 standard deviation, or a complete predictive distribution.
 
@@ -84,7 +84,7 @@ The main `modelskill` functions used below are:
 | [`accuracy_plot_metrics()`](../reference/accuracy_plot_metrics.html) | Summarizes deviations between the empirical coverage curve and the ideal 1:1 reliability line.                                         | [@goovaerts2001; @schmidinger2023]            |
 | [`qcp()`](../reference/qcp.html)                                     | Calculates quantile coverage probability, the proportion of observations below each predicted quantile.                                | [@schmidinger2023]                              |
 | [`gg_qcp()`](../reference/gg_qcp.html)                               | Produces a quantile calibration plot comparing nominal quantile probabilities with empirical quantile coverage.                        | [@schmidinger2023]                              |
-| [`pit()`](../reference/pit.html) | Validates PIT values supplied as predictive CDF values evaluated at the observations. | [@gneiting2007; @schmidinger2023] |
+| [`pit()`](../reference/pit.html) | Calculates probability integral transform values from predictive CDF values or directly from predictive means and standard deviations under a normal predictive-distribution assumption. | [@gneiting2007; @schmidinger2023] |
 | [`gg_pit()`](../reference/gg_pit.html)                               | Produces a PIT histogram for assessing the calibration of complete predictive distributions.                                           | [@gneitingraftery2007; @schmidinger2023] |
 | [`crps()`](../reference/crps.html)                                   | Calculates the continuous ranked probability score, a proper score that evaluates the full predictive distribution.                    | [@hersbach2000; @gneitingraftery2007]                  |
 | [`median_crps()`](../reference/median_crps.html)                     | Calculates the median case-wise CRPS, providing a robust summary of typical probabilistic prediction performance.                      | [@gneitingraftery2007]                                   |
@@ -96,8 +96,10 @@ The appropriate functions depend on the available model output. For example,
 prediction-interval bounds. `crps()` can use either a normal predictive
 distribution represented by a predictive mean and standard deviation or a
 matrix of predictive samples. `crps_decomposition()` is intended for equally
-weighted predictive samples, while `pit()` and `log_score()` require predictive
-CDF or density values evaluated at the observations.
+weighted predictive samples, while `pit()` can use predictive CDF values evaluated at the observations or calculate
+them directly from predictive means and standard deviations when a normal
+predictive distribution is assumed. `log_score()` requires predictive density
+values evaluated at the observations.
 
 ## 4. Example data
 
@@ -704,81 +706,124 @@ is considered alone.
 
 ### 5.6 Probability integral transform
 
-When a complete predictive cumulative distribution function \(F_i\) is
-available, calibration can also be assessed through the **probability integral
-transform (PIT)**:
+The **probability integral transform (PIT)** evaluates calibration of the complete
+predictive distribution. For observation \(y_i\) and its predictive cumulative
+distribution function \(F_i\), the PIT value is
 
 \[
 u_i = F_i(y_i).
 \]
 
-For a calibrated continuous predictive distribution, PIT values should be
-uniformly distributed between 0 and 1.
+For calibrated continuous predictive distributions, PIT values evaluated across
+independent validation observations should be approximately uniformly distributed
+between 0 and 1 [@gneiting2007; @schmidinger2023].
 
-For the normal predictive distributions in this example, evaluate each CDF at
-its corresponding observation:
+There is therefore no single ideal PIT value for an individual observation.
+Calibration is assessed from the distribution of PIT values over the validation
+set.
+
+When the predictive distribution is represented by a predictive mean and
+standard deviation and a normal distribution is appropriate, [`pit()`](../reference/pit.html)
+can calculate the PIT values directly:
 
 ```{r}
 pit_normal <- pit(
-  stats::pnorm(
-    obs,
-    mean = pred,
-    sd = predictive_sd
-  )
+  obs = obs,
+  pred = pred,
+  predictive_sd = predictive_sd
 )
 
 gg_pit(pit_normal)
-
 ```
 
-There is no ideal PIT value for an individual observation. Calibration is
-evaluated from the distribution of PIT values across the validation set.
+[`gg_pit()`](../reference/gg_pit.html) displays the resulting PIT values as a
+histogram. The histogram is shown on a density scale, and the dashed horizontal
+line at density 1 represents the expected density under a uniform distribution.
 
-A roughly flat histogram is desirable.
+For a well-calibrated predictive distribution, the histogram should therefore
+be approximately flat around this reference line. Departures from uniformity can
+provide information about the form of miscalibration:
 
-Common deviations are informative:
+- a **U-shaped** histogram, with excess PIT values near 0 and 1, is commonly
+  associated with predictive distributions that are too narrow
+  (underdispersed);
+- a **hump-shaped** histogram, with excess PIT values near 0.5, is commonly
+  associated with predictive distributions that are too wide
+  (overdispersed);
+- an excess of PIT values near **0** can occur when predictions are
+  systematically too high relative to the observations;
+- an excess of PIT values near **1** can occur when predictions are
+  systematically too low relative to the observations.
 
-- excess observations near **0 and 1** generally indicate predictive
-  distributions that are too narrow;
-- excess observations near the **centre** generally indicate distributions that
-  are too wide;
-- systematic asymmetry or a slope can indicate directional bias.
+These patterns are diagnostic rather than unique: different forms of
+misspecification can produce similar PIT histograms. Sampling variability can
+also create apparent departures from uniformity, particularly for small
+validation datasets.
 
-For example, PIT immediately reveals the uncertainty estimates that were made
-too narrow:
+For example, consider the predictive standard deviations that were deliberately
+made too small:
 
 ```{r}
 pit_narrow <- pit(
-  stats::pnorm(
-    obs,
-    mean = pred,
-    sd = sd_too_small
-  )
+  obs = obs,
+  pred = pred,
+  predictive_sd = sd_too_small
 )
 
 gg_pit(pit_narrow)
-
 ```
 
-The biased distribution can also be inspected:
+Because these predictive distributions are too narrow, the observations occur
+in their tails more frequently than expected, producing relatively more PIT
+values near 0 and 1.
+
+The deliberately biased predictive distribution can be assessed in the same
+way:
 
 ```{r}
 pit_biased <- pit(
-  stats::pnorm(
-    obs,
-    mean = biased_pred,
-    sd = biased_sd
-  )
+  obs = obs,
+  pred = biased_pred,
+  predictive_sd = biased_sd
 )
 
 gg_pit(pit_biased)
-
 ```
 
-PIT and QCP convey closely related calibration information but emphasize
-different aspects visually. @schmidinger2023 recommend them as
-useful complements to PICP, particularly because they can expose calibration
-problems that central interval coverage alone may hide.
+A directional bias tends to shift PIT values towards one side of the unit
+interval rather than producing a symmetric departure from uniformity.
+
+`pit()` can also be used when the predictive CDF has been calculated externally.
+This allows PIT values to be obtained for continuous predictive distributions
+other than the normal distribution:
+
+```{r}
+cdf_at_obs <- stats::pnorm(
+  obs,
+  mean = pred,
+  sd = predictive_sd
+)
+
+pit_from_cdf <- pit(
+  cdf_at_obs = cdf_at_obs
+)
+
+gg_pit(pit_from_cdf)
+```
+
+PIT and QCP are closely related because both evaluate calibration across the
+predictive distribution, but they summarize it differently. QCP evaluates
+empirical coverage at specified predictive quantiles, whereas PIT evaluates the
+position of each observation within its complete predictive distribution.
+Together with prediction-interval coverage, these diagnostics can reveal
+distributional or asymmetric calibration problems that may not be apparent from
+central prediction intervals alone [@schmidinger2023].
+
+The usual uniformity interpretation of PIT applies to **continuous** predictive
+distributions. For discrete distributions or finite predictive ensembles,
+ordinary PIT values are themselves discrete and randomized PIT or rank-based
+diagnostics are more appropriate.
+
 
 ### 5.7 Proper scoring rules
 
