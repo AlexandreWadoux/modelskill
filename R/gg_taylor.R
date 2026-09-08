@@ -85,37 +85,8 @@
 #'   smooth = c(2, 2, 3, 4, 4)
 #' )
 #'
-#' # Model names directly on the diagram
-#' gg_taylor(mods, obs, label = TRUE)
-#'
-#' # Positive-correlation Taylor diagram
+#' # Positive-correlation Taylor diagram with model names
 #' gg_taylor(mods, obs, label = TRUE, half = TRUE)
-#'
-#' # Coloured points and legend
-#' gg_taylor(mods, obs, legend = TRUE, half = TRUE)
-#'
-#' # Remove RMSD contours completely
-#' gg_taylor(mods, obs, legend = TRUE, half = TRUE, rmsd = FALSE)
-#'
-#' # Change RMSD colour
-#' gg_taylor(
-#'   mods, obs,
-#'   legend = TRUE,
-#'   half = TRUE,
-#'   rmsd_colour = "steelblue"
-#' )
-#'
-#' # Define custom RMSD contours
-#' gg_taylor(
-#'   mods, obs,
-#'   half = TRUE,
-#'   rmsd_breaks = c(0.25, 0.5, 1, 1.5, 2)
-#' )
-#'
-#' # Ordinary ggplot2 customisation remains available
-#' gg_taylor(mods, obs, legend = TRUE, half = TRUE) +
-#'   ggplot2::scale_colour_brewer(palette = "Dark2") +
-#'   ggplot2::theme(legend.position = "bottom")
 #'
 #' @export
 gg_taylor <- function(mods, obs,
