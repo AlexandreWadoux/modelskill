@@ -460,31 +460,43 @@ clearly.
 
 ### 5.5 Quantile coverage probability
 
-Suppose a model predicts several conditional quantiles.
+Prediction interval coverage probability evaluates whether observations fall
+inside prediction intervals, but it does not distinguish between the lower and
+upper tails. Quantile coverage probability (QCP) provides a complementary
+calibration diagnostic by evaluating individual predictive quantiles.
 
-For a correctly calibrated quantile at probability \(p\), approximately a
-fraction \(p\) of observations should fall below that predicted quantile.
-
-The **quantile coverage probability (QCP)** is
+For a correctly calibrated predictive quantile at probability \(p\),
+approximately a fraction \(p\) of observations should fall below that predicted
+quantile. The **quantile coverage probability (QCP)** is
 
 \[
 \mathrm{QCP}(p) =
 \frac{1}{n}
 \sum_{i=1}^{n}
-I(y_i \leq q_{i,p}).
+I(y_i \leq q_{i,p}),
 \]
 
-For example, create several quantiles from the calibrated normal predictive
-distribution:
+where \(q_{i,p}\) is the predicted \(p\)-quantile for observation \(i\).
+
+For a calibrated predictive distribution,
+
+- a predicted 0.05 quantile should have QCP close to 0.05;
+- a predicted 0.50 quantile should have QCP close to 0.50;
+- a predicted 0.95 quantile should have QCP close to 0.95.
+
+It is generally more informative to evaluate QCP across several quantile levels
+rather than at only a few selected probabilities. We therefore evaluate
+quantiles from 0.05 to 0.95 at increments of 0.05.
 
 ```{r}
-q_levels <- c(0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95)
+q_levels <- seq(0.05, 0.95, by = 0.05)
 
-qhat <- sapply(
+qhat <- vapply(
   q_levels,
   function(p) {
     pred + stats::qnorm(p) * predictive_sd
-  }
+  },
+  numeric(n)
 )
 
 qcp(
@@ -492,16 +504,12 @@ qcp(
   quantiles = qhat,
   levels = q_levels
 )
-
 ```
 
-For a well-calibrated model:
+For a well-calibrated predictive distribution, the empirical QCP values should
+be close to their corresponding nominal quantile probabilities.
 
-- the 0.05 quantile should have QCP close to 0.05;
-- the 0.50 quantile should have QCP close to 0.50;
-- the 0.95 quantile should have QCP close to 0.95.
-
-[`gg_qcp()`](../reference/gg_qcp.html) shows this relationship graphically:
+[`gg_qcp()`](../reference/gg_qcp.html) displays this relationship graphically:
 
 ```{r}
 gg_qcp(
@@ -509,19 +517,46 @@ gg_qcp(
   quantiles = qhat,
   levels = q_levels
 )
-
 ```
 
-Points close to the 1:1 line indicate calibrated quantiles.
+The horizontal axis gives the nominal predictive quantile probability and the
+vertical axis gives its empirical QCP. Points close to the 1:1 line indicate
+well-calibrated predictive quantiles.
+
+When the predictive distribution is represented by a predictive mean and
+standard deviation and a normal distribution is appropriate, `gg_qcp()` can
+also generate these quantiles directly:
+
+```{r}
+gg_qcp(
+  obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+```
+
+This differs from [`gg_coverage()`](../reference/gg_coverage.html). The
+reliability or accuracy plot produced by `gg_coverage()` evaluates the
+**joint coverage of central prediction intervals**, whereas `gg_qcp()` evaluates
+**individual predictive quantiles**. For example, a central 90% prediction
+interval jointly evaluates its 0.05 and 0.95 quantile bounds. QCP instead
+evaluates those two quantiles separately.
+
+This distinction is important because satisfactory central interval coverage
+does not necessarily imply that both tails are calibrated. A prediction
+interval may contain approximately the expected proportion of observations even
+when too many observations fall below its lower bound and too few fall above its
+upper bound.
 
 Now examine the deliberately biased predictive distribution:
 
 ```{r}
-qhat_biased <- sapply(
+qhat_biased <- vapply(
   q_levels,
   function(p) {
     biased_pred + stats::qnorm(p) * biased_sd
-  }
+  },
+  numeric(n)
 )
 
 qcp(
@@ -535,15 +570,29 @@ gg_qcp(
   quantiles = qhat_biased,
   levels = q_levels
 )
-
 ```
 
-Unlike central PICP, QCP evaluates the lower and upper parts of the predictive
-distribution separately and can therefore reveal directional bias.
+The same plot can be generated directly from its predictive mean and standard
+deviation:
 
-QCP above its nominal probability means that the predicted quantile tends to be
-too high. QCP below its nominal probability means that the predicted quantile
+```{r}
+gg_qcp(
+  obs,
+  pred = biased_pred,
+  predictive_sd = biased_sd
+)
+```
+
+Departures from the 1:1 line indicate quantile miscalibration. QCP above its
+nominal probability means that observations fall below the predicted quantile
+more frequently than expected, so the predicted quantile tends to be too high.
+QCP below its nominal probability means that observations fall below the
+predicted quantile less frequently than expected, so the predicted quantile
 tends to be too low.
+
+QCP is therefore particularly useful for identifying asymmetric or one-sided
+miscalibration that may remain hidden when central prediction-interval coverage
+is considered alone.
 
 ### 5.6 Probability integral transform
 
