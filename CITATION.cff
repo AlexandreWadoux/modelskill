@@ -5,7 +5,7 @@ type: software
 version: 0.0.0.9000
 authors:
   - family-names: Wadoux
-    given-names: Alexandre M.J.-C.
+    given-names: A.M.J.-C.
     email: alexandre.wadoux@yahoo.fr
     orcid: https://orcid.org/0000-0001-7325-9716
 repository-code: https://github.com/AlexandreWadoux/modelskill
