@@ -226,7 +226,10 @@ gg_target <- function(
       ][37],
       rmse_reference$y[37]
     ),
-    label = c("0.9", "0.7", "1")
+    label = c(
+      format(correlation_thresholds, trim = TRUE),
+      "1"
+    )
   )
 
   ticks <- subset(
