@@ -223,33 +223,210 @@ qcp <- function(obs, quantiles, levels, na.rm = TRUE) {
   stats::setNames(out, as.character(levels))
 }
 
-#' Probability integral transform values
+#' Probability integral transform
 #'
-#' Validates already evaluated predictive-CDF values, `cdf_at_obs = F_i(y_i)`.
-#' For calibrated continuous predictive distributions, PIT values are uniform
-#' on zero to one. Plot them with [gg_pit()].
+#' Calculates probability integral transform (PIT) values for continuous
+#' predictive distributions. PIT values can either be supplied directly as
+#' predictive cumulative distribution function (CDF) values evaluated at the
+#' observations, or calculated from predictive means and standard deviations
+#' under a normal predictive-distribution assumption.
 #'
-#' \deqn{u_i = F_i(obs_i)}
+#' For observation \eqn{obs_i} and predictive cumulative distribution function
+#' \eqn{F_i}, the PIT value is
 #'
-#' PIT values have no individually preferred value. Across cases, a uniform
-#' distribution indicates calibration; systematic departures in [gg_pit()] can
-#' reveal bias or incorrect predictive dispersion.
-#' @param cdf_at_obs Numeric vector of predictive CDF values evaluated at the
-#'   corresponding observations.
-#' @param na.rm Logical; remove missing values?
-#' @return Numeric PIT values.
-#' @references Gneiting, T., Balabdaoui, F. and Raftery, A. E. (2007).
-#'   Probabilistic forecasts, calibration and sharpness. *JRSS B*, 69, 243-268.
-#'   <doi:10.1111/j.1467-9868.2007.00587.x>
-#' @examples pit(stats::pnorm(c(-1, 0, 1)))
+#' \deqn{
+#' u_i = F_i(obs_i).
+#' }
+#'
+#' For calibrated continuous predictive distributions, PIT values evaluated
+#' over independent validation observations should be approximately uniformly
+#' distributed between zero and one. Individual PIT values do not have a
+#' preferred value; calibration is assessed from their distribution across
+#' observations, for example with [gg_pit()].
+#'
+#' When `cdf_at_obs` is supplied, the values are returned after validation.
+#' This mode can be used with any continuous predictive distribution provided
+#' its CDF has already been evaluated at each corresponding observation.
+#'
+#' Alternatively, `obs`, `pred`, and `predictive_sd` can be supplied together.
+#' In this case, normal predictive distributions are assumed and PIT values are
+#' calculated as
+#'
+#' \deqn{
+#' u_i =
+#' \Phi\left(
+#' \frac{obs_i-pred_i}{\sigma_i}
+#' \right),
+#' }
+#'
+#' where \eqn{\Phi} is the standard normal CDF and \eqn{\sigma_i} is the
+#' predictive standard deviation.
+#'
+#' A uniform PIT distribution is consistent with probabilistic calibration.
+#' Systematic departures from uniformity can indicate misspecification of the
+#' predictive distributions. For example, U-shaped PIT histograms are commonly
+#' associated with underdispersed predictive distributions, hump-shaped
+#' histograms with overdispersed distributions, and asymmetric PIT histograms
+#' with systematic bias. These patterns are diagnostic rather than unique and
+#' should be interpreted together with other validation measures.
+#'
+#' PIT uniformity assesses the predictive distributions collectively and does
+#' not by itself establish that every aspect of conditional calibration is
+#' correct. Calibration should therefore generally be evaluated using
+#' complementary diagnostics such as [gg_qcp()], [gg_coverage()], and proper
+#' scoring rules.
+#'
+#' The usual uniformity interpretation applies directly to continuous
+#' predictive distributions. For discrete distributions or finite predictive
+#' ensembles, ordinary PIT values are discrete; randomized PIT or rank-based
+#' diagnostics are more appropriate.
+#'
+#' @param cdf_at_obs Optional numeric vector containing predictive CDF values
+#'   evaluated at the corresponding observations. Values must lie between zero
+#'   and one. Do not supply this together with `obs`, `pred`, or
+#'   `predictive_sd`.
+#' @param obs Optional numeric vector of observations. Must be supplied together
+#'   with `pred` and `predictive_sd`.
+#' @param pred Optional numeric vector of predictive means. Used with `obs` and
+#'   `predictive_sd` to calculate PIT values assuming normal predictive
+#'   distributions.
+#' @param predictive_sd Optional numeric vector of predictive standard
+#'   deviations. Values must be finite and strictly positive.
+#' @param na.rm Logical; remove incomplete values or observation-prediction
+#'   combinations? The default is `TRUE`.
+#'
+#' @return Numeric vector of PIT values between zero and one.
+#'
+#' @references
+#' Gneiting, T., Balabdaoui, F. and Raftery, A. E. (2007). Probabilistic
+#' forecasts, calibration and sharpness. *Journal of the Royal Statistical
+#' Society: Series B*, 69, 243-268.
+#' <doi:10.1111/j.1467-9868.2007.00587.x>
+#'
+#' Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+#' predictions in digital soil mapping. *Geoderma*, 437, 116585.
+#' <doi:10.1016/j.geoderma.2023.116585>
+#'
+#' @seealso [gg_pit()], [qcp()], [gg_qcp()], [picp()], [gg_coverage()],
+#'   [crps()]
+#'
+#' @examples
+#' # PIT values from CDF values calculated elsewhere
+#' cdf_values <- stats::pnorm(c(-1, 0, 1))
+#' pit(cdf_values)
+#'
+#' # Calculate PIT directly for normal predictive distributions
+#' set.seed(123)
+#'
+#' n <- 500
+#' pred <- seq(0, 10, length.out = n)
+#' predictive_sd <- rep(1, n)
+#' obs <- stats::rnorm(n, mean = pred, sd = predictive_sd)
+#'
+#' pit_values <- pit(
+#'   obs = obs,
+#'   pred = pred,
+#'   predictive_sd = predictive_sd
+#' )
+#'
+#' gg_pit(pit_values)
+#'
 #' @export
-pit <- function(cdf_at_obs, na.rm = TRUE) {
-  if (!is_numeric_vector(cdf_at_obs) || any(!is.na(cdf_at_obs) &
-      (!is.finite(cdf_at_obs) | cdf_at_obs < 0 | cdf_at_obs > 1))) {
-    stop("`cdf_at_obs` must be a numeric vector with values between zero and one.", call. = FALSE)
+pit <- function(cdf_at_obs = NULL,
+                obs = NULL,
+                pred = NULL,
+                predictive_sd = NULL,
+                na.rm = TRUE) {
+
+  check_flag(na.rm, "na.rm")
+
+  cdf_mode <- !is.null(cdf_at_obs)
+  normal_mode <- !is.null(obs) ||
+    !is.null(pred) ||
+    !is.null(predictive_sd)
+
+  if (cdf_mode && normal_mode) {
+    stop(
+      paste0(
+        "Supply either `cdf_at_obs`, or `obs`, `pred`, and ",
+        "`predictive_sd`, not both."
+      ),
+      call. = FALSE
+    )
   }
-  if (!na.rm && anyNA(cdf_at_obs)) return(rep(NA_real_, length(cdf_at_obs)))
-  cdf_at_obs[!is.na(cdf_at_obs)]
+
+  if (!cdf_mode && !normal_mode) {
+    stop(
+      paste0(
+        "Supply either `cdf_at_obs`, or `obs`, `pred`, and ",
+        "`predictive_sd`."
+      ),
+      call. = FALSE
+    )
+  }
+
+  # Already evaluated predictive CDF values
+  if (cdf_mode) {
+
+    if (!is_numeric_vector(cdf_at_obs) || !length(cdf_at_obs)) {
+      stop(
+        "`cdf_at_obs` must be a non-empty numeric vector.",
+        call. = FALSE
+      )
+    }
+
+    invalid <- !is.na(cdf_at_obs) &
+      (
+        !is.finite(cdf_at_obs) |
+          cdf_at_obs < 0 |
+          cdf_at_obs > 1
+      )
+
+    if (any(invalid)) {
+      stop(
+        "`cdf_at_obs` values must be finite and between zero and one.",
+        call. = FALSE
+      )
+    }
+
+    if (na.rm) {
+      return(cdf_at_obs[!is.na(cdf_at_obs)])
+    }
+
+    return(cdf_at_obs)
+  }
+
+  # Normal predictive-distribution mode
+  if (is.null(obs) ||
+      is.null(pred) ||
+      is.null(predictive_sd)) {
+    stop(
+      paste0(
+        "Normal-distribution mode requires `obs`, `pred`, and ",
+        "`predictive_sd`."
+      ),
+      call. = FALSE
+    )
+  }
+
+  x <- prepare_predictive_sd_vectors(
+    obs,
+    pred,
+    predictive_sd,
+    na.rm = na.rm
+  )
+
+  if (is.null(x)) {
+    return(rep(NA_real_, length(obs)))
+  }
+
+  if (!length(x$obs)) {
+    return(numeric())
+  }
+
+  z <- (x$obs - x$pred) / x$predictive_sd
+
+  stats::pnorm(z)
 }
 
 crps_casewise <- function(obs, distribution = NULL, pred = NULL,
