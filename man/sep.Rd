@@ -21,8 +21,8 @@ Standard error of prediction (SEP) is the sample standard deviation of
 prediction errors after removing their mean error (ME).
 }
 \details{
-\deqn{\mathrm{SEP}=\sqrt{\frac{\sum_{i=1}^n(e_i-\mathrm{ME})^2}{n-1}},
-\quad e_i=obs_i-pred_i.}
+\deqn{\mathrm{SEP}=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}
+\left[(obs_i-pred_i)-\frac{1}{n}\sum_{j=1}^{n}(obs_j-pred_j)\right]^2}.}
 
 SEP has response units, is non-negative, and zero is ideal. Unlike RMSE, it
 removes constant bias. At least two retained pairs are required. Missing-value

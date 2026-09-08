@@ -18,11 +18,16 @@ One numeric value; one is ideal.
 }
 \description{
 Kling-Gupta efficiency (KGE) combines correlation, variability ratio, and
-mean ratio. Let \code{r} be \code{\link[=correlation]{correlation()}}, \code{alpha = s_pred / s_obs}, and
-\code{beta = mean(pred) / mean(obs)}.
+mean ratio. The component definitions below use the same paired observations
+and predictions as the main score.
 }
 \details{
-\deqn{\mathrm{KGE} = 1 - \sqrt{(r-1)^2 + (\alpha-1)^2 + (\beta-1)^2}}
+\deqn{r=\frac{\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})}
+{\sqrt{\sum_{i=1}^{n}(obs_i-\bar{obs})^2\sum_{i=1}^{n}(pred_i-\bar{pred})^2}},
+\quad \alpha=\sqrt{\frac{\sum_{i=1}^{n}(pred_i-\bar{pred})^2}
+{\sum_{i=1}^{n}(obs_i-\bar{obs})^2}},
+\quad \beta=\frac{\bar{pred}}{\bar{obs}}.}
+\deqn{\mathrm{KGE}=1-\sqrt{(r-1)^2+(\alpha-1)^2+(\beta-1)^2}.}
 
 One is ideal. Values closer to one indicate agreement in linear association,
 spread, and mean. The range is unbounded below and at most one. Zero is

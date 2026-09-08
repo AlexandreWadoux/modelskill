@@ -21,7 +21,9 @@ Normalized RMSE (NRMSE) divides \code{\link[=rmse]{rmse()}} by the sample standa
 observations.
 }
 \details{
-\deqn{\mathrm{NRMSE} = \frac{\mathrm{RMSE}}{s_{obs}}}
+\deqn{\mathrm{NRMSE}=
+\frac{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}
+{\sqrt{(n-1)^{-1}\sum_{i=1}^{n}(obs_i-\bar{obs})^2}}.}
 
 NRMSE is unitless and zero is ideal. Smaller values indicate less error
 relative to the observed variation. A value of one means RMSE equals one

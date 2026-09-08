@@ -21,7 +21,8 @@ Relative root mean squared error (RRMSE) expresses RMSE as a percentage of
 the absolute observed mean.
 }
 \details{
-\deqn{\mathrm{RRMSE}=100\,\mathrm{RMSE}/|\bar{obs}|.}
+\deqn{\mathrm{RRMSE}=100\,
+\frac{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}{|\bar{obs}|}.}
 
 RRMSE is non-negative and zero is ideal. It is NA for a zero observed mean
 and unstable when that mean is near zero. This mean-normalized convention

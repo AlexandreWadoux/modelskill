@@ -21,7 +21,9 @@ The standard deviation ratio compares the sample standard deviation of
 predictions with that of observations.
 }
 \details{
-\deqn{\mathrm{SD\ ratio} = \frac{s_{pred}}{s_{obs}}}
+\deqn{\mathrm{SD\ ratio}=
+\sqrt{\frac{\sum_{i=1}^{n}(pred_i-\bar{pred})^2}
+{\sum_{i=1}^{n}(obs_i-\bar{obs})^2}}.}
 
 The ratio is non-negative and one indicates equal spread. Values below one
 indicate under-dispersed predictions; values above one indicate

@@ -112,7 +112,9 @@ rmse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "rmse")
 #' Normalized RMSE (NRMSE) divides [rmse()] by the sample standard deviation of
 #' observations.
 #'
-#' \deqn{\mathrm{NRMSE} = \frac{\mathrm{RMSE}}{s_{obs}}}
+#' \deqn{\mathrm{NRMSE}=
+#' \frac{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}
+#' {\sqrt{(n-1)^{-1}\sum_{i=1}^{n}(obs_i-\bar{obs})^2}}.}
 #'
 #' NRMSE is unitless and zero is ideal. Smaller values indicate less error
 #' relative to the observed variation. A value of one means RMSE equals one
@@ -133,8 +135,8 @@ nrmse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "nrmse
 #' Centered RMSE (cRMSE) is the root mean square difference after removing the
 #' mean error from the paired errors.
 #'
-#' \deqn{\mathrm{cRMSE} = \sqrt{\frac{1}{n}\sum_{i = 1}^{n}
-#' [(obs_i - pred_i) - \mathrm{ME}]^2}}
+#' \deqn{\mathrm{cRMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}
+#' \left[(obs_i-pred_i)-\frac{1}{n}\sum_{j=1}^{n}(obs_j-pred_j)\right]^2}.}
 #'
 #' cRMSE is non-negative, has the response units, and zero is ideal. It measures
 #' disagreement in pattern and spread independently of a constant mean bias.
@@ -180,7 +182,9 @@ correlation <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, 
 #'
 #' Squared Pearson correlation is the square of [correlation()].
 #'
-#' \deqn{r^2 = r \times r}
+#' \deqn{r^2=
+#' \frac{\left[\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})\right]^2}
+#' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2\sum_{i=1}^{n}(pred_i-\bar{pred})^2}.}
 #'
 #' It ranges from zero to one and summarizes the strength, but not the sign, of
 #' linear association. A value of one can occur despite additive bias or
@@ -237,8 +241,12 @@ nse <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "nse")
 #'
 #' Alias for [nse()]. MEC, NSE, and the uppercase R-squared efficiency `R2()`
 #' are the same statistic. They must not be confused with lowercase `r2()`,
-#' the squared Pearson correlation. Its equation, interpretation, and references
-#' are given in [nse()].
+#' the squared Pearson correlation.
+#'
+#' \deqn{\mathrm{MEC}=1-\frac{\sum_{i=1}^{n}(obs_i-pred_i)^2}
+#' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}.}
+#'
+#' Its interpretation and references are given in [nse()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @examples mec(1:3, c(1, 3, 2))
@@ -249,7 +257,10 @@ mec <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
 #'
 #' Alias for [nse()] and `mec()`. This uppercase `R2()` is the model-efficiency
 #' coefficient; lowercase `r2()` remains squared Pearson correlation. Its
-#' equation, interpretation, and references are given in [nse()].
+#' interpretation and references are given in [nse()].
+#'
+#' \deqn{R^2=1-\frac{\sum_{i=1}^{n}(obs_i-pred_i)^2}
+#' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}.}
 #' @rdname efficiency_r2
 #' @inheritParams bias
 #' @return One numeric value.
@@ -262,7 +273,9 @@ R2 <- function(obs, pred, na.rm = TRUE) nse(obs, pred, na.rm)
 #' The standard deviation ratio compares the sample standard deviation of
 #' predictions with that of observations.
 #'
-#' \deqn{\mathrm{SD\ ratio} = \frac{s_{pred}}{s_{obs}}}
+#' \deqn{\mathrm{SD\ ratio}=
+#' \sqrt{\frac{\sum_{i=1}^{n}(pred_i-\bar{pred})^2}
+#' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}}.}
 #'
 #' The ratio is non-negative and one indicates equal spread. Values below one
 #' indicate under-dispersed predictions; values above one indicate
@@ -283,8 +296,9 @@ sd_ratio <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "sd
 #' Lin's concordance correlation coefficient (CCC) combines Pearson correlation
 #' with agreement in location and scale.
 #'
-#' \deqn{\rho_c = \frac{2s_{obs,pred}}
-#' {s_{obs}^2 + s_{pred}^2 + (\bar{obs} - \bar{pred})^2}}
+#' \deqn{\rho_c=\frac{2\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})}
+#' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2+
+#' \sum_{i=1}^{n}(pred_i-\bar{pred})^2+n(\bar{obs}-\bar{pred})^2}.}
 #'
 #' CCC ranges from -1 to one and equals one for perfect agreement. Values near
 #' zero indicate little concordance; negative values indicate discordant linear
@@ -348,7 +362,9 @@ mdae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, 
 #' Ratio of performance to deviation (RPD) scales RMSE by the sample standard
 #' deviation of observations.
 #'
-#' \deqn{\mathrm{RPD}=s_{obs}/\mathrm{RMSE}.}
+#' \deqn{\mathrm{RPD}=
+#' \frac{\sqrt{(n-1)^{-1}\sum_{i=1}^{n}(obs_i-\bar{obs})^2}}
+#' {\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 #'
 #' RPD is non-negative and larger values indicate lower error relative to
 #' observed variation. It returns NA for perfect predictions rather than
@@ -370,7 +386,9 @@ rpd <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #' Ratio of performance to interquartile distance (RPIQ) scales RMSE by the
 #' interquartile range of observations.
 #'
-#' \deqn{\mathrm{RPIQ}=\mathrm{IQR}(obs)/\mathrm{RMSE}.}
+#' \deqn{\mathrm{RPIQ}=
+#' \frac{Q_{0.75}(obs)-Q_{0.25}(obs)}
+#' {\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 #'
 #' RPIQ is non-negative and larger values indicate lower error relative to the
 #' middle 50 percent of observed values. It is less influenced by extremes than
@@ -388,8 +406,8 @@ rpiq <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, 
 #' Standard error of prediction (SEP) is the sample standard deviation of
 #' prediction errors after removing their mean error (ME).
 #'
-#' \deqn{\mathrm{SEP}=\sqrt{\frac{\sum_{i=1}^n(e_i-\mathrm{ME})^2}{n-1}},
-#' \quad e_i=obs_i-pred_i.}
+#' \deqn{\mathrm{SEP}=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}
+#' \left[(obs_i-pred_i)-\frac{1}{n}\sum_{j=1}^{n}(obs_j-pred_j)\right]^2}.}
 #'
 #' SEP has response units, is non-negative, and zero is ideal. Unlike RMSE, it
 #' removes constant bias. At least two retained pairs are required. Missing-value
@@ -405,7 +423,8 @@ sep <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #'
 #' Range-to-RMSE ratio (RER) scales RMSE by the observed range.
 #'
-#' \deqn{\mathrm{RER}=[\max(obs)-\min(obs)]/\mathrm{RMSE}.}
+#' \deqn{\mathrm{RER}=\frac{\max_{i}(obs_i)-\min_{i}(obs_i)}
+#' {\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 #'
 #' RER is non-negative and larger values indicate smaller error relative to the
 #' observed range. It is sensitive to extreme observations and is NA for perfect
@@ -531,7 +550,8 @@ rae <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, pred, n
 #' Relative root mean squared error (RRMSE) expresses RMSE as a percentage of
 #' the absolute observed mean.
 #'
-#' \deqn{\mathrm{RRMSE}=100\,\mathrm{RMSE}/|\bar{obs}|.}
+#' \deqn{\mathrm{RRMSE}=100\,
+#' \frac{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}{|\bar{obs}|}.}
 #'
 #' RRMSE is non-negative and zero is ideal. It is NA for a zero observed mean
 #' and unstable when that mean is near zero. This mean-normalized convention
@@ -570,11 +590,11 @@ willmott_d <- function(obs, pred, na.rm = TRUE) unname(extended_components(obs, 
 #' Quantile (pinball) loss
 #'
 #' Quantile loss evaluates a prediction for a specified conditional quantile.
-#' With `e_i = obs_i - pred_i` and quantile level `tau`, it is
+#' With quantile level `tau`, it is
 #'
 #' \deqn{L_\tau = \frac{1}{n}\sum_{i=1}^{n}
-#' \begin{cases}\tau e_i, & e_i \geq 0\\
-#' (\tau-1)e_i, & e_i < 0.\end{cases}}
+#' \begin{cases}\tau(obs_i-pred_i), & obs_i-pred_i \geq 0\\
+#' (\tau-1)(obs_i-pred_i), & obs_i-pred_i < 0.\end{cases}}
 #'
 #' It is non-negative and zero is ideal. Underprediction is penalized more when
 #' `level` is high; overprediction is penalized more when `level` is low. At
@@ -595,10 +615,15 @@ pinball_loss <- function(obs, pred, level = .5, na.rm = TRUE) {
 #' Kling-Gupta efficiency
 #'
 #' Kling-Gupta efficiency (KGE) combines correlation, variability ratio, and
-#' mean ratio. Let `r` be [correlation()], `alpha = s_pred / s_obs`, and
-#' `beta = mean(pred) / mean(obs)`.
+#' mean ratio. The component definitions below use the same paired observations
+#' and predictions as the main score.
 #'
-#' \deqn{\mathrm{KGE} = 1 - \sqrt{(r-1)^2 + (\alpha-1)^2 + (\beta-1)^2}}
+#' \deqn{r=\frac{\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})}
+#' {\sqrt{\sum_{i=1}^{n}(obs_i-\bar{obs})^2\sum_{i=1}^{n}(pred_i-\bar{pred})^2}},
+#' \quad \alpha=\sqrt{\frac{\sum_{i=1}^{n}(pred_i-\bar{pred})^2}
+#' {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}},
+#' \quad \beta=\frac{\bar{pred}}{\bar{obs}}.}
+#' \deqn{\mathrm{KGE}=1-\sqrt{(r-1)^2+(\alpha-1)^2+(\beta-1)^2}.}
 #'
 #' One is ideal. Values closer to one indicate agreement in linear association,
 #' spread, and mean. The range is unbounded below and at most one. Zero is

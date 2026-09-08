@@ -21,7 +21,9 @@ Ratio of performance to deviation (RPD) scales RMSE by the sample standard
 deviation of observations.
 }
 \details{
-\deqn{\mathrm{RPD}=s_{obs}/\mathrm{RMSE}.}
+\deqn{\mathrm{RPD}=
+\frac{\sqrt{(n-1)^{-1}\sum_{i=1}^{n}(obs_i-\bar{obs})^2}}
+{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 
 RPD is non-negative and larger values indicate lower error relative to
 observed variation. It returns NA for perfect predictions rather than

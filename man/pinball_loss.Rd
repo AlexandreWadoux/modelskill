@@ -20,12 +20,12 @@ One numeric loss; lower is better.
 }
 \description{
 Quantile loss evaluates a prediction for a specified conditional quantile.
-With \code{e_i = obs_i - pred_i} and quantile level \code{tau}, it is
+With quantile level \code{tau}, it is
 }
 \details{
 \deqn{L_\tau = \frac{1}{n}\sum_{i=1}^{n}
-\begin{cases}\tau e_i, & e_i \geq 0\\
-(\tau-1)e_i, & e_i < 0.\end{cases}}
+\begin{cases}\tau(obs_i-pred_i), & obs_i-pred_i \geq 0\\
+(\tau-1)(obs_i-pred_i), & obs_i-pred_i < 0.\end{cases}}
 
 It is non-negative and zero is ideal. Underprediction is penalized more when
 \code{level} is high; overprediction is penalized more when \code{level} is low. At

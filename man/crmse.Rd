@@ -21,8 +21,8 @@ Centered RMSE (cRMSE) is the root mean square difference after removing the
 mean error from the paired errors.
 }
 \details{
-\deqn{\mathrm{cRMSE} = \sqrt{\frac{1}{n}\sum_{i = 1}^{n}
-[(obs_i - pred_i) - \mathrm{ME}]^2}}
+\deqn{\mathrm{cRMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}
+\left[(obs_i-pred_i)-\frac{1}{n}\sum_{j=1}^{n}(obs_j-pred_j)\right]^2}.}
 
 cRMSE is non-negative, has the response units, and zero is ideal. It measures
 disagreement in pattern and spread independently of a constant mean bias.

@@ -21,8 +21,9 @@ Lin's concordance correlation coefficient (CCC) combines Pearson correlation
 with agreement in location and scale.
 }
 \details{
-\deqn{\rho_c = \frac{2s_{obs,pred}}
-{s_{obs}^2 + s_{pred}^2 + (\bar{obs} - \bar{pred})^2}}
+\deqn{\rho_c=\frac{2\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})}
+{\sum_{i=1}^{n}(obs_i-\bar{obs})^2+
+\sum_{i=1}^{n}(pred_i-\bar{pred})^2+n(\bar{obs}-\bar{pred})^2}.}
 
 CCC ranges from -1 to one and equals one for perfect agreement. Values near
 zero indicate little concordance; negative values indicate discordant linear

@@ -21,7 +21,9 @@ Ratio of performance to interquartile distance (RPIQ) scales RMSE by the
 interquartile range of observations.
 }
 \details{
-\deqn{\mathrm{RPIQ}=\mathrm{IQR}(obs)/\mathrm{RMSE}.}
+\deqn{\mathrm{RPIQ}=
+\frac{Q_{0.75}(obs)-Q_{0.25}(obs)}
+{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 
 RPIQ is non-negative and larger values indicate lower error relative to the
 middle 50 percent of observed values. It is less influenced by extremes than

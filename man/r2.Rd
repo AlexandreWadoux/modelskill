@@ -20,7 +20,9 @@ One numeric value.
 Squared Pearson correlation is the square of \code{\link[=correlation]{correlation()}}.
 }
 \details{
-\deqn{r^2 = r \times r}
+\deqn{r^2=
+\frac{\left[\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})\right]^2}
+{\sum_{i=1}^{n}(obs_i-\bar{obs})^2\sum_{i=1}^{n}(pred_i-\bar{pred})^2}.}
 
 It ranges from zero to one and summarizes the strength, but not the sign, of
 linear association. A value of one can occur despite additive bias or

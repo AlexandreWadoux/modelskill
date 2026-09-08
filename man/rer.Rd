@@ -20,7 +20,8 @@ One numeric value.
 Range-to-RMSE ratio (RER) scales RMSE by the observed range.
 }
 \details{
-\deqn{\mathrm{RER}=[\max(obs)-\min(obs)]/\mathrm{RMSE}.}
+\deqn{\mathrm{RER}=\frac{\max_{i}(obs_i)-\min_{i}(obs_i)}
+{\sqrt{n^{-1}\sum_{i=1}^{n}(obs_i-pred_i)^2}}.}
 
 RER is non-negative and larger values indicate smaller error relative to the
 observed range. It is sensitive to extreme observations and is NA for perfect
