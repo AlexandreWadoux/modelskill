@@ -66,8 +66,8 @@
 #' variation than observations from predictions with greater variation; the
 #' mean-error coordinate distinguishes overprediction (negative ME*) from
 #' underprediction (positive ME*) under the `obs - pred` convention. The
-#' distance to the origin is standardized RMSE, so points near the origin are
-#' preferred.
+#' distance to the origin is RMSE normalized by the population-moment
+#' observation standard deviation, so points near the origin are preferred.
 #'
 #' The circular contours are RMSE* references. A point near the origin is both
 #' close in mean and in spread/pattern; a point displaced along the mean-error
@@ -145,8 +145,7 @@ gg_target <- function(
   # Uppercase R2 in modelskill is the model-efficiency coefficient and is
   # equivalent to NSE/MEC. Derive it from the normalized target coordinates so
   # that missing pairs are handled identically to diagram_stats() for each model.
-  data$R2_NSE <- 1 - data$sde^2 -
-    data$nME^2 * data$n / (data$n - 1)
+  data$R2_NSE <- 1 - data$sde^2 - data$nME^2
 
   custom_colour <- !is.null(colorval)
 
@@ -217,7 +216,6 @@ gg_target <- function(
     ),
     ticks != 0
   )
-
   labels <- subset(
     data.frame(
       label = c(axis_begin, axis_end),
