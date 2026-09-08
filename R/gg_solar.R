@@ -68,11 +68,11 @@
 #' The solar diagram uses the error decomposition
 #' \deqn{\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2},}
 #' where ME*, SDE*, and RMSE* are respectively mean error, centred root mean
-#' square difference, and RMSE divided by the observation standard deviation.
-#' The distance from the origin is RMSE*. The origin is perfect prediction;
-#' points on the vertical axis have no mean error; negative ME* indicates
-#' overprediction under the package convention `obs - pred`; and positive ME*
-#' indicates underprediction.
+#' square difference, and RMSE divided by the population-moment observation
+#' standard deviation. The distance from the origin is RMSE*. The origin is
+#' perfect prediction; points on the vertical axis have no mean error; negative
+#' ME* indicates overprediction under the package convention `obs - pred`; and
+#' positive ME* indicates underprediction.
 #'
 #' Points inside the outer RMSE* = 1 circle improve on predicting the observed
 #' mean (equivalently, MEC/NSE/R2 is positive). The pale-yellow regions give
@@ -152,8 +152,7 @@ gg_solar <- function(
   # Uppercase R2 in modelskill is the model-efficiency coefficient and is
   # equivalent to NSE/MEC. Derive it from the solar coordinates so that missing
   # pairs are handled identically to diagram_stats() for every model.
-  data$R2_NSE <- 1 - data$sde^2 -
-    data$nME^2 * data$n / (data$n - 1)
+  data$R2_NSE <- 1 - data$sde^2 - data$nME^2
 
   custom_colour <- !is.null(colorval)
 
