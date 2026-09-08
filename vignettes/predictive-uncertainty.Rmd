@@ -59,7 +59,7 @@ full predictive distributions. This tutorial develops two broad worked cases:
   distribution is summarized by its mean and standard deviation. Prediction
   intervals, quantiles, CDF values, and densities can be derived when an
   appropriate distributional assumption is available.
-- **Case B — full predictive distribution**: the predictive distribution is
+- **Case B — predictive samples**: the predictive distribution is
   represented directly by predictive samples or draws. This can preserve
   features such as skewness, heavy tails, and multimodality that may not be
   represented by a mean and standard deviation alone.
@@ -92,14 +92,15 @@ The main `modelskill` functions used below are:
 | [`log_score()`](../reference/log_score.html)                         | Calculates the logarithmic score from predictive density values evaluated at the observations.                                         | [@gneitingraftery2007]                                   |
 
 The appropriate functions depend on the available model output. For example,
-`picp()`, `coverage_error()`, `interval_width()`, and `interval_score()` require
-prediction-interval bounds. `crps()` can use either a normal predictive
-distribution represented by a predictive mean and standard deviation or a
-matrix of predictive samples. `crps_decomposition()` is intended for equally
-weighted predictive samples, while `pit()` can use predictive CDF values evaluated at the observations or calculate
-them directly from predictive means and standard deviations when a normal
-predictive distribution is assumed. `log_score()` requires predictive density
-values evaluated at the observations.
+`picp()`, `coverage_error()`, `interval_width()`, `interval_score()`, and
+`uncertainty_metrics()` accept explicit bounds, predictive mean and standard
+deviation under a normal assumption, or equally weighted predictive samples.
+`qcp()`, `gg_qcp()`, `gg_coverage()`, and `accuracy_plot_metrics()` can also
+derive their quantiles or intervals directly from either predictive representation.
+`crps()` and `median_crps()` support both representations.
+`crps_decomposition()` remains sample-only. `pit()` accepts predictive CDF
+values, normal predictive means and standard deviations, or predictive samples.
+`log_score()` requires predictive density values evaluated at the observations.
 
 ## 4. Example data
 
@@ -284,6 +285,9 @@ uncertainty_metrics(
   upper = upper95,
   level = 0.95
 )
+
+# Equivalent direct interface under the normal assumption:
+uncertainty_metrics(obs, pred = pred, predictive_sd = predictive_sd, level = 0.95)
 
 ```
 
@@ -640,7 +644,7 @@ vertical axis gives its empirical QCP. Points close to the 1:1 line indicate
 well-calibrated predictive quantiles.
 
 When the predictive distribution is represented by a predictive mean and
-standard deviation and a normal distribution is appropriate, `gg_qcp()` can
+standard deviation and a normal distribution is appropriate, `qcp()` and `gg_qcp()` can
 also generate these quantiles directly:
 
 ```{r}
@@ -989,36 +993,28 @@ the predictive distribution for one observation.
 
 #### 6.1 Prediction intervals from predictive samples
 
-Prediction intervals can be obtained from the appropriate quantiles of the
-predictive samples.
+Prediction intervals are generated internally from empirical equal-tailed
+quantiles using `stats::quantile(type = 7)`.
 
 For a 95% central interval:
 
 ```{r}
-lower95_samples <- apply(
-  predictive_samples,
-  1,
-  stats::quantile,
-  probs = 0.025,
-  names = FALSE
-)
-
-upper95_samples <- apply(
-  predictive_samples,
-  1,
-  stats::quantile,
-  probs = 0.975,
-  names = FALSE
-)
-
 uncertainty_metrics(
   obs,
-  lower = lower95_samples,
-  upper = upper95_samples,
+  distribution = predictive_samples,
   level = 0.95
 )
 
+# Individual interval statistics accept the same input.
+picp(obs, distribution = predictive_samples, level = 0.95)
+interval_width(obs, distribution = predictive_samples, level = 0.95)
+interval_score(obs, distribution = predictive_samples, level = 0.95)
+
 ```
+
+A missing observation or any missing predictive draw removes that entire row
+when `na.rm = TRUE`; individual missing draws are not silently dropped.
+Standalone `interval_width()` remains independent of missing observations.
 
 The interpretation of PICP, interval width, coverage error, and interval score
 is exactly the same as when the intervals were derived from a predictive mean
@@ -1029,54 +1025,16 @@ algorithm used to generate it.
 
 ### 6.2 Reliability across interval levels from predictive samples
 
-When only predictive samples are available, central prediction intervals can be
-constructed for several nominal levels.
+Pass the predictive samples directly and choose the nominal interval levels.
+There is no need to construct lower and upper interval lists:
 
 ```{r}
 interval_levels <- seq(0.10, 0.90, by = 0.10)
 
-lower_list <- lapply(
-  interval_levels,
-  function(level) {
-    alpha <- (1 - level) / 2
-
-    apply(
-      predictive_samples,
-      1,
-      stats::quantile,
-      probs = alpha,
-      names = FALSE
-    )
-  }
-)
-
-upper_list <- lapply(
-  interval_levels,
-  function(level) {
-    alpha <- (1 - level) / 2
-
-    apply(
-      predictive_samples,
-      1,
-      stats::quantile,
-      probs = 1 - alpha,
-      names = FALSE
-    )
-  }
-)
-
-names(lower_list) <- sprintf("%.2f", interval_levels)
-names(upper_list) <- sprintf("%.2f", interval_levels)
-
-```
-
-These lists can be supplied directly to `gg_coverage()`:
-
-```{r}
 gg_coverage(
   obs,
-  lower = lower_list,
-  upper = upper_list
+  distribution = predictive_samples,
+  levels = interval_levels
 )
 
 ```
@@ -1086,34 +1044,24 @@ and to `accuracy_plot_metrics()`:
 ```{r}
 accuracy_plot_metrics(
   obs,
-  lower = lower_list,
-  upper = upper_list
+  distribution = predictive_samples,
+  levels = interval_levels
 )
 
 ```
 
-Thus, `gg_coverage()` can be used both when uncertainty is represented by
-normal predictive means and standard deviations and when intervals have been
-derived from arbitrary predictive distributions.
+If `levels` is omitted, both functions evaluate levels from 1% to 99%.
+The existing explicit interval-list interface remains available when a model
+only provides selected intervals.
 
 ### 6.3 Quantile calibration from predictive samples
 
-Predicted quantiles can also be extracted from each predictive distribution.
+Empirical quantiles are extracted internally from each row of predictive samples.
 
 ```{r}
-qhat_samples <- t(
-  apply(
-    predictive_samples,
-    1,
-    stats::quantile,
-    probs = q_levels,
-    names = FALSE
-  )
-)
-
 qcp(
   obs,
-  quantiles = qhat_samples,
+  distribution = predictive_samples,
   levels = q_levels
 )
 
@@ -1124,7 +1072,7 @@ Plot the calibration:
 ```{r}
 gg_qcp(
   obs,
-  quantiles = qhat_samples,
+  distribution = predictive_samples,
   levels = q_levels
 )
 
@@ -1142,16 +1090,7 @@ With predictive samples, the predictive CDF can instead be approximated by the
 fraction of predictive draws less than or equal to the observation:
 
 ```{r}
-cdf_at_obs_samples <- rowMeans(
-  sweep(
-    predictive_samples,
-    1,
-    obs,
-    FUN = "<="
-  )
-)
-
-pit_samples <- pit(cdf_at_obs_samples)
+pit_samples <- pit(obs = obs, distribution = predictive_samples)
 
 gg_pit(pit_samples)
 
@@ -1255,17 +1194,17 @@ calculating the logarithmic score.
 The two examples above represent the same conceptual predictive uncertainty in
 different ways.
 
-| TaskMean + SDPredictive samples |                                |                                   |
-| ------------------------------- | ------------------------------ | --------------------------------- |
-| Construct intervals             | Normal quantiles               | Empirical quantiles               |
-| `uncertainty_metrics()`         | Yes, after constructing bounds | Yes, after constructing bounds    |
-| `gg_coverage()`                 | Directly                       | Via interval lists                |
-| `qcp()` / `gg_qcp()`            | From normal quantiles          | From empirical quantiles          |
-| `pit()` / `gg_pit()`            | From analytic CDF              | From empirical CDF                |
-| `crps()`                        | Directly                       | Directly                          |
-| `median_crps()`                 | Directly                       | Directly                          |
-| `crps_decomposition()`          | No                             | Yes                               |
-| `log_score()`                   | From analytic density          | Requires density estimation first |
+| Task | Mean + SD | Predictive samples |
+| ---- | --------- | ------------------ |
+| `picp()`, `coverage_error()`, `interval_width()`, `interval_score()` | Directly (`pred`, `predictive_sd`, `level`) | Directly (`distribution`, `level`) |
+| `uncertainty_metrics()` | Directly (`pred`, `predictive_sd`, `level`) | Directly (`distribution`, `level`) |
+| `gg_coverage()` / `accuracy_plot_metrics()` | Directly (`pred`, `predictive_sd`, `levels`) | Directly (`distribution`, `levels`) |
+| `qcp()` / `gg_qcp()` | Directly (`pred`, `predictive_sd`, `levels`) | Directly (`distribution`, `levels`) |
+| `pit()` | Directly (`pred`, `predictive_sd`) | Directly (`distribution`), using the empirical CDF |
+| `gg_pit()` | Supply the values returned by `pit()` | Supply the values returned by `pit()` |
+| `crps()` / `median_crps()` | Directly (`pred`, `predictive_sd`) | Directly (`distribution`) |
+| `crps_decomposition()` | No: requires ensemble members | Directly (`distribution`) |
+| `log_score()` | Supply `density_at_obs`, e.g. from `dnorm()` | No automatic density estimation; supply `density_at_obs` from an explicitly chosen density model |
 
 The appropriate representation depends on what the prediction model provides.
 There is generally no reason to reduce a rich predictive distribution to a mean
@@ -1326,12 +1265,12 @@ log_score(...)
 Prediction intervals and quantiles can also be generated from the normal
 distribution as shown above.
 
-### 8.4 If you have full predictive samples
+### 8.4 If you have predictive samples
 
 Retain them rather than reducing them unnecessarily to a mean and standard
 deviation.
 
-Use them to derive:
+Pass them directly to the calculation functions:
 
 ```r
 # Intervals

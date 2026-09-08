@@ -21,6 +21,8 @@ One-row data frame with \code{crps}, \code{reliability}, and \code{potential_crp
 Decomposes mean ensemble CRPS into a reliability component and potential
 CRPS following Hersbach (2000). Predictive-distribution columns are treated
 as equally likely ensemble members.
+This function accepts predictive samples only, not a predictive mean and
+standard deviation. Its decomposition is defined for finite ensembles.
 }
 \details{
 \deqn{\mathrm{CRPS} = \mathrm{RELI} + \mathrm{potential\ CRPS}}

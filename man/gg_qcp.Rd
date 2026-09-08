@@ -11,17 +11,20 @@ gg_qcp(
   pred = NULL,
   predictive_sd = NULL,
   na.rm = TRUE,
-  point_size = 3
+  point_size = 3,
+  distribution = NULL
 )
 }
 \arguments{
 \item{obs}{Numeric observation vector.}
 
 \item{quantiles}{Numeric matrix or data frame containing predicted quantiles
-in columns. Required unless \code{pred} and \code{predictive_sd} are supplied.}
+in columns. Required unless \code{pred} and \code{predictive_sd}, or \code{distribution},
+are supplied.}
 
 \item{levels}{Numeric vector of nominal quantile probabilities corresponding
-to the columns of \code{quantiles}. When \code{pred} and \code{predictive_sd} are supplied,
+to the columns of \code{quantiles}. With predictive means and standard deviations
+or predictive samples,
 defaults to \code{seq(0.05, 0.95, by = 0.05)}.}
 
 \item{pred}{Optional numeric vector of predictive means. Must be supplied
@@ -34,6 +37,11 @@ Must be supplied together with \code{pred}.}
 \item{na.rm}{Logical; remove incomplete observation/quantile rows?}
 
 \item{point_size}{Positive numeric point size.}
+
+\item{distribution}{Optional numeric matrix or data frame of equally weighted
+predictive samples: one row per observation and one column per predictive
+draw. Supply this instead of bounds or predictive means and standard
+deviations. At least one draw is required; infinite values are not allowed.}
 }
 \value{
 A \code{ggplot2} object with \code{nominal} and \code{qcp} data columns.
@@ -55,6 +63,11 @@ predictive distribution is assumed to be normal, they can instead be generated
 automatically from predictive means (\code{pred}) and predictive standard deviations
 (\code{predictive_sd}). In this mode, the default is to evaluate quantiles from 0.05
 to 0.95 in increments of 0.05.
+Predictive samples (\code{distribution}) are also accepted, using empirical
+quantiles (\code{\link[stats:quantile]{stats::quantile()}}, \code{type = 7}) at the same default levels.
+Supply exactly one representation. As in \code{\link[=qcp]{qcp()}}, every level uses the same
+complete rows across \code{obs} and all supplied predictive values. With
+\code{na.rm = FALSE}, any incomplete row makes coverage missing at every level.
 
 A calibration curve is generally most informative when quantiles are available
 over a reasonably dense range of probability levels. A smaller number of levels
@@ -90,6 +103,7 @@ gg_qcp(
   quantiles = quantiles,
   levels = levels
 )
+gg_qcp(1:3, distribution = cbind(0:2, 1:3, 2:4), levels = c(0.25, 0.75))
 
 }
 \seealso{

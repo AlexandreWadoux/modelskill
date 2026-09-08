@@ -14,7 +14,8 @@ gg_coverage(
   levels = NULL,
   na.rm = TRUE,
   point_size = 3,
-  line_width = 0.6
+  line_width = 0.6,
+  distribution = NULL
 )
 }
 \arguments{
@@ -33,17 +34,23 @@ intervals are generated assuming normal predictive distributions. Do not
 also supply \code{lower} or \code{upper}.}
 
 \item{levels}{Nominal central prediction-interval coverage probabilities used
-when \code{pred} and \code{predictive_sd} are supplied. Values must lie strictly
+when \code{pred} and \code{predictive_sd}, or \code{distribution}, are supplied. Values must lie strictly
 between zero and one. Defaults to every percentage from 1\% to 99\%.}
 
 \item{na.rm}{Logical; remove incomplete observation/interval combinations?
 With interval lists, only cases complete in \code{obs} and both bounds at every
 supplied level are used, so all levels share the same validation sample.
-If \code{FALSE}, any incomplete case makes coverage missing at every level.}
+If \code{FALSE}, any incomplete case makes coverage missing at every level.
+With predictive samples, a row missing any draw or \code{obs} is incomplete.}
 
 \item{point_size}{Positive numeric point size.}
 
 \item{line_width}{Positive numeric width of the 1:1 reference line.}
+
+\item{distribution}{Optional numeric matrix or data frame of equally weighted
+predictive samples: one row per observation and one column per predictive
+draw. Supply this instead of bounds or predictive means and standard
+deviations. At least one draw is required; infinite values are not allowed.}
 }
 \value{
 A \code{ggplot2} object. Its plotting data contain:
@@ -83,6 +90,9 @@ a single PICP value because it shows how calibration changes across the
 predictive distribution. When \code{pred} and \code{predictive_sd} are supplied and
 \code{levels} is left \code{NULL}, central normal prediction intervals are evaluated
 from 1\% to 99\% nominal coverage.
+Alternatively, \code{distribution} generates central empirical intervals from
+equally weighted predictive samples, using \code{\link[stats:quantile]{stats::quantile()}} with \code{type = 7}.
+The same default levels apply. Supply only one input representation.
 
 The accuracy-plot approach was developed for direct assessment of local
 uncertainty in geostatistics by Deutsch (1997) and subsequently applied to
@@ -138,6 +148,7 @@ gg_coverage(
   lower = lower,
   upper = upper
 )
+gg_coverage(1:3, distribution = cbind(0:2, 1:3, 2:4), levels = c(0.5, 0.9))
 
 }
 \references{

@@ -5,7 +5,8 @@
 #' from nominal coverage, interval width, and the interval score in a single
 #' one-row summary.
 #'
-#' Both `lower` and `upper` prediction-interval bounds must be supplied. For a
+#' Supply `lower` and `upper`, predictive mean and standard deviation
+#' (`pred` and `predictive_sd`), or predictive samples (`distribution`). For a
 #' nominal interval level \eqn{p}, a well-calibrated uncertainty model should
 #' have empirical prediction interval coverage probability (PICP) close to
 #' \eqn{p}.
@@ -32,7 +33,7 @@
 #' the intervals contain observations at the stated frequency. The interval
 #' score combines both aspects in a single statistic.
 #'
-#' This function is intentionally restricted to prediction intervals. For
+#' This function summarizes prediction intervals at one `level`. For
 #' calibration across multiple interval levels, use [gg_coverage()] and
 #' [accuracy_plot_metrics()]. For predictive quantiles, use [qcp()] and
 #' [gg_qcp()]. For complete predictive distributions, use [pit()], [gg_pit()],
@@ -43,10 +44,12 @@
 #' which is observation-independent and can use interval bounds where `obs` is
 #' missing.
 #'
+#' @inheritParams picp
+#' @inheritSection picp Input representations
 #' @param obs Numeric observation vector.
 #' @param lower,upper Numeric vectors containing the lower and upper
-#'   prediction-interval bounds. Both must be supplied and have the same length
-#'   as `obs`.
+#'   prediction-interval bounds. In explicit-bound mode, both must be supplied
+#'   and have the same length as `obs`.
 #' @param level Nominal central prediction-interval coverage probability,
 #'   strictly between zero and one. The default is `0.95`.
 #' @param na.rm Logical; remove incomplete observation/interval combinations?
@@ -87,26 +90,25 @@
 #'   upper = upper,
 #'   level = 0.80
 #' )
+#' uncertainty_metrics(obs, pred = obs, predictive_sd = rep(1, 5), level = 0.8)
+#' uncertainty_metrics(obs, distribution = cbind(obs - 1, obs, obs + 1))
 #'
 #' @export
 uncertainty_metrics <- function(obs,
                                 lower = NULL,
                                 upper = NULL,
                                 level = 0.95,
-                                na.rm = TRUE) {
+                                na.rm = TRUE,
+                                pred = NULL,
+                                predictive_sd = NULL,
+                                distribution = NULL) {
 
   check_flag(na.rm, "na.rm")
 
-  if (is.null(lower) || is.null(upper)) {
-    stop(
-      "Prediction-interval validation requires both `lower` and `upper`.",
-      call. = FALSE
-    )
-  }
-
   check_probability(level, "level")
 
-  x <- prepare_interval_vectors(obs, lower, upper, na.rm)
+  x <- resolve_interval_inputs(obs, lower, upper, level, na.rm,
+                               pred, predictive_sd, distribution)
 
   if (is.null(x) || !length(x$obs)) {
     return(data.frame(

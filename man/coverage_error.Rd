@@ -4,16 +4,36 @@
 \alias{coverage_error}
 \title{Prediction-interval coverage error}
 \usage{
-coverage_error(obs, lower, upper, level = 0.95, na.rm = TRUE)
+coverage_error(
+  obs,
+  lower = NULL,
+  upper = NULL,
+  level = 0.95,
+  na.rm = TRUE,
+  pred = NULL,
+  predictive_sd = NULL,
+  distribution = NULL
+)
 }
 \arguments{
 \item{obs}{Numeric observation vector.}
 
-\item{lower, upper}{Numeric lower and upper prediction-interval bounds.}
+\item{lower, upper}{Optional numeric lower and upper prediction-interval bounds.
+Supply both, without another input representation.}
 
 \item{level}{Nominal central interval coverage, strictly between zero and one.}
 
-\item{na.rm}{Logical; remove incomplete triplets?}
+\item{na.rm}{Logical; remove incomplete cases? See Input representations.}
+
+\item{pred, predictive_sd}{Optional numeric vectors of predictive means and
+predictive standard deviations, supplied together and of the same length
+as \code{obs}. Assumes normal predictive distributions. Non-missing predictive
+standard deviations must be finite and strictly positive.}
+
+\item{distribution}{Optional numeric matrix or data frame of equally weighted
+predictive samples: one row per observation and one column per predictive
+draw. Supply this instead of bounds or predictive means and standard
+deviations. At least one draw is required; infinite values are not allowed.}
 }
 \value{
 One numeric value.
@@ -29,6 +49,19 @@ probability scale; multiply by 100 for percentage points.
 Zero is ideal. Positive values mean intervals cover too often (are too wide
 or over-pessimistic); negative values mean intervals cover too rarely.
 }
+\section{Input representations}{
+
+Supply exactly one of explicit \code{lower} and \code{upper} bounds, predictive mean
+and standard deviation (\code{pred} and \code{predictive_sd}), or predictive samples
+(\code{distribution}). Normal inputs generate central intervals using normal
+quantiles. Samples generate equal-tailed intervals using \code{\link[stats:quantile]{stats::quantile()}}
+with \code{type = 7}, at probabilities \code{(1 - level) / 2} and \code{(1 + level) / 2}.
+With \code{na.rm = TRUE}, a case is removed if its observation or any supplied
+predictive value is missing; individual missing draws are not discarded
+within a case. With \code{na.rm = FALSE}, incomplete inputs give \code{NA}. No complete
+cases also gives \code{NA}. Standalone \code{\link[=interval_width]{interval_width()}} ignores missing \code{obs}.
+}
+
 \examples{
 coverage_error(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
 }

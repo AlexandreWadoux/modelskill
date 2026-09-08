@@ -9,21 +9,34 @@ uncertainty_metrics(
   lower = NULL,
   upper = NULL,
   level = 0.95,
-  na.rm = TRUE
+  na.rm = TRUE,
+  pred = NULL,
+  predictive_sd = NULL,
+  distribution = NULL
 )
 }
 \arguments{
 \item{obs}{Numeric observation vector.}
 
 \item{lower, upper}{Numeric vectors containing the lower and upper
-prediction-interval bounds. Both must be supplied and have the same length
-as \code{obs}.}
+prediction-interval bounds. In explicit-bound mode, both must be supplied
+and have the same length as \code{obs}.}
 
 \item{level}{Nominal central prediction-interval coverage probability,
 strictly between zero and one. The default is \code{0.95}.}
 
 \item{na.rm}{Logical; remove incomplete observation/interval combinations?
 The default is \code{TRUE}.}
+
+\item{pred, predictive_sd}{Optional numeric vectors of predictive means and
+predictive standard deviations, supplied together and of the same length
+as \code{obs}. Assumes normal predictive distributions. Non-missing predictive
+standard deviations must be finite and strictly positive.}
+
+\item{distribution}{Optional numeric matrix or data frame of equally weighted
+predictive samples: one row per observation and one column per predictive
+draw. Supply this instead of bounds or predictive means and standard
+deviations. At least one draw is required; infinite values are not allowed.}
 }
 \value{
 A one-row base data frame containing:
@@ -43,7 +56,8 @@ from nominal coverage, interval width, and the interval score in a single
 one-row summary.
 }
 \details{
-Both \code{lower} and \code{upper} prediction-interval bounds must be supplied. For a
+Supply \code{lower} and \code{upper}, predictive mean and standard deviation
+(\code{pred} and \code{predictive_sd}), or predictive samples (\code{distribution}). For a
 nominal interval level \eqn{p}, a well-calibrated uncertainty model should
 have empirical prediction interval coverage probability (PICP) close to
 \eqn{p}.
@@ -70,7 +84,7 @@ reward sharp predictions, while interval width alone does not assess whether
 the intervals contain observations at the stated frequency. The interval
 score combines both aspects in a single statistic.
 
-This function is intentionally restricted to prediction intervals. For
+This function summarizes prediction intervals at one \code{level}. For
 calibration across multiple interval levels, use \code{\link[=gg_coverage]{gg_coverage()}} and
 \code{\link[=accuracy_plot_metrics]{accuracy_plot_metrics()}}. For predictive quantiles, use \code{\link[=qcp]{qcp()}} and
 \code{\link[=gg_qcp]{gg_qcp()}}. For complete predictive distributions, use \code{\link[=pit]{pit()}}, \code{\link[=gg_pit]{gg_pit()}},
@@ -81,6 +95,19 @@ triplets. This differs intentionally from standalone \code{\link[=interval_width
 which is observation-independent and can use interval bounds where \code{obs} is
 missing.
 }
+\section{Input representations}{
+
+Supply exactly one of explicit \code{lower} and \code{upper} bounds, predictive mean
+and standard deviation (\code{pred} and \code{predictive_sd}), or predictive samples
+(\code{distribution}). Normal inputs generate central intervals using normal
+quantiles. Samples generate equal-tailed intervals using \code{\link[stats:quantile]{stats::quantile()}}
+with \code{type = 7}, at probabilities \code{(1 - level) / 2} and \code{(1 + level) / 2}.
+With \code{na.rm = TRUE}, a case is removed if its observation or any supplied
+predictive value is missing; individual missing draws are not discarded
+within a case. With \code{na.rm = FALSE}, incomplete inputs give \code{NA}. No complete
+cases also gives \code{NA}. Standalone \code{\link[=interval_width]{interval_width()}} ignores missing \code{obs}.
+}
+
 \examples{
 obs <- c(1, 2, 3, 4, 5)
 lower <- c(0, 1, 2, 3, 4)
@@ -92,6 +119,8 @@ uncertainty_metrics(
   upper = upper,
   level = 0.80
 )
+uncertainty_metrics(obs, pred = obs, predictive_sd = rep(1, 5), level = 0.8)
+uncertainty_metrics(obs, distribution = cbind(obs - 1, obs, obs + 1))
 
 }
 \references{

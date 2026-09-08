@@ -4,18 +4,39 @@
 \alias{qcp}
 \title{Quantile coverage probability}
 \usage{
-qcp(obs, quantiles, levels, na.rm = TRUE)
+qcp(
+  obs,
+  quantiles = NULL,
+  levels = NULL,
+  na.rm = TRUE,
+  pred = NULL,
+  predictive_sd = NULL,
+  distribution = NULL
+)
 }
 \arguments{
 \item{obs}{Numeric observation vector.}
 
 \item{quantiles}{Numeric matrix or data frame with observations in rows and
-predicted quantiles in columns.}
+predicted quantiles in columns.
+Supply this with \code{levels}, without another input representation.}
 
 \item{levels}{Strictly increasing quantile probabilities, one per column of
-\code{quantiles}. Values must lie strictly between zero and one.}
+\code{quantiles}. Values must lie strictly between zero and one. For generated
+quantiles, defaults to \code{seq(0.05, 0.95, by = 0.05)} and is sorted with
+duplicates removed.}
 
 \item{na.rm}{Logical; remove incomplete observation/quantile rows?}
+
+\item{pred, predictive_sd}{Optional numeric vectors of predictive means and
+predictive standard deviations, supplied together and of the same length
+as \code{obs}. Assumes normal predictive distributions. Non-missing predictive
+standard deviations must be finite and strictly positive.}
+
+\item{distribution}{Optional numeric matrix or data frame of equally weighted
+predictive samples: one row per observation and one column per predictive
+draw. Supply this instead of bounds or predictive means and standard
+deviations. At least one draw is required; infinite values are not allowed.}
 }
 \value{
 Named numeric vector containing one QCP value for each supplied
@@ -55,6 +76,14 @@ several probability levels rather than at a single quantile. A dense sequence
 of quantiles provides a more complete view of distributional calibration,
 although selected levels remain useful when only specific predictive
 quantiles are available.
+
+Instead of explicit quantiles, supply predictive mean and standard
+deviation (\code{pred} and \code{predictive_sd}) for normal quantiles, or
+\code{distribution} for empirical quantiles (\code{\link[stats:quantile]{stats::quantile()}}, \code{type = 7}).
+These representations are mutually exclusive. Complete rows are selected
+across \code{obs} and all supplied predictive values, so every level uses the
+same cases. If \code{na.rm = FALSE} and any case is incomplete, or no complete
+cases remain, every QCP value is \code{NA}.
 }
 \examples{
 set.seed(123)
@@ -77,6 +106,8 @@ qcp(
   quantiles = quantiles,
   levels = levels
 )
+qcp(obs, pred = pred, predictive_sd = predictive_sd, levels = levels)
+qcp(1:3, distribution = cbind(0:2, 1:3, 2:4), levels = c(0.25, 0.75))
 
 }
 \references{

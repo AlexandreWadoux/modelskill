@@ -12,7 +12,8 @@ accuracy_plot_metrics(
   pred = NULL,
   predictive_sd = NULL,
   levels = NULL,
-  na.rm = TRUE
+  na.rm = TRUE,
+  distribution = NULL
 )
 }
 \arguments{
@@ -31,13 +32,19 @@ intervals are generated assuming normal predictive distributions. Do not
 also supply \code{lower} or \code{upper}.}
 
 \item{levels}{Nominal central prediction-interval coverage probabilities used
-when \code{pred} and \code{predictive_sd} are supplied. Values must lie strictly
+when \code{pred} and \code{predictive_sd}, or \code{distribution}, are supplied. Values must lie strictly
 between zero and one. Defaults to every percentage from 1\% to 99\%.}
 
 \item{na.rm}{Logical; remove incomplete observation/interval combinations?
 With interval lists, only cases complete in \code{obs} and both bounds at every
 supplied level are used, so all levels share the same validation sample.
-If \code{FALSE}, any incomplete case makes coverage missing at every level.}
+If \code{FALSE}, any incomplete case makes coverage missing at every level.
+With predictive samples, a row missing any draw or \code{obs} is incomplete.}
+
+\item{distribution}{Optional numeric matrix or data frame of equally weighted
+predictive samples: one row per observation and one column per predictive
+draw. Supply this instead of bounds or predictive means and standard
+deviations. At least one draw is required; infinite values are not allowed.}
 }
 \value{
 A one-row data frame containing:
@@ -127,6 +134,10 @@ by Deutsch (1997) and subsequently applied to geostatistical uncertainty
 evaluation in soil science by Goovaerts (2001). Related numerical summaries
 of departure from the accuracy-plot reference line were used by Wadoux,
 Brus, and Heuvelink (2018).
+
+Predictive samples can be supplied directly using \code{distribution}.
+Central empirical intervals are generated at \code{levels} as in \code{\link[=gg_coverage]{gg_coverage()}},
+using type-7 quantiles and the same complete cases at every level.
 }
 \examples{
 set.seed(123)
@@ -140,6 +151,8 @@ accuracy_plot_metrics(
   pred = pred,
   predictive_sd = predictive_sd
 )
+accuracy_plot_metrics(1:3, distribution = cbind(0:2, 1:3, 2:4),
+                      levels = c(0.5, 0.9))
 
 }
 \references{

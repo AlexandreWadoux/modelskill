@@ -73,6 +73,9 @@
 #' Brus, and Heuvelink (2018).
 #'
 #' @inheritParams gg_coverage
+#' @details Predictive samples can be supplied directly using `distribution`.
+#'   Central empirical intervals are generated at `levels` as in [gg_coverage()],
+#'   using type-7 quantiles and the same complete cases at every level.
 #'
 #' @return A one-row data frame containing:
 #' \describe{
@@ -116,14 +119,16 @@
 #'   pred = pred,
 #'   predictive_sd = predictive_sd
 #' )
+#' accuracy_plot_metrics(1:3, distribution = cbind(0:2, 1:3, 2:4),
+#'                       levels = c(0.5, 0.9))
 #'
 #' @export
 accuracy_plot_metrics <- function(obs, lower = NULL, upper = NULL, level = NULL,
                                   pred = NULL, predictive_sd = NULL, levels = NULL,
-                                  na.rm = TRUE) {
+                                  na.rm = TRUE, distribution = NULL) {
   curve <- coverage_intervals(
     obs, lower, upper, level, na.rm,
-    pred, predictive_sd, levels
+    pred, predictive_sd, levels, distribution
   )
   if (anyNA(curve$picp)) {
     reason <- if (na.rm) {

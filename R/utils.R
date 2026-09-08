@@ -231,3 +231,80 @@ prepare_quantiles <- function(obs, quantiles, levels, na.rm = TRUE) {
   }
   x
 }
+
+# Select one representation before doing any missing-value filtering.
+predictive_input_mode <- function(explicit, pred, predictive_sd, distribution) {
+  normal <- !is.null(pred) || !is.null(predictive_sd)
+  samples <- !is.null(distribution)
+  if (sum(c(explicit, normal, samples)) > 1L) {
+    stop("Supply either explicit bounds/quantiles, `pred` and `predictive_sd`, or `distribution`, not both or multiple representations.",
+         call. = FALSE)
+  }
+  if (normal && (is.null(pred) || is.null(predictive_sd))) {
+    stop("Normal-distribution mode requires both `pred` and `predictive_sd`.",
+         call. = FALSE)
+  }
+  if (normal) "normal" else if (samples) "samples" else "explicit"
+}
+
+predictive_levels <- function(levels, default) {
+  if (is.null(levels)) levels <- default
+  if (!is_numeric_vector(levels) || !length(levels) ||
+      any(!is.finite(levels)) || any(levels <= 0 | levels >= 1)) {
+    stop("`levels` must contain finite probabilities strictly between 0 and 1.",
+         call. = FALSE)
+  }
+  sort(unique(levels))
+}
+
+# All requested quantiles share the same complete rows; never drop individual
+# draws within a row. Callers validate probabilities and select the input mode.
+predictive_quantiles <- function(obs, probs, pred, predictive_sd, distribution,
+                                 na.rm) {
+  check_flag(na.rm, "na.rm")
+  if (is.null(distribution)) {
+    x <- prepare_predictive_sd_vectors(obs, pred, predictive_sd, na.rm)
+    if (is.null(x)) return(NULL)
+    quantiles <- vapply(probs, function(p) {
+      x$pred + stats::qnorm(p) * x$predictive_sd
+    }, numeric(length(x$obs)))
+    dim(quantiles) <- c(length(x$obs), length(probs))
+  } else {
+    x <- prepare_distribution_matrix(obs, distribution, na.rm)
+    if (is.null(x)) return(NULL)
+    quantiles <- matrix(NA_real_, nrow = length(x$obs), ncol = length(probs))
+    for (i in seq_along(x$obs)) {
+      quantiles[i, ] <- stats::quantile(x$distribution[i, ], probs = probs,
+                                       names = FALSE, type = 7)
+    }
+  }
+  list(obs = x$obs, distribution = quantiles)
+}
+
+resolve_interval_inputs <- function(obs, lower, upper, level, na.rm,
+                                    pred, predictive_sd, distribution,
+                                    use_obs = TRUE) {
+  check_flag(na.rm, "na.rm")
+  check_probability(level, "level")
+  mode <- predictive_input_mode(!is.null(lower) || !is.null(upper),
+                                pred, predictive_sd, distribution)
+  if (mode == "explicit") {
+    if (is.null(lower) || is.null(upper)) {
+      stop("Prediction-interval validation requires both `lower` and `upper`, or a predictive distribution.",
+           call. = FALSE)
+    }
+    if (use_obs) return(prepare_interval_vectors(obs, lower, upper, na.rm))
+    prepare_metric_vectors(obs = obs, lower = lower, upper = upper, na.rm = FALSE)
+    return(prepare_interval_bounds(lower, upper, na.rm))
+  }
+  if (!use_obs) {
+    # Standalone PIW checks observation type/length, but not completeness.
+    if (!is_numeric_vector(obs)) stop("`obs` must be a numeric vector.", call. = FALSE)
+    if (any(is.infinite(obs))) stop("Inputs must not contain infinite values.", call. = FALSE)
+    obs <- rep(0, length(obs))
+  }
+  x <- predictive_quantiles(obs, c((1 - level) / 2, (1 + level) / 2),
+                            pred, predictive_sd, distribution, na.rm)
+  if (is.null(x)) return(NULL)
+  list(obs = x$obs, lower = x$distribution[, 1L], upper = x$distribution[, 2L])
+}

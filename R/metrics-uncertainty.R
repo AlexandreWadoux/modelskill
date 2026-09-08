@@ -15,8 +15,30 @@
 #' levels; assess tail-specific calibration separately when directional bias is
 #' scientifically important.
 #' @param obs Numeric observation vector.
-#' @param lower,upper Numeric lower and upper prediction-interval bounds.
-#' @param na.rm Logical; remove incomplete triplets?
+#' @section Input representations:
+#' Supply exactly one of explicit `lower` and `upper` bounds, predictive mean
+#' and standard deviation (`pred` and `predictive_sd`), or predictive samples
+#' (`distribution`). Normal inputs generate central intervals using normal
+#' quantiles. Samples generate equal-tailed intervals using [stats::quantile()]
+#' with `type = 7`, at probabilities `(1 - level) / 2` and `(1 + level) / 2`.
+#' With `na.rm = TRUE`, a case is removed if its observation or any supplied
+#' predictive value is missing; individual missing draws are not discarded
+#' within a case. With `na.rm = FALSE`, incomplete inputs give `NA`. No complete
+#' cases also gives `NA`. Standalone [interval_width()] ignores missing `obs`.
+#' @param lower,upper Optional numeric lower and upper prediction-interval bounds.
+#'   Supply both, without another input representation.
+#' @param level Nominal central interval coverage, strictly between zero and one.
+#'   Used to generate bounds from predictive means and standard deviations or
+#'   predictive samples; it does not alter explicit bounds.
+#' @param pred,predictive_sd Optional numeric vectors of predictive means and
+#'   predictive standard deviations, supplied together and of the same length
+#'   as `obs`. Assumes normal predictive distributions. Non-missing predictive
+#'   standard deviations must be finite and strictly positive.
+#' @param distribution Optional numeric matrix or data frame of equally weighted
+#'   predictive samples: one row per observation and one column per predictive
+#'   draw. Supply this instead of bounds or predictive means and standard
+#'   deviations. At least one draw is required; infinite values are not allowed.
+#' @param na.rm Logical; remove incomplete cases? See Input representations.
 #' @return One numeric value.
 #' @references Goovaerts, P. (2001). Geostatistical modelling of uncertainty in
 #'   soil science. *Geoderma*, 103, 3-26. <doi:10.1016/S0016-7061(01)00067-2>
@@ -25,10 +47,15 @@
 #'   estimating uncertainty in rainfall-runoff modelling. *International Journal
 #'   of River Basin Management*, 6, 109-122.
 #'   <doi:10.1080/15715124.2008.9635341>
-#' @examples picp(1:3, c(0, 1, 2), c(2, 3, 4))
+#' @examples
+#' picp(1:3, c(0, 1, 2), c(2, 3, 4))
+#' picp(1:3, pred = 1:3, predictive_sd = rep(1, 3), level = 0.8)
+#' picp(1:3, distribution = cbind(0:2, 1:3, 2:4), level = 0.8)
 #' @export
-picp <- function(obs, lower, upper, na.rm = TRUE) {
-  x <- prepare_interval_vectors(obs, lower, upper, na.rm)
+picp <- function(obs, lower = NULL, upper = NULL, na.rm = TRUE, level = 0.95,
+                 pred = NULL, predictive_sd = NULL, distribution = NULL) {
+  x <- resolve_interval_inputs(obs, lower, upper, level, na.rm,
+                               pred, predictive_sd, distribution)
   if (is.null(x) || !length(x$obs)) return(NA_real_)
   mean(x$obs >= x$lower & x$obs <= x$upper)
 }
@@ -38,12 +65,14 @@ picp <- function(obs, lower, upper, na.rm = TRUE) {
 #' Backward-compatible alias for [picp()]. New code should prefer `picp()`, the
 #' conventional abbreviation for prediction interval coverage probability. Its
 #' equation, interpretation, and reference are given in [picp()].
+#' @inheritSection picp Input representations
 #' @inheritParams picp
 #' @return One numeric value on the probability scale from zero to one.
 #' @examples coverage(1:3, c(0, 1, 2), c(2, 3, 4))
 #' @export
-coverage <- function(obs, lower, upper, na.rm = TRUE) {
-  picp(obs, lower, upper, na.rm = na.rm)
+coverage <- function(obs, lower = NULL, upper = NULL, na.rm = TRUE, level = 0.95,
+                     pred = NULL, predictive_sd = NULL, distribution = NULL) {
+  picp(obs, lower, upper, na.rm, level, pred, predictive_sd, distribution)
 }
 
 #' Prediction-interval coverage error
@@ -56,6 +85,7 @@ coverage <- function(obs, lower, upper, na.rm = TRUE) {
 #'
 #' Zero is ideal. Positive values mean intervals cover too often (are too wide
 #' or over-pessimistic); negative values mean intervals cover too rarely.
+#' @inheritSection picp Input representations
 #' @inheritParams picp
 #' @param level Nominal central interval coverage, strictly between zero and one.
 #' @return One numeric value.
@@ -64,9 +94,11 @@ coverage <- function(obs, lower, upper, na.rm = TRUE) {
 #'   <doi:10.1016/j.geoderma.2023.116585>
 #' @examples coverage_error(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
 #' @export
-coverage_error <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
+coverage_error <- function(obs, lower = NULL, upper = NULL, level = 0.95,
+                           na.rm = TRUE, pred = NULL, predictive_sd = NULL,
+                           distribution = NULL) {
   check_probability(level, "level")
-  picp(obs, lower, upper, na.rm = na.rm) - level
+  picp(obs, lower, upper, na.rm, level, pred, predictive_sd, distribution) - level
 }
 
 #' Average prediction-interval width
@@ -82,6 +114,7 @@ coverage_error <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
 #'
 #' PIW has response units. Smaller values indicate sharper predictions, but are
 #' desirable only when calibration is adequate; assess it alongside [picp()].
+#' @inheritSection picp Input representations
 #' @inheritParams coverage
 #' @return One numeric value.
 #' @references Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of
@@ -89,10 +122,11 @@ coverage_error <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
 #'   <doi:10.1016/j.geoderma.2023.116585>
 #' @examples interval_width(1:3, c(0, 1, 2), c(2, 3, 4))
 #' @export
-interval_width <- function(obs, lower, upper, na.rm = TRUE) {
-  # Keep `obs` in the API while ensuring PIW itself is independent of test data.
-  prepare_metric_vectors(obs = obs, lower = lower, upper = upper, na.rm = FALSE)
-  x <- prepare_interval_bounds(lower, upper, na.rm)
+interval_width <- function(obs, lower = NULL, upper = NULL, na.rm = TRUE,
+                           level = 0.95, pred = NULL, predictive_sd = NULL,
+                           distribution = NULL) {
+  x <- resolve_interval_inputs(obs, lower, upper, level, na.rm,
+                               pred, predictive_sd, distribution, use_obs = FALSE)
   if (is.null(x) || !length(x$lower)) return(NA_real_)
   mean(x$upper - x$lower)
 }
@@ -118,6 +152,8 @@ interval_width <- function(obs, lower, upper, na.rm = TRUE) {
 #' The score has response units and lower values are better. It rewards narrow
 #' intervals but penalizes observations outside them by their distance from the
 #' nearest bound.
+#' @inheritParams picp
+#' @inheritSection picp Input representations
 #' @param obs Numeric observation vector.
 #' @param lower,upper Numeric bounds of the central prediction interval. For the
 #'   usual proper-score interpretation, these must be the equal-tailed
@@ -131,9 +167,12 @@ interval_width <- function(obs, lower, upper, na.rm = TRUE) {
 #'   Association*, 102, 359-378.
 #' @examples interval_score(1:3, c(0, 1, 2), c(2, 3, 4), level = .8)
 #' @export
-interval_score <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
+interval_score <- function(obs, lower = NULL, upper = NULL, level = 0.95,
+                           na.rm = TRUE, pred = NULL, predictive_sd = NULL,
+                           distribution = NULL) {
   check_probability(level, "level")
-  x <- prepare_interval_vectors(obs, lower, upper, na.rm)
+  x <- resolve_interval_inputs(obs, lower, upper, level, na.rm,
+                               pred, predictive_sd, distribution)
   if (is.null(x) || !length(x$obs)) return(NA_real_)
   alpha <- 1 - level
   width <- x$upper - x$lower
@@ -179,9 +218,20 @@ interval_score <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
 #' @param obs Numeric observation vector.
 #' @param quantiles Numeric matrix or data frame with observations in rows and
 #'   predicted quantiles in columns.
+#'   Supply this with `levels`, without another input representation.
 #' @param levels Strictly increasing quantile probabilities, one per column of
-#'   `quantiles`. Values must lie strictly between zero and one.
+#'   `quantiles`. Values must lie strictly between zero and one. For generated
+#'   quantiles, defaults to `seq(0.05, 0.95, by = 0.05)` and is sorted with
+#'   duplicates removed.
 #' @param na.rm Logical; remove incomplete observation/quantile rows?
+#' @inheritParams picp
+#' @details Instead of explicit quantiles, supply predictive mean and standard
+#'   deviation (`pred` and `predictive_sd`) for normal quantiles, or
+#'   `distribution` for empirical quantiles ([stats::quantile()], `type = 7`).
+#'   These representations are mutually exclusive. Complete rows are selected
+#'   across `obs` and all supplied predictive values, so every level uses the
+#'   same cases. If `na.rm = FALSE` and any case is incomplete, or no complete
+#'   cases remain, every QCP value is `NA`.
 #'
 #' @return Named numeric vector containing one QCP value for each supplied
 #'   quantile level, on the probability scale from zero to one.
@@ -214,10 +264,23 @@ interval_score <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
 #'   quantiles = quantiles,
 #'   levels = levels
 #' )
+#' qcp(obs, pred = pred, predictive_sd = predictive_sd, levels = levels)
+#' qcp(1:3, distribution = cbind(0:2, 1:3, 2:4), levels = c(0.25, 0.75))
 #'
 #' @export
-qcp <- function(obs, quantiles, levels, na.rm = TRUE) {
-  x <- prepare_quantiles(obs, quantiles, levels, na.rm)
+qcp <- function(obs, quantiles = NULL, levels = NULL, na.rm = TRUE,
+                pred = NULL, predictive_sd = NULL, distribution = NULL) {
+  check_flag(na.rm, "na.rm")
+  mode <- predictive_input_mode(!is.null(quantiles), pred, predictive_sd, distribution)
+  if (mode == "explicit") {
+    if (is.null(quantiles) || is.null(levels)) {
+      stop("Supply `quantiles` and `levels`, or a predictive distribution.", call. = FALSE)
+    }
+    x <- prepare_quantiles(obs, quantiles, levels, na.rm)
+  } else {
+    levels <- predictive_levels(levels, seq(0.05, 0.95, by = 0.05))
+    x <- predictive_quantiles(obs, levels, pred, predictive_sd, distribution, na.rm)
+  }
 
   out <- rep(NA_real_, length(levels))
 
@@ -242,6 +305,7 @@ qcp <- function(obs, quantiles, levels, na.rm = TRUE) {
 #' predictive cumulative distribution function (CDF) values evaluated at the
 #' observations, or calculated from predictive means and standard deviations
 #' under a normal predictive-distribution assumption.
+#' Predictive samples may instead be supplied through `distribution`.
 #'
 #' For observation \eqn{obs_i} and predictive cumulative distribution function
 #' \eqn{F_i}, the PIT value is
@@ -293,12 +357,19 @@ qcp <- function(obs, quantiles, levels, na.rm = TRUE) {
 #' ensembles, ordinary PIT values are discrete; randomized PIT or rank-based
 #' diagnostics are more appropriate.
 #'
+#' With predictive samples, `pit()` returns the fraction of draws less than or
+#' equal to each observation (including ties). This empirical CDF requires no
+#' normal assumption. With `na.rm = TRUE`, rows missing `obs` or any draw are
+#' removed together; with `na.rm = FALSE`, an incomplete row makes all returned
+#' PIT values `NA`, retaining the original observation-vector length.
+#' @inheritParams picp
+#'
 #' @param cdf_at_obs Optional numeric vector containing predictive CDF values
 #'   evaluated at the corresponding observations. Values must lie between zero
 #'   and one. Do not supply this together with `obs`, `pred`, or
-#'   `predictive_sd`.
+#'   `predictive_sd`, or `distribution`.
 #' @param obs Optional numeric vector of observations. Must be supplied together
-#'   with `pred` and `predictive_sd`.
+#'   with `pred` and `predictive_sd`, or with `distribution`.
 #' @param pred Optional numeric vector of predictive means. Used with `obs` and
 #'   `predictive_sd` to calculate PIT values assuming normal predictive
 #'   distributions.
@@ -342,15 +413,28 @@ qcp <- function(obs, quantiles, levels, na.rm = TRUE) {
 #' )
 #'
 #' gg_pit(pit_values)
+#' pit(obs = 1:3, distribution = cbind(0:2, 1:3, 2:4))
 #'
 #' @export
 pit <- function(cdf_at_obs = NULL,
                 obs = NULL,
                 pred = NULL,
                 predictive_sd = NULL,
-                na.rm = TRUE) {
+                na.rm = TRUE,
+                distribution = NULL) {
 
   check_flag(na.rm, "na.rm")
+
+  if (!is.null(distribution)) {
+    if (!is.null(cdf_at_obs) || !is.null(pred) || !is.null(predictive_sd)) {
+      stop("Supply either `cdf_at_obs`, `pred` and `predictive_sd`, or `distribution`, not both or multiple representations.",
+           call. = FALSE)
+    }
+    if (is.null(obs)) stop("Predictive-sample mode requires `obs`.", call. = FALSE)
+    x <- prepare_distribution_matrix(obs, distribution, na.rm)
+    if (is.null(x)) return(rep(NA_real_, length(obs)))
+    return(rowMeans(sweep(x$distribution, 1, x$obs, FUN = "<=")))
+  }
 
   cdf_mode <- !is.null(cdf_at_obs)
   normal_mode <- !is.null(obs) ||
@@ -474,6 +558,8 @@ crps_casewise <- function(obs, distribution = NULL, pred = NULL,
 #' Decomposes mean ensemble CRPS into a reliability component and potential
 #' CRPS following Hersbach (2000). Predictive-distribution columns are treated
 #' as equally likely ensemble members.
+#' This function accepts predictive samples only, not a predictive mean and
+#' standard deviation. Its decomposition is defined for finite ensembles.
 #'
 #' \deqn{\mathrm{CRPS} = \mathrm{RELI} + \mathrm{potential\ CRPS}}
 #'

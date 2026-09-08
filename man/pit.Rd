@@ -9,17 +9,18 @@ pit(
   obs = NULL,
   pred = NULL,
   predictive_sd = NULL,
-  na.rm = TRUE
+  na.rm = TRUE,
+  distribution = NULL
 )
 }
 \arguments{
 \item{cdf_at_obs}{Optional numeric vector containing predictive CDF values
 evaluated at the corresponding observations. Values must lie between zero
 and one. Do not supply this together with \code{obs}, \code{pred}, or
-\code{predictive_sd}.}
+\code{predictive_sd}, or \code{distribution}.}
 
 \item{obs}{Optional numeric vector of observations. Must be supplied together
-with \code{pred} and \code{predictive_sd}.}
+with \code{pred} and \code{predictive_sd}, or with \code{distribution}.}
 
 \item{pred}{Optional numeric vector of predictive means. Used with \code{obs} and
 \code{predictive_sd} to calculate PIT values assuming normal predictive
@@ -30,6 +31,11 @@ deviations. Values must be finite and strictly positive.}
 
 \item{na.rm}{Logical; remove incomplete values or observation-prediction
 combinations? The default is \code{TRUE}.}
+
+\item{distribution}{Optional numeric matrix or data frame of equally weighted
+predictive samples: one row per observation and one column per predictive
+draw. Supply this instead of bounds or predictive means and standard
+deviations. At least one draw is required; infinite values are not allowed.}
 }
 \value{
 Numeric vector of PIT values between zero and one.
@@ -40,6 +46,7 @@ predictive distributions. PIT values can either be supplied directly as
 predictive cumulative distribution function (CDF) values evaluated at the
 observations, or calculated from predictive means and standard deviations
 under a normal predictive-distribution assumption.
+Predictive samples may instead be supplied through \code{distribution}.
 }
 \details{
 For observation \eqn{obs_i} and predictive cumulative distribution function
@@ -91,6 +98,12 @@ The usual uniformity interpretation applies directly to continuous
 predictive distributions. For discrete distributions or finite predictive
 ensembles, ordinary PIT values are discrete; randomized PIT or rank-based
 diagnostics are more appropriate.
+
+With predictive samples, \code{pit()} returns the fraction of draws less than or
+equal to each observation (including ties). This empirical CDF requires no
+normal assumption. With \code{na.rm = TRUE}, rows missing \code{obs} or any draw are
+removed together; with \code{na.rm = FALSE}, an incomplete row makes all returned
+PIT values \code{NA}, retaining the original observation-vector length.
 }
 \examples{
 # PIT values from CDF values calculated elsewhere
@@ -112,6 +125,7 @@ pit_values <- pit(
 )
 
 gg_pit(pit_values)
+pit(obs = 1:3, distribution = cbind(0:2, 1:3, 2:4))
 
 }
 \references{

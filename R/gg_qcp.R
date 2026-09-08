@@ -15,6 +15,11 @@
 #' automatically from predictive means (`pred`) and predictive standard deviations
 #' (`predictive_sd`). In this mode, the default is to evaluate quantiles from 0.05
 #' to 0.95 in increments of 0.05.
+#' Predictive samples (`distribution`) are also accepted, using empirical
+#' quantiles ([stats::quantile()], `type = 7`) at the same default levels.
+#' Supply exactly one representation. As in [qcp()], every level uses the same
+#' complete rows across `obs` and all supplied predictive values. With
+#' `na.rm = FALSE`, any incomplete row makes coverage missing at every level.
 #'
 #' A calibration curve is generally most informative when quantiles are available
 #' over a reasonably dense range of probability levels. A smaller number of levels
@@ -22,9 +27,11 @@
 #'
 #' @inheritParams qcp
 #' @param quantiles Numeric matrix or data frame containing predicted quantiles
-#'   in columns. Required unless `pred` and `predictive_sd` are supplied.
+#'   in columns. Required unless `pred` and `predictive_sd`, or `distribution`,
+#'   are supplied.
 #' @param levels Numeric vector of nominal quantile probabilities corresponding
-#'   to the columns of `quantiles`. When `pred` and `predictive_sd` are supplied,
+#'   to the columns of `quantiles`. With predictive means and standard deviations
+#'   or predictive samples,
 #'   defaults to `seq(0.05, 0.95, by = 0.05)`.
 #' @param pred Optional numeric vector of predictive means. Must be supplied
 #'   together with `predictive_sd`; in this mode predictive quantiles are
@@ -67,6 +74,7 @@
 #'   quantiles = quantiles,
 #'   levels = levels
 #' )
+#' gg_qcp(1:3, distribution = cbind(0:2, 1:3, 2:4), levels = c(0.25, 0.75))
 #'
 #' @export
 gg_qcp <- function(obs,
@@ -75,108 +83,13 @@ gg_qcp <- function(obs,
                    pred = NULL,
                    predictive_sd = NULL,
                    na.rm = TRUE,
-                   point_size = 3) {
+                   point_size = 3,
+                   distribution = NULL) {
 
   check_number(point_size, "point_size", positive = TRUE)
 
-  normal_mode <- !is.null(pred) || !is.null(predictive_sd)
-
-  if (normal_mode) {
-
-    if (!is.null(quantiles)) {
-      stop(
-        "Supply either `quantiles`, or `pred` and `predictive_sd`, not both.",
-        call. = FALSE
-      )
-    }
-
-    if (is.null(pred) || is.null(predictive_sd)) {
-      stop(
-        "Normal-distribution mode requires both `pred` and `predictive_sd`.",
-        call. = FALSE
-      )
-    }
-
-    if (is.null(levels)) {
-      levels <- seq(0.05, 0.95, by = 0.05)
-    }
-
-    if (!is_numeric_vector(levels) ||
-        !length(levels) ||
-        any(!is.finite(levels)) ||
-        any(levels <= 0 | levels >= 1)) {
-      stop(
-        "`levels` must contain finite probabilities strictly between 0 and 1.",
-        call. = FALSE
-      )
-    }
-
-    levels <- sort(unique(levels))
-
-    x <- prepare_predictive_sd_vectors(
-      obs,
-      pred,
-      predictive_sd,
-      na.rm
-    )
-
-    if (is.null(x) || !length(x$obs)) {
-      data <- data.frame(
-        nominal = levels,
-        qcp = NA_real_
-      )
-    } else {
-
-      quantiles <- vapply(
-        levels,
-        function(p) {
-          x$pred + stats::qnorm(p) * x$predictive_sd
-        },
-        numeric(length(x$obs))
-      )
-      dim(quantiles) <- c(length(x$obs), length(levels))
-
-      values <- qcp(
-        x$obs,
-        quantiles,
-        levels,
-        na.rm = FALSE
-      )
-
-      data <- data.frame(
-        nominal = levels,
-        qcp = unname(values)
-      )
-    }
-
-  } else {
-
-    if (is.null(quantiles)) {
-      stop(
-        "Supply `quantiles` and `levels`, or `pred` and `predictive_sd`.",
-        call. = FALSE
-      )
-    }
-
-    if (is.null(levels)) {
-      stop(
-        "`levels` must be supplied with `quantiles`.",
-        call. = FALSE
-      )
-    }
-
-    values <- qcp(
-      obs,
-      quantiles,
-      levels,
-      na.rm
-    )
-
-    data <- data.frame(
-      nominal = levels,
-      qcp = unname(values)
-    )
-  }
+  values <- qcp(obs, quantiles, levels, na.rm, pred, predictive_sd, distribution)
+  data <- data.frame(nominal = as.numeric(names(values)), qcp = unname(values))
 
   ggplot2::ggplot(
     data,

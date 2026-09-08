@@ -29,6 +29,9 @@
 #' predictive distribution. When `pred` and `predictive_sd` are supplied and
 #' `levels` is left `NULL`, central normal prediction intervals are evaluated
 #' from 1% to 99% nominal coverage.
+#' Alternatively, `distribution` generates central empirical intervals from
+#' equally weighted predictive samples, using [stats::quantile()] with `type = 7`.
+#' The same default levels apply. Supply only one input representation.
 #'
 #' The accuracy-plot approach was developed for direct assessment of local
 #' uncertainty in geostatistics by Deutsch (1997) and subsequently applied to
@@ -64,12 +67,14 @@
 #'   intervals are generated assuming normal predictive distributions. Do not
 #'   also supply `lower` or `upper`.
 #' @param levels Nominal central prediction-interval coverage probabilities used
-#'   when `pred` and `predictive_sd` are supplied. Values must lie strictly
+#'   when `pred` and `predictive_sd`, or `distribution`, are supplied. Values must lie strictly
 #'   between zero and one. Defaults to every percentage from 1% to 99%.
 #' @param na.rm Logical; remove incomplete observation/interval combinations?
 #'   With interval lists, only cases complete in `obs` and both bounds at every
 #'   supplied level are used, so all levels share the same validation sample.
 #'   If `FALSE`, any incomplete case makes coverage missing at every level.
+#'   With predictive samples, a row missing any draw or `obs` is incomplete.
+#' @inheritParams picp
 #' @param point_size Positive numeric point size.
 #' @param line_width Positive numeric width of the 1:1 reference line.
 #'
@@ -130,11 +135,13 @@
 #'   lower = lower,
 #'   upper = upper
 #' )
+#' gg_coverage(1:3, distribution = cbind(0:2, 1:3, 2:4), levels = c(0.5, 0.9))
 #'
 #' @export
 gg_coverage <- function(obs, lower = NULL, upper = NULL, level = NULL,
                         pred = NULL, predictive_sd = NULL, levels = NULL,
-                        na.rm = TRUE, point_size = 3, line_width = 0.6) {
+                        na.rm = TRUE, point_size = 3, line_width = 0.6,
+                        distribution = NULL) {
 
   check_flag(na.rm, "na.rm")
   check_number(point_size, "point_size", positive = TRUE)
@@ -142,7 +149,7 @@ gg_coverage <- function(obs, lower = NULL, upper = NULL, level = NULL,
 
   intervals <- coverage_intervals(
     obs, lower, upper, level, na.rm,
-    pred, predictive_sd, levels
+    pred, predictive_sd, levels, distribution
   )
 
   p <- ggplot2::ggplot(
@@ -188,9 +195,27 @@ gg_coverage <- function(obs, lower = NULL, upper = NULL, level = NULL,
 
 coverage_intervals <- function(obs, lower, upper, level, na.rm,
                                pred = NULL, predictive_sd = NULL,
-                               levels = NULL) {
+                               levels = NULL, distribution = NULL) {
 
   check_flag(na.rm, "na.rm")
+  if (!is.null(distribution)) {
+    predictive_input_mode(!is.null(lower) || !is.null(upper),
+                           pred, predictive_sd, distribution)
+    if (!is.null(level)) {
+      stop("Use `levels`, not `level`, with `distribution`.", call. = FALSE)
+    }
+    levels <- predictive_levels(levels, seq(.01, .99, by = .01))
+    x <- predictive_quantiles(obs, c((1 - levels) / 2, (1 + levels) / 2),
+                              pred, predictive_sd, distribution, na.rm)
+    values <- rep(NA_real_, length(levels))
+    if (!is.null(x) && length(x$obs)) {
+      values <- vapply(seq_along(levels), function(i) {
+        mean(x$obs >= x$distribution[, i] &
+               x$obs <= x$distribution[, length(levels) + i])
+      }, numeric(1))
+    }
+    return(data.frame(nominal = levels, picp = values))
+  }
   normal_mode <- !is.null(pred) || !is.null(predictive_sd)
 
   if (normal_mode) {
