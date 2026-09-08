@@ -2,6 +2,7 @@
 title: "Summary diagrams and diagnostic plots"
 author: "Alexandre M.J.-C. Wadoux"
 output: rmarkdown::html_vignette
+link-citations: true
 vignette: >
   %\VignetteIndexEntry{Summary diagrams and diagnostic plots}
   %\VignetteEngine{knitr::rmarkdown}

@@ -2,6 +2,7 @@
 title: "Prediction performance metrics"
 author: "Alexandre M.J.-C. Wadoux"
 output: rmarkdown::html_vignette
+link-citations: true
 vignette: >
   %\VignetteIndexEntry{Prediction performance metrics}
   %\VignetteEngine{knitr::rmarkdown}

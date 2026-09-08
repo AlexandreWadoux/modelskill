@@ -2,6 +2,7 @@
 title: "Predictive-uncertainty evaluation"
 author: "Alexandre M.J.-C. Wadoux"
 output: rmarkdown::html_vignette
+link-citations: true
 vignette: >
   %\VignetteIndexEntry{Predictive-uncertainty evaluation}
   %\VignetteEngine{knitr::rmarkdown}
