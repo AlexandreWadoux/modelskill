@@ -283,6 +283,8 @@ gg_target <- function(
         data = circle_labels,
         ggplot2::aes(x = x, y = y, label = label),
         inherit.aes = FALSE,
+        vjust = 1,
+        hjust = -0.1,
         size = 3.5,
         colour = "black"
       )
