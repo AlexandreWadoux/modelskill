@@ -220,15 +220,17 @@ but they measure different things.
 \[
 r^2
 =
-\frac{
 \left[
+\frac{
 \sum_{i=1}^{n}
 (obs_i-\bar{obs})(pred_i-\bar{pred})
-\right]^2
 }{
+\sqrt{
 \sum_{i=1}^{n}(obs_i-\bar{obs})^2
 \sum_{i=1}^{n}(pred_i-\bar{pred})^2
-}.
+}
+}
+\right]^2.
 \]
 
 It measures the strength of linear association.
