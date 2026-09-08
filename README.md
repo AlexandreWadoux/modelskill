@@ -153,6 +153,47 @@ See the **[prediction-performance tutorial](https://alexandrewadoux.github.io/mo
 
 ---
 
+## Summary diagrams
+
+`modelskill` provides solar, target, and Taylor diagrams for comparing several aspects of model performance simultaneously.
+
+```r
+gg_solar(models, obs, label = TRUE)
+
+gg_target(models, obs, label = TRUE)
+
+gg_taylor(models, obs, label = TRUE)
+```
+
+### Graphical model evaluation
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/solar-approved.png" width="32%" alt="Solar diagram" />
+  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/target-approved.png" width="32%" alt="Target diagram" />
+  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/taylor-approved.png" width="32%" alt="Taylor diagram" />
+</p>
+
+The three diagrams provide complementary information:
+
+- the **solar diagram** combines mean error, centred error, total error, and additional performance information;
+- the **target diagram** additionally distinguishes whether predictions have less or more variability than the observations;
+- the **Taylor diagram** focuses on correlation, relative variability, and centred error.
+
+The Taylor diagram can also be displayed using only positive correlations:
+
+```r
+gg_taylor(
+  models,
+  obs,
+  legend = TRUE,
+  half = TRUE
+)
+```
+
+See the **[summary-diagram tutorial](https://alexandrewadoux.github.io/modelskill/articles/summary-diagrams.html)** for interpretation and additional options.
+
+---
+
 ## Uncertainty statistics
 
 `modelskill` evaluates quantified predictive uncertainty represented as:

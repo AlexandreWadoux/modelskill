@@ -1,6 +1,6 @@
 bibentry(
   bibtype = "Manual",
-  title = "modelskill: Assessing and Visualising Continuous Prediction Model Performance",
+  title = "modelskill: Assessing and Visualising the Performance of Continuous Prediction Models",
   author = person(
     given = "A.M.J.-C.",
     family = "Wadoux"
