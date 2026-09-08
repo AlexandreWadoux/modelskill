@@ -7,6 +7,10 @@ template:
     primary: "#1B6CA8"
     link-color: "#1B6CA8"
 
+home:
+  sidebar:
+    structure: [links, license, citation, authors, dev]
+
 navbar:
   structure:
     left: [reference, articles, news]
