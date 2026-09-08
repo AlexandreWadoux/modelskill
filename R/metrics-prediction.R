@@ -743,6 +743,9 @@ pinball_loss <- function(obs, pred, level = .5, na.rm = TRUE) {
 kge <- function(obs, pred, na.rm = TRUE) {
   x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
   if (is.null(x)) return(undefined_metric("KGE", missing_pair_reason(na.rm)))
+  if (!length(x$obs)) {
+    return(undefined_metric("KGE", "no valid observation-prediction pairs remain after missing-value handling"))
+  }
   reason <- kge_undefined_reason(x)
   if (!is.null(reason)) return(undefined_metric("KGE", reason))
   1 - sqrt((stats::cor(x$obs, x$pred) - 1)^2 + (stats::sd(x$pred) / stats::sd(x$obs) - 1)^2 + (mean(x$pred) / mean(x$obs) - 1)^2)

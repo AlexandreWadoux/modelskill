@@ -49,6 +49,8 @@ test_that("missing-data handling warns only when no valid pairs or na.rm is FALS
   expect_silent(expect_equal(nse(c(1, NA, 3), c(1, 2, 2)), nse(c(1, 3), c(1, 2))))
   expect_warning(expect_true(is.na(rmse(c(NA_real_, NA_real_), c(NA_real_, NA_real_)))),
                  "RMSE is undefined because no valid observation-prediction pairs remain")
+  expect_warning(expect_true(is.na(kge(c(NA_real_, NA_real_), c(NA_real_, NA_real_)))),
+                 "KGE is undefined because no valid observation-prediction pairs remain")
   expect_warning(expect_true(is.na(mae(c(1, NA), c(1, 2), na.rm = FALSE))),
                  "MAE is undefined because inputs contain missing values and `na.rm = FALSE`")
 })
