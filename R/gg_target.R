@@ -3,8 +3,9 @@
 #' Creates a target diagram comparing quantitative prediction models with an
 #' observation vector. The horizontal coordinate is the signed standardized
 #' unbiased root mean square difference and the vertical coordinate is
-#' normalized mean error. Concentric circles provide reference thresholds
-#' associated with correlation levels.
+#' normalized mean error. The dashed inner circles delimit regions implying
+#' minimum Pearson correlation levels, whereas the solid unit circle provides
+#' an RMSE* reference.
 #'
 #' The default geometry follows Wadoux, Walvoort, and Brus (2022). By default,
 #' points are coloured by the model-efficiency coefficient R-squared, equivalent
@@ -49,8 +50,10 @@
 #' @param point_size Numeric point size.
 #' @param label_size Numeric size of model labels.
 #' @param legend Logical; show the point-colour legend?
-#' @param reference Logical; draw the original RMSD reference circles and
-#'   their labels?
+#' @param reference Logical; draw the target-diagram reference circles and
+#'   their labels? The dashed inner circles indicate regions implying minimum
+#'   Pearson correlation levels, whereas the solid unit circle represents the
+#'   RMSE* = 1 reference.
 #'
 #' @section Coordinates and labels:
 #' The horizontal coordinate is `signed_sde` and the vertical coordinate is
@@ -69,12 +72,16 @@
 #' distance to the origin is RMSE normalized by the population-moment
 #' observation standard deviation, so points near the origin are preferred.
 #'
-#' The circular contours are RMSE* references. A point near the origin is both
-#' close in mean and in spread/pattern; a point displaced along the mean-error
-#' direction is chiefly biased; and a point displaced along the signed-SDE
-#' direction chiefly differs in variability or pattern. The displayed titles
-#' intentionally retain the original implementation's visual orientation; use
-#' the coordinate definitions above when interpreting position.
+#' The reference circles have two distinct interpretations. The dashed inner
+#' circles correspond to correlation lower-bound regions, with radius
+#' \eqn{\sqrt{1-r^2}} for the displayed Pearson correlation threshold. The
+#' solid unit circle instead represents the RMSE* = 1 reference. A point near
+#' the origin is both close in mean and in spread/pattern; a point displaced
+#' along the mean-error direction is chiefly biased; and a point displaced
+#' along the signed-SDE direction chiefly differs in variability or pattern.
+#' The displayed titles intentionally retain the original implementation's
+#' visual orientation; use the coordinate definitions above when interpreting
+#' position.
 #'
 #' @section ggplot2 customization:
 #' Arguments that change the statistical content or core target-diagram
@@ -193,20 +200,33 @@ gg_target <- function(
     )
   }
 
-  circle_data <- rbind(circle(0.44), circle(0.71))
-  circle_reference <- circle(1)
+  correlation_thresholds <- c(0.9, 0.7)
+  correlation_radii <- sqrt(1 - correlation_thresholds^2)
+  correlation_circles <- do.call(
+    rbind,
+    lapply(correlation_radii, circle)
+  )
+  rmse_reference <- circle(1)
   circle_labels <- data.frame(
     x = c(
-      circle_data$x[circle_data$r == 0.44][37],
-      circle_data$x[circle_data$r == 0.71][37],
-      circle_reference$x[37]
+      correlation_circles$x[
+        correlation_circles$r == correlation_radii[1]
+      ][37],
+      correlation_circles$x[
+        correlation_circles$r == correlation_radii[2]
+      ][37],
+      rmse_reference$x[37]
     ),
     y = c(
-      circle_data$y[circle_data$r == 0.44][37],
-      circle_data$y[circle_data$r == 0.71][37],
-      circle_reference$y[37]
+      correlation_circles$y[
+        correlation_circles$r == correlation_radii[1]
+      ][37],
+      correlation_circles$y[
+        correlation_circles$r == correlation_radii[2]
+      ][37],
+      rmse_reference$y[37]
     ),
-    label = c(0.9, 0.7, 1)
+    label = c("r >= 0.9", "r >= 0.7", "RMSE* = 1")
   )
 
   ticks <- subset(
@@ -243,14 +263,14 @@ gg_target <- function(
   if (isTRUE(reference)) {
     p <- p +
       ggplot2::geom_path(
-        data = circle_data,
+        data = correlation_circles,
         ggplot2::aes(x = x, y = y, group = r),
         inherit.aes = FALSE,
         colour = "black",
         linetype = 2
       ) +
       ggplot2::geom_path(
-        data = circle_reference,
+        data = rmse_reference,
         ggplot2::aes(x = x, y = y),
         inherit.aes = FALSE,
         colour = "black",
