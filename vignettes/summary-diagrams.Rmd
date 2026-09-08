@@ -718,7 +718,8 @@ standard ggplot additions can be applied after the diagram has been created.
 p <- gg_solar(
   models,
   obs,
-  colour_by = "model"
+  colour_by = "model",
+  y.axis_end = 2
 )
 
 p +
@@ -735,7 +736,8 @@ p +
 gg_solar(
   models,
   obs,
-  colour_by = "model"
+  colour_by = "model",
+  y.axis_end = 2
 ) +
   ggplot2::theme(
     legend.position = "bottom"
@@ -815,7 +817,8 @@ also be added when a closer view is useful:
 gg_solar(
   models,
   obs,
-  colour_by = "model"
+  colour_by = "model",
+  y.axis_end = 2
 ) +
   ggplot2::coord_fixed(
     xlim = c(-1.5, 1.5),
@@ -838,7 +841,8 @@ gg_solar(
   obs,
   label = TRUE,
   point_size = 5,
-  label_size = 3.5
+  label_size = 3.5,
+  y.axis_end = 2
 )
 ```
 
