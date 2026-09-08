@@ -7,6 +7,34 @@ output: github_document
 [![pkgdown](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 
+**Alexandre M.J.-C. Wadoux**
+
+## Citation
+
+If you use `modelskill` in your work, please cite the package as:
+
+> Wadoux, A.M.J.-C. (2026). *modelskill: Assessing and Visualising Continuous Prediction Model Performance*. R package version 0.0.0.9000. <https://github.com/AlexandreWadoux/modelskill>
+
+**BibTeX**
+
+```bibtex
+@Manual{wadoux2026modelskill,
+  title  = {modelskill: Assessing and Visualising Continuous Prediction Model Performance},
+  author = {Wadoux, A.M.J.-C.},
+  year   = {2026},
+  note   = {R package version 0.0.0.9000},
+  url    = {https://github.com/AlexandreWadoux/modelskill}
+}
+```
+
+The citation can also be retrieved directly from R with:
+
+```r
+citation("modelskill")
+```
+
+---
+
 ## About
 
 `modelskill` is an R package for the **evaluation of continuous predictions and their quantified uncertainty**.
@@ -46,8 +74,8 @@ Full function documentation is available on the **[modelskill website](https://a
 |:--|:--|
 | **Prediction performance** | [`model_metrics()`](https://alexandrewadoux.github.io/modelskill/reference/model_metrics.html), [`rmse()`](https://alexandrewadoux.github.io/modelskill/reference/rmse.html), [`mae()`](https://alexandrewadoux.github.io/modelskill/reference/mae.html), [`bias()`](https://alexandrewadoux.github.io/modelskill/reference/bias.html), [`correlation()`](https://alexandrewadoux.github.io/modelskill/reference/correlation.html), [`r2()`](https://alexandrewadoux.github.io/modelskill/reference/r2.html), [`R2()`](https://alexandrewadoux.github.io/modelskill/reference/efficiency_r2.html), [`ccc()`](https://alexandrewadoux.github.io/modelskill/reference/ccc.html), [`kge()`](https://alexandrewadoux.github.io/modelskill/reference/kge.html) |
 | **Predictive uncertainty** | [`uncertainty_metrics()`](https://alexandrewadoux.github.io/modelskill/reference/uncertainty_metrics.html), [`picp()`](https://alexandrewadoux.github.io/modelskill/reference/picp.html), [`interval_width()`](https://alexandrewadoux.github.io/modelskill/reference/interval_width.html), [`interval_score()`](https://alexandrewadoux.github.io/modelskill/reference/interval_score.html), [`qcp()`](https://alexandrewadoux.github.io/modelskill/reference/qcp.html), [`pit()`](https://alexandrewadoux.github.io/modelskill/reference/pit.html), [`crps()`](https://alexandrewadoux.github.io/modelskill/reference/crps.html) |
-| **Summary diagrams** | [`gg_solar()`](https://alexandrewadoux.github.io/modelskill/reference/gg_solar.html), [`gg_target()`](https://alexandrewadoux.github.io/modelskill/reference/gg_target.html), [`gg_taylor()`](https://alexandrewadoux.github.io/modelskill/reference/gg_taylor.html) |
 | **Uncertainty diagnostics** | [`gg_coverage()`](https://alexandrewadoux.github.io/modelskill/reference/gg_coverage.html), [`gg_qcp()`](https://alexandrewadoux.github.io/modelskill/reference/gg_qcp.html), [`gg_pit()`](https://alexandrewadoux.github.io/modelskill/reference/gg_pit.html) |
+| **Summary diagrams** | [`gg_solar()`](https://alexandrewadoux.github.io/modelskill/reference/gg_solar.html), [`gg_target()`](https://alexandrewadoux.github.io/modelskill/reference/gg_target.html), [`gg_taylor()`](https://alexandrewadoux.github.io/modelskill/reference/gg_taylor.html) |
 
 ---
 
@@ -70,7 +98,7 @@ library(modelskill)
 
 ---
 
-## Quick start
+## Validation statistics
 
 Suppose several models have predicted the same observations:
 
@@ -125,48 +153,7 @@ See the **[prediction-performance tutorial](https://alexandrewadoux.github.io/mo
 
 ---
 
-## Summary diagrams
-
-`modelskill` provides solar, target, and Taylor diagrams for comparing several aspects of model performance simultaneously.
-
-```r
-gg_solar(models, obs, label = TRUE)
-
-gg_target(models, obs, label = TRUE)
-
-gg_taylor(models, obs, label = TRUE)
-```
-
-### Graphical model evaluation
-
-<p align="center">
-  <img src="review/solar-approved.png" width="32%" alt="Solar diagram" />
-  <img src="review/target-approved.png" width="32%" alt="Target diagram" />
-  <img src="review/taylor-approved.png" width="32%" alt="Taylor diagram" />
-</p>
-
-The three diagrams provide complementary information:
-
-- the **solar diagram** combines mean error, centred error, total error, and additional performance information;
-- the **target diagram** additionally distinguishes whether predictions have less or more variability than the observations;
-- the **Taylor diagram** focuses on correlation, relative variability, and centred error.
-
-The Taylor diagram can also be displayed using only positive correlations:
-
-```r
-gg_taylor(
-  models,
-  obs,
-  legend = TRUE,
-  half = TRUE
-)
-```
-
-See the **[summary-diagram tutorial](https://alexandrewadoux.github.io/modelskill/articles/summary-diagrams.html)** for interpretation and additional options.
-
----
-
-## Evaluating predictive uncertainty
+## Uncertainty statistics
 
 `modelskill` evaluates quantified predictive uncertainty represented as:
 
@@ -244,6 +231,51 @@ crps(
 ```
 
 See the **[predictive-uncertainty tutorial](https://alexandrewadoux.github.io/modelskill/articles/predictive-uncertainty.html)** for prediction intervals, QCP, PIT, CRPS, predictive samples, and scoring rules.
+
+---
+
+## Graphical summaries
+
+`modelskill` provides solar, target, and Taylor diagrams for comparing several aspects of model performance simultaneously.
+
+```r
+gg_solar(models, obs, label = TRUE)
+
+gg_target(models, obs, label = TRUE)
+
+gg_taylor(models, obs, label = TRUE)
+```
+
+### Graphical model evaluation
+
+<p align="center">
+  <img src="review/solar-approved.png" width="32%" alt="Solar diagram" />
+  <img src="review/target-approved.png" width="32%" alt="Target diagram" />
+  <img src="review/taylor-approved.png" width="32%" alt="Taylor diagram" />
+</p>
+
+The three diagrams provide complementary information:
+
+- the **solar diagram** combines mean error, centred error, total error, and additional performance information;
+- the **target diagram** additionally distinguishes whether predictions have less or more variability than the observations;
+- the **Taylor diagram** focuses on correlation, relative variability, and centred error.
+
+The Taylor diagram can also be displayed using only positive correlations:
+
+```r
+gg_taylor(
+  models,
+  obs,
+  legend = TRUE,
+  half = TRUE
+)
+```
+
+<p align="center">
+  <img src="review/taylor-options.png" width="55%" alt="Half Taylor diagram" />
+</p>
+
+See the **[summary-diagram tutorial](https://alexandrewadoux.github.io/modelskill/articles/summary-diagrams.html)** for interpretation and additional options.
 
 ---
 
