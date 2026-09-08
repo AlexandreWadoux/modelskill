@@ -1,6 +1,7 @@
 url: https://alexandrewadoux.github.io/modelskill/
 template:
   bootstrap: 5
+  math-rendering: katex
   light-switch: true
   bslib:
     primary: "#1B6CA8"
