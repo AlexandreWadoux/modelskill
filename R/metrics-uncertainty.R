@@ -558,7 +558,9 @@ crps <- function(obs, distribution = NULL, pred = NULL, predictive_sd = NULL,
 #'
 #' It has response units; lower values are better. Unlike mean CRPS, it
 #' describes a typical case and is less sensitive to a small number of very poor
-#' predictive distributions.
+#' predictive distributions. Median aggregation is a robust descriptive summary
+#' but should not replace mean CRPS for formal comparisons based on proper
+#' scoring rules.
 #' @inheritParams crps
 #' @return One numeric median CRPS value.
 #' @references Hersbach, H. (2000). Decomposition of the continuous ranked
