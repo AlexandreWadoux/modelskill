@@ -2,7 +2,7 @@
 % Please edit documentation in R/metrics-prediction.R
 \name{kge}
 \alias{kge}
-\title{Kling-Gupta efficiency}
+\title{Kling-Gupta efficiency: KGE (2009)}
 \usage{
 kge(obs, pred, na.rm = TRUE)
 }
@@ -14,12 +14,14 @@ kge(obs, pred, na.rm = TRUE)
 \item{na.rm}{Logical; remove incomplete pairs?}
 }
 \value{
-One numeric value; one is ideal.
+One numeric KGE (2009) value; one is ideal.
 }
 \description{
-Kling-Gupta efficiency (KGE) combines correlation, variability ratio, and
-mean ratio. The component definitions below use the same paired observations
-and predictions as the main score.
+KGE (2009) is the original Kling-Gupta efficiency formulation of Gupta et al.
+(2009). It combines correlation, variability ratio, and mean ratio. The
+component definitions below use the same paired observations and predictions
+as the main score. Later KGE variants use different component definitions and
+are not implemented by this function.
 }
 \details{
 \deqn{r=\frac{\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})}
@@ -27,14 +29,15 @@ and predictions as the main score.
 \quad \alpha=\sqrt{\frac{\sum_{i=1}^{n}(pred_i-\bar{pred})^2}
 {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}},
 \quad \beta=\frac{\bar{pred}}{\bar{obs}}.}
-\deqn{\mathrm{KGE}=1-\sqrt{(r-1)^2+(\alpha-1)^2+(\beta-1)^2}.}
+\deqn{\mathrm{KGE}_{2009}=1-\sqrt{(r-1)^2+(\alpha-1)^2+(\beta-1)^2}.}
 
 One is ideal. Values closer to one indicate agreement in linear association,
-spread, and mean. The range is unbounded below and at most one. Zero is
-not the observed-mean benchmark used for NSE. KGE is undefined when the
+spread, and mean. The range is unbounded below and at most one. Zero is not
+the observed-mean benchmark used for NSE. KGE (2009) is undefined when the
 observed mean or either vector's standard deviation is zero, or fewer than
-two pairs remain; it returns \code{NA} with a warning in those cases. As with NSE, avoid treating KGE as the only measure of model
-quality; inspect its components and complementary error metrics.
+two pairs remain; it returns \code{NA} with a warning in those cases. As with NSE,
+avoid treating KGE (2009) as the only measure of model quality; inspect its
+components and complementary error metrics.
 }
 \references{
 Gupta, H. V., Kling, H., Yilmaz, K. K., and Martinez, G. F.

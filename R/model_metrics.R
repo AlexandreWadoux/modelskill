@@ -16,7 +16,7 @@
 #'   be removed. The default is `TRUE`. If `FALSE`, incomplete pairs result in
 #'   missing statistics rather than being silently removed.
 #' @param extended Logical; include additional robust, scale-normalised,
-#'   percentage, agreement, and KGE metrics?
+#'   percentage, agreement, and KGE (2009) metrics?
 #' @param digits Integer or `NULL`. If supplied, round numeric results to this
 #'   many digits (0 to 22). `NULL` retains full numerical precision.
 #'
@@ -38,7 +38,7 @@
 #'   `model`, `bias`, `mae`, `mse`, `rmse`, `nrmse`, `crmse`, `correlation`,
 #'   `r2`, `R2`, `sd_ratio`, `ccc`, and `Cb`. With `extended = TRUE`, adds
 #'   `mdae`, `rpd`, `rpiq`, `sep`, `rer`, `mape`, `mpe`, `smape`, `msle`,
-#'   `rmsle`, `rae`, `rrmse`, `willmott_d`, and `kge`.
+#'   `rmsle`, `rae`, `rrmse`, `willmott_d`, and `kge` (KGE (2009)).
 #'   Duplicate columns ME, MAE, RMSE, r, nse, NSE, MEC, and rhoC have been
 #'   removed; use bias, mae, rmse, correlation, R2, and ccc instead.
 #' @section Bias correction factor:
