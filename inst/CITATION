@@ -7,5 +7,11 @@ bibentry(
   ),
   year = "2026",
   note = "R package version 0.0.0.9000",
-  url = "https://github.com/AlexandreWadoux/modelskill"
+  url = "https://github.com/AlexandreWadoux/modelskill",
+  textVersion = paste(
+    "Wadoux, A.M.J.-C. (2026).",
+    "modelskill: Assessing and Visualising the Performance of Continuous Prediction Models.",
+    "R package version 0.0.0.9000.",
+    "https://github.com/AlexandreWadoux/modelskill"
+  )
 )
