@@ -38,6 +38,11 @@
 #' [gg_qcp()]. For complete predictive distributions, use [pit()], [gg_pit()],
 #' [crps()], or [crps_decomposition()].
 #'
+#' All four returned statistics use the same complete observation/lower/upper
+#' triplets. This differs intentionally from standalone [interval_width()],
+#' which is observation-independent and can use interval bounds where `obs` is
+#' missing.
+#'
 #' @param obs Numeric observation vector.
 #' @param lower,upper Numeric vectors containing the lower and upper
 #'   prediction-interval bounds. Both must be supplied and have the same length
@@ -101,32 +106,43 @@ uncertainty_metrics <- function(obs,
 
   check_probability(level, "level")
 
+  x <- prepare_interval_vectors(obs, lower, upper, na.rm)
+
+  if (is.null(x) || !length(x$obs)) {
+    return(data.frame(
+      picp = NA_real_,
+      picp_error = NA_real_,
+      interval_width = NA_real_,
+      interval_score = NA_real_
+    ))
+  }
+
   data.frame(
     picp = picp(
-      obs,
-      lower,
-      upper,
-      na.rm
+      x$obs,
+      x$lower,
+      x$upper,
+      na.rm = FALSE
     ),
     picp_error = coverage_error(
-      obs,
-      lower,
-      upper,
+      x$obs,
+      x$lower,
+      x$upper,
       level,
-      na.rm
+      na.rm = FALSE
     ),
     interval_width = interval_width(
-      obs,
-      lower,
-      upper,
-      na.rm
+      x$obs,
+      x$lower,
+      x$upper,
+      na.rm = FALSE
     ),
     interval_score = interval_score(
-      obs,
-      lower,
-      upper,
+      x$obs,
+      x$lower,
+      x$upper,
       level,
-      na.rm
+      na.rm = FALSE
     )
   )
 }

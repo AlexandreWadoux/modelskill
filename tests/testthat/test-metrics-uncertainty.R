@@ -412,3 +412,20 @@ test_that("uncertainty wrapper is interval-only", {
     "both"
   )
 })
+
+test_that("uncertainty wrapper uses one complete-triplet subset", {
+  obs <- c(1, NA_real_, 3)
+  lower <- c(0, 10, 2)
+  upper <- c(2, 30, 4)
+
+  summary <- uncertainty_metrics(obs, lower, upper, level = 0.8)
+
+  expect_equal(summary$picp, 1)
+  expect_equal(summary$picp_error, 0.2)
+  expect_equal(summary$interval_width, 2)
+  expect_equal(summary$interval_score, 2)
+  expect_equal(interval_width(obs, lower, upper), 8)
+
+  incomplete <- uncertainty_metrics(obs, lower, upper, level = 0.8, na.rm = FALSE)
+  expect_true(all(is.na(incomplete)))
+})

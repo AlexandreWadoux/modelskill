@@ -35,7 +35,9 @@ descriptive summary when a few large errors dominate mean CRPS.
 
 It has response units; lower values are better. Unlike mean CRPS, it
 describes a typical case and is less sensitive to a small number of very poor
-predictive distributions.
+predictive distributions. Median aggregation is a robust descriptive summary
+but should not replace mean CRPS for formal comparisons based on proper
+scoring rules.
 }
 \examples{
 median_crps(0, distribution = matrix(c(-1, 1), nrow = 1))

@@ -107,9 +107,9 @@ layer with the desired limits.
 
 The horizontal coordinate is normalized mean error (nME; ME*) and the
 vertical coordinate is standardized unbiased root mean square difference
-(sde; SDE*). The reference regions retain the rounded radii from the
-original implementation; their interpretation requires the normalization
-assumptions documented in \code{\link[=diagram_stats]{diagram_stats()}}.
+(sde; SDE*). Correlation-region radii are calculated exactly from their
+correlation thresholds as \code{sqrt(1 - r^2)}; their interpretation requires
+the normalization assumptions documented in \code{\link[=diagram_stats]{diagram_stats()}}.
 }
 
 \section{Interpretation}{

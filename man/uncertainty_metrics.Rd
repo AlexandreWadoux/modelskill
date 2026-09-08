@@ -75,6 +75,11 @@ calibration across multiple interval levels, use \code{\link[=gg_coverage]{gg_co
 \code{\link[=accuracy_plot_metrics]{accuracy_plot_metrics()}}. For predictive quantiles, use \code{\link[=qcp]{qcp()}} and
 \code{\link[=gg_qcp]{gg_qcp()}}. For complete predictive distributions, use \code{\link[=pit]{pit()}}, \code{\link[=gg_pit]{gg_pit()}},
 \code{\link[=crps]{crps()}}, or \code{\link[=crps_decomposition]{crps_decomposition()}}.
+
+All four returned statistics use the same complete observation/lower/upper
+triplets. This differs intentionally from standalone \code{\link[=interval_width]{interval_width()}},
+which is observation-independent and can use interval bounds where \code{obs} is
+missing.
 }
 \examples{
 obs <- c(1, 2, 3, 4, 5)
