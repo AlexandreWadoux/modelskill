@@ -9,73 +9,1178 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+
 ```
 
-This article evaluates *quantified predictive uncertainty*. The same principles
-apply to uncertainty estimates from machine learning (such as quantile
-regression, ensembles, and conformal intervals), Bayesian models,
-geostatistics, and process-based models.
+## Why validate predictive uncertainty?
 
-Two properties should be assessed together:
+Point-prediction metrics assess how close predictions are to observations, but
+many models also quantify how uncertain each prediction is. This information may
+be supplied as prediction intervals, predicted quantiles, a predictive mean and
+standard deviation, or a complete predictive distribution.
 
-* **Calibration** (or reliability): stated probabilities agree with empirical
-  frequencies.
-* **Sharpness**: intervals or distributions are sufficiently concentrated.
-  Sharpness is valuable only when calibration is adequate.
+These probabilistic predictions should be validated just like point predictions.
+A poorly calibrated uncertainty estimate can give users unwarranted confidence
+in a prediction even when the point prediction itself appears reasonable.
 
-```{r data}
+Two properties are particularly important:
+
+- **Calibration**, also called **reliability**, describes whether stated
+  probabilities agree with observed frequencies. For example, approximately
+  90% of independent observations should fall inside intervals presented as
+  90% prediction intervals.
+- **Sharpness** describes how concentrated the predictive distributions are.
+  Narrower prediction intervals correspond to sharper predictions.
+
+Sharpness should always be interpreted conditional on adequate calibration. Very
+narrow intervals are not useful when observations frequently fall outside them.
+The general objective is therefore to obtain predictive distributions that are
+as sharp as possible while remaining well calibrated
+(Schmidinger and Heuvelink, 2023; Gneiting and Raftery, 2007).
+
+As with point-prediction validation, these diagnostics should be calculated
+using independent validation data or an appropriate resampling strategy.
+
+## Which form of predictive uncertainty do you have?
+
+Probabilistic predictions can be supplied in several forms, including prediction
+intervals, predicted quantiles, predictive means and standard deviations, and
+full predictive distributions. This tutorial develops two broad worked cases:
+
+- **Case A — predictive mean and standard deviation**: the predictive
+  distribution is summarized by its mean and standard deviation. Prediction
+  intervals, quantiles, CDF values, and densities can be derived when an
+  appropriate distributional assumption is available.
+- **Case B — full predictive distribution**: the predictive distribution is
+  represented directly by predictive samples or draws. This can preserve
+  features such as skewness, heavy tails, and multimodality that may not be
+  represented by a mean and standard deviation alone.
+
+Prediction intervals and quantiles may also be supplied directly by a model.
+The same validation principles apply regardless of how they were generated. A
+model may also provide several representations of the same predictive
+distribution.
+
+## Functions used in this tutorial
+
+The main `modelskill` functions used below are:
+
+| Function | Description | Reference |
+| :-- | :-- | :-- |
+| [`picp()`](../reference/picp.html)                                   | Calculates the prediction interval coverage probability, that is, the proportion of observations falling within a prediction interval. | Goovaerts (2001); Schmidinger and Heuvelink (2023)            |
+| [`coverage_error()`](../reference/coverage_error.html)               | Calculates the difference between empirical and nominal prediction interval coverage.                                                  | Schmidinger and Heuvelink (2023)                              |
+| [`interval_width()`](../reference/interval_width.html) | Calculates the average width of prediction intervals and therefore summarizes their sharpness. | Schmidinger and Heuvelink (2023) |
+| [`interval_score()`](../reference/interval_score.html)               | Calculates a proper scoring rule that combines prediction interval width with penalties for observations outside the interval.         | Gneiting and Raftery (2007)                                   |
+| [`uncertainty_metrics()`](../reference/uncertainty_metrics.html)     | Calculates PICP, coverage error, interval width, and interval score together.                                                          | Gneiting and Raftery (2007); Schmidinger and Heuvelink (2023) |
+| [`gg_coverage()`](../reference/gg_coverage.html)                     | Produces a reliability plot comparing nominal prediction interval coverage with empirical coverage across several interval levels.     | Goovaerts (2001); Schmidinger and Heuvelink (2023)            |
+| [`accuracy_plot_metrics()`](../reference/accuracy_plot_metrics.html) | Summarizes deviations between the empirical coverage curve and the ideal 1:1 reliability line.                                         | Goovaerts (2001); Schmidinger and Heuvelink (2023)            |
+| [`qcp()`](../reference/qcp.html)                                     | Calculates quantile coverage probability, the proportion of observations below each predicted quantile.                                | Schmidinger and Heuvelink (2023)                              |
+| [`gg_qcp()`](../reference/gg_qcp.html)                               | Produces a quantile calibration plot comparing nominal quantile probabilities with empirical quantile coverage.                        | Schmidinger and Heuvelink (2023)                              |
+| [`pit()`](../reference/pit.html) | Validates PIT values supplied as predictive CDF values evaluated at the observations. | Gneiting et al. (2007); Schmidinger and Heuvelink (2023) |
+| [`gg_pit()`](../reference/gg_pit.html)                               | Produces a PIT histogram for assessing the calibration of complete predictive distributions.                                           | Gneiting and Raftery (2007); Schmidinger and Heuvelink (2023) |
+| [`crps()`](../reference/crps.html)                                   | Calculates the continuous ranked probability score, a proper score that evaluates the full predictive distribution.                    | Hersbach (2000); Gneiting and Raftery (2007)                  |
+| [`median_crps()`](../reference/median_crps.html)                     | Calculates the median case-wise CRPS, providing a robust summary of typical probabilistic prediction performance.                      | Gneiting and Raftery (2007)                                   |
+| [`crps_decomposition()`](../reference/crps_decomposition.html)       | Decomposes CRPS into reliability and potential CRPS components when predictive samples are available.                                  | Hersbach (2000); Schmidinger and Heuvelink (2023)             |
+| [`log_score()`](../reference/log_score.html)                         | Calculates the logarithmic score from predictive density values evaluated at the observations.                                         | Gneiting and Raftery (2007)                                   |
+
+The appropriate functions depend on the available model output. For example,
+`picp()`, `coverage_error()`, `interval_width()`, and `interval_score()` require
+prediction-interval bounds. `crps()` can use either a normal predictive
+distribution represented by a predictive mean and standard deviation or a
+matrix of predictive samples. `crps_decomposition()` is intended for equally
+weighted predictive samples, while `pit()` and `log_score()` require predictive
+CDF or density values evaluated at the observations.
+
+## Example data
+
+We first create a simple situation in which the predictive distributions are
+correctly calibrated by construction.
+
+```{r}
 library(modelskill)
+
 set.seed(123)
-obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
-pred <- obs + rnorm(100, sd = 0.5)
-predictive_sd <- rep(0.8, length(obs))
-lower95 <- pred - 1.96 * predictive_sd
-upper95 <- pred + 1.96 * predictive_sd
+
+n <- 500
+
+# Predictive means
+pred <- seq(0, 10, length.out = n)
+
+# True predictive standard deviation
+predictive_sd <- rep(1, n)
+
+# Independent observations generated from the predictive distributions
+obs <- stats::rnorm(
+  n,
+  mean = pred,
+  sd = predictive_sd
+)
+
 ```
 
-## Prediction intervals
+Here, observation \(i\) is generated from
 
-```{r intervals}
-uncertainty_metrics(obs, lower = lower95, upper = upper95, level = .95)
+\[
+Y_i \sim N(\mathrm{pred}_i, \sigma_i^2),
+\]
+
+with \(\sigma_i = 1\). Because the predictive model and data-generating process
+are the same, the uncertainty estimates should be approximately calibrated.
+Departures from perfect calibration still occur because validation is based on
+a finite sample.
+
+## Case A: predictive mean and standard deviation
+
+A common output from geostatistical models, Bayesian approximations, Gaussian
+processes, and other statistical models is a predictive mean together with a
+predictive standard deviation.
+
+If a normal predictive distribution is appropriate, prediction intervals,
+quantiles, CDF values, and predictive densities can all be obtained from these
+two quantities.
+
+### Prediction intervals
+
+For a central 95% prediction interval:
+
+```{r}
+lower95 <- pred + stats::qnorm(0.025) * predictive_sd
+upper95 <- pred + stats::qnorm(0.975) * predictive_sd
+
 ```
 
-PICP is between 0 and 1 and is ideal when it equals the nominal level. PICP
-error is ideal at zero: negative values indicate under-coverage, while positive
-values indicate over-coverage. PIW is average interval width in response units;
-smaller means sharper intervals, conditional on good calibration. Interval
-score combines width and penalties for misses; lower is better and scores are
-comparable only for the same data, response scale, and interval level.
+A 95% prediction interval means that, under calibration, approximately 95% of
+independent observations should fall between the corresponding lower and upper
+bounds.
 
-## Reliability across interval levels
+#### Prediction interval coverage probability
 
-```{r coverage}
-gg_coverage(obs, pred = pred, predictive_sd = predictive_sd)
-accuracy_plot_metrics(obs, pred = pred, predictive_sd = predictive_sd)
+The **prediction interval coverage probability (PICP)** is the empirical
+proportion of observations contained in the interval:
+
+\[
+\mathrm{PICP}(\tau) =
+\frac{1}{n}
+\sum_{i=1}^{n}
+I(l_i \leq y_i \leq u_i).
+\]
+
+where \(\tau\) is the nominal interval level.
+
+```{r}
+picp(obs, lower95, upper95)
+
 ```
 
-This PICP reliability plot is also called an *accuracy plot* in geostatistical
-uncertainty validation. A curve near the 1:1 line is desirable. Its area-based
-summaries have ideal value zero.
+For a 95% prediction interval, a well-calibrated model should return a value
+close to 0.95.
 
-## Quantiles, PIT, and proper scores
+`modelskill` reports PICP on the probability scale from 0 to 1 rather than as a
+percentage.
 
-```{r distribution}
-qhat <- cbind(`0.1` = pred - 1.282 * predictive_sd,
-              `0.5` = pred,
-              `0.9` = pred + 1.282 * predictive_sd)
-gg_qcp(obs, qhat, c(.1, .5, .9))
-gg_pit(pit(stats::pnorm(obs, mean = pred, sd = predictive_sd)))
-crps(obs, pred = pred, predictive_sd = predictive_sd)
+#### Coverage error
+
+[`coverage_error()`](../reference/coverage_error.html) directly compares
+empirical and nominal coverage:
+
+\[
+\mathrm{coverage\ error} = \mathrm{PICP}(\tau) - \tau.
+\]
+
+```{r}
+coverage_error(
+  obs,
+  lower95,
+  upper95,
+  level = 0.95
+)
+
 ```
 
-At quantile probability \(p\), QCP is ideal when it equals \(p\). PIT values
-should be uniformly distributed across validation cases. CRPS jointly rewards
-calibration and sharpness; zero is ideal and lower values are better. For
-predictive samples, `crps_decomposition()` reports the non-negative RELI
-component, ideal at zero. `log_score()` is also lower-is-better but strongly
-penalizes observations assigned very low density.
+Interpretation is straightforward:
 
-Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
-predictions in digital soil mapping. *Geoderma*, 437, 116585.
-<https://doi.org/10.1016/j.geoderma.2023.116585>
+- **0**: empirical and nominal coverage agree;
+- **negative**: under-coverage, meaning that observations fall outside the
+  intervals too frequently;
+- **positive**: over-coverage, meaning that observations fall inside the
+  intervals more frequently than required.
+
+Under-coverage often indicates that predictive uncertainty has been
+underestimated, whereas substantial over-coverage can indicate unnecessarily
+wide uncertainty estimates.
+
+#### Prediction interval width
+
+Calibration alone is not sufficient. A model could achieve high coverage simply
+by producing extremely wide intervals.
+
+[`interval_width()`](../reference/interval_width.html) measures average
+prediction interval width:
+
+\[
+\mathrm{PIW}(\tau) =
+\frac{1}{n}
+\sum_{i=1}^{n}
+(u_i-l_i).
+\]
+
+```{r}
+interval_width(
+  obs,
+  lower95,
+  upper95
+)
+
+```
+
+PIW has the same units as the response variable. Smaller values mean sharper
+prediction intervals.
+
+Importantly, PIW does not measure calibration and does not depend on where the
+observations fall. It should therefore always be interpreted together with a
+coverage diagnostic such as PICP.
+
+#### Interval score
+
+The [`interval_score()`](../reference/interval_score.html) combines sharpness
+and calibration in a single proper score.
+
+```{r}
+interval_score(
+  obs,
+  lower95,
+  upper95,
+  level = 0.95
+)
+
+```
+
+The score contains the interval width plus penalties when an observation falls
+below or above the interval. The farther an observation lies outside the
+interval, the larger the penalty.
+
+Lower interval scores are better. Scores should only be compared for the same
+validation data, response scale, and interval level.
+
+#### Calculate all interval diagnostics together
+
+[`uncertainty_metrics()`](../reference/uncertainty_metrics.html) is a
+convenience wrapper that returns the principal interval diagnostics together:
+
+```{r}
+uncertainty_metrics(
+  obs,
+  lower = lower95,
+  upper = upper95,
+  level = 0.95
+)
+
+```
+
+It returns:
+
+- `picp`: empirical prediction interval coverage;
+- `picp_error`: empirical minus nominal coverage;
+- `interval_width`: average interval width;
+- `interval_score`: proper interval score.
+
+The individual functions remain useful when only one diagnostic is required.
+
+### Why calibration and sharpness must be considered together
+
+Consider a second uncertainty estimate that uses the same predictive means but
+standard deviations that are only half as large:
+
+```{r}
+sd_too_small <- rep(0.5, n)
+
+lower95_narrow <- pred + stats::qnorm(0.025) * sd_too_small
+upper95_narrow <- pred + stats::qnorm(0.975) * sd_too_small
+
+uncertainty_metrics(
+  obs,
+  lower = lower95_narrow,
+  upper = upper95_narrow,
+  level = 0.95
+)
+
+```
+
+These intervals are much narrower and therefore appear sharper. However, their
+coverage should be substantially below 0.95 because the predictive uncertainty
+has been underestimated.
+
+Compare this with the calibrated intervals:
+
+```{r}
+uncertainty_metrics(
+  obs,
+  lower = lower95,
+  upper = upper95,
+  level = 0.95
+)
+
+```
+
+This illustrates why a smaller interval width is desirable only when
+calibration remains adequate.
+
+### Reliability across multiple interval levels
+
+A single PICP assesses one interval level only. It is often more informative to
+evaluate calibration across many central prediction intervals.
+
+[`gg_coverage()`](../reference/gg_coverage.html) constructs this reliability
+curve directly from predictive means and standard deviations:
+
+```{r}
+gg_coverage(
+  obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+```
+
+Nominal interval coverage is shown on the horizontal axis and empirical PICP on
+the vertical axis.
+
+A well-calibrated model should follow the 1:1 line.
+
+- Points **below** the line indicate under-coverage and generally
+  underestimated uncertainty.
+- Points **above** the line indicate over-coverage and generally overly
+  conservative uncertainty.
+
+The same plot for the deliberately underestimated predictive standard
+deviations shows the difference:
+
+```{r}
+gg_coverage(
+  obs,
+  pred = pred,
+  predictive_sd = sd_too_small
+)
+
+```
+
+In geostatistical uncertainty validation this display has traditionally also
+been called an **accuracy plot** (Goovaerts, 2001), although **reliability**
+**plot** is the more general terminology used for probabilistic predictions.
+
+#### Numerical summaries of the reliability plot
+
+[`accuracy_plot_metrics()`](../reference/accuracy_plot_metrics.html) summarizes
+the departures visible in `gg_coverage()`:
+
+```{r}
+accuracy_plot_metrics(
+  obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+```
+
+and for underestimated uncertainty:
+
+```{r}
+accuracy_plot_metrics(
+  obs,
+  pred = pred,
+  predictive_sd = sd_too_small
+)
+
+```
+
+The output contains:
+
+- `absolute_deviation`: total area between the reliability curve and the
+  1:1 line;
+- `over_uncertainty`: area above the line;
+- `under_uncertainty`: area below the line;
+- `over_percent` and `under_percent`: relative contributions to the total
+  deviation.
+
+The area measures are zero under perfect calibration.
+
+### Why PICP alone is not enough
+
+PICP measures whether observations fall inside an interval, but it does not
+describe **where** the observations that fall outside the interval occur.
+
+This means that PICP can hide a **one-sided bias**.
+
+For example, for a central 90% prediction interval we expect approximately 5%
+of observations below the lower boundary and 5% above the upper boundary.
+A model could instead have approximately 10% below the lower boundary and
+almost none above the upper boundary while still obtaining approximately 90%
+total coverage.
+
+Schmidinger and Heuvelink (2023) showed that this limitation can occur in
+practice and recommended complementing PICP with quantile-based calibration or
+PIT diagnostics.
+
+We can reproduce the idea with a deliberately shifted predictive distribution.
+
+The predictive mean is shifted upward by 0.5 response units. Its predictive
+standard deviation is also increased so that central 90% coverage can remain
+close to its nominal value.
+
+```{r}
+biased_pred <- pred + 0.5
+biased_sd <- rep(1.118, n)
+
+lower90_biased <-
+  biased_pred + stats::qnorm(0.05) * biased_sd
+
+upper90_biased <-
+  biased_pred + stats::qnorm(0.95) * biased_sd
+
+uncertainty_metrics(
+  obs,
+  lower = lower90_biased,
+  upper = upper90_biased,
+  level = 0.90
+)
+
+```
+
+The total PICP may look acceptable even though the predictive distribution is
+systematically displaced. Individual quantiles reveal this problem more
+clearly.
+
+### Quantile coverage probability
+
+Suppose a model predicts several conditional quantiles.
+
+For a correctly calibrated quantile at probability \(p\), approximately a
+fraction \(p\) of observations should fall below that predicted quantile.
+
+The **quantile coverage probability (QCP)** is
+
+\[
+\mathrm{QCP}(p) =
+\frac{1}{n}
+\sum_{i=1}^{n}
+I(y_i \leq q_{i,p}).
+\]
+
+For example, create several quantiles from the calibrated normal predictive
+distribution:
+
+```{r}
+q_levels <- c(0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95)
+
+qhat <- sapply(
+  q_levels,
+  function(p) {
+    pred + stats::qnorm(p) * predictive_sd
+  }
+)
+
+qcp(
+  obs,
+  quantiles = qhat,
+  levels = q_levels
+)
+
+```
+
+For a well-calibrated model:
+
+- the 0.05 quantile should have QCP close to 0.05;
+- the 0.50 quantile should have QCP close to 0.50;
+- the 0.95 quantile should have QCP close to 0.95.
+
+[`gg_qcp()`](../reference/gg_qcp.html) shows this relationship graphically:
+
+```{r}
+gg_qcp(
+  obs,
+  quantiles = qhat,
+  levels = q_levels
+)
+
+```
+
+Points close to the 1:1 line indicate calibrated quantiles.
+
+Now examine the deliberately biased predictive distribution:
+
+```{r}
+qhat_biased <- sapply(
+  q_levels,
+  function(p) {
+    biased_pred + stats::qnorm(p) * biased_sd
+  }
+)
+
+qcp(
+  obs,
+  quantiles = qhat_biased,
+  levels = q_levels
+)
+
+gg_qcp(
+  obs,
+  quantiles = qhat_biased,
+  levels = q_levels
+)
+
+```
+
+Unlike central PICP, QCP evaluates the lower and upper parts of the predictive
+distribution separately and can therefore reveal directional bias.
+
+QCP above its nominal probability means that the predicted quantile tends to be
+too high. QCP below its nominal probability means that the predicted quantile
+tends to be too low.
+
+### Probability integral transform
+
+When a complete predictive cumulative distribution function \(F_i\) is
+available, calibration can also be assessed through the **probability integral
+transform (PIT)**:
+
+\[
+u_i = F_i(y_i).
+\]
+
+For a calibrated continuous predictive distribution, PIT values should be
+uniformly distributed between 0 and 1.
+
+For the normal predictive distributions in this example, evaluate each CDF at
+its corresponding observation:
+
+```{r}
+pit_normal <- pit(
+  stats::pnorm(
+    obs,
+    mean = pred,
+    sd = predictive_sd
+  )
+)
+
+gg_pit(pit_normal)
+
+```
+
+There is no ideal PIT value for an individual observation. Calibration is
+evaluated from the distribution of PIT values across the validation set.
+
+A roughly flat histogram is desirable.
+
+Common deviations are informative:
+
+- excess observations near **0 and 1** generally indicate predictive
+  distributions that are too narrow;
+- excess observations near the **centre** generally indicate distributions that
+  are too wide;
+- systematic asymmetry or a slope can indicate directional bias.
+
+For example, PIT immediately reveals the uncertainty estimates that were made
+too narrow:
+
+```{r}
+pit_narrow <- pit(
+  stats::pnorm(
+    obs,
+    mean = pred,
+    sd = sd_too_small
+  )
+)
+
+gg_pit(pit_narrow)
+
+```
+
+The biased distribution can also be inspected:
+
+```{r}
+pit_biased <- pit(
+  stats::pnorm(
+    obs,
+    mean = biased_pred,
+    sd = biased_sd
+  )
+)
+
+gg_pit(pit_biased)
+
+```
+
+PIT and QCP convey closely related calibration information but emphasize
+different aspects visually. Schmidinger and Heuvelink (2023) recommend them as
+useful complements to PICP, particularly because they can expose calibration
+problems that central interval coverage alone may hide.
+
+### Proper scoring rules
+
+Calibration diagnostics such as PICP, QCP, and PIT ask whether a predictive
+distribution is statistically reliable.
+
+When several probabilistic models must be compared, it is also useful to have a
+single numerical criterion that rewards both calibration and sharpness.
+**Proper scoring rules** are designed for this purpose.
+
+A proper scoring rule does not reward a model for deliberately reporting a
+predictive distribution different from the distribution it actually represents
+(Gneiting and Raftery, 2007).
+
+#### Continuous ranked probability score
+
+The **continuous ranked probability score (CRPS)** compares the complete
+predictive CDF with the realised observation.
+
+[`crps()`](../reference/crps.html) supports two important input formats in
+`modelskill`.
+
+For a normal predictive distribution:
+
+```{r}
+crps(
+  obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+```
+
+CRPS has the same units as the response variable. Zero is ideal and lower
+values are better.
+
+Compare the calibrated and underestimated uncertainty models:
+
+```{r}
+crps(
+  obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+crps(
+  obs,
+  pred = pred,
+  predictive_sd = sd_too_small
+)
+
+```
+
+CRPS simultaneously reflects the location of the predictive distribution and
+its spread.
+
+#### Median CRPS
+
+Mean CRPS can be influenced by a small number of very poor predictive
+distributions.
+
+[`median_crps()`](../reference/median_crps.html) summarizes the typical
+case more robustly:
+
+```{r}
+median_crps(
+  obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+```
+
+Mean and median CRPS answer slightly different questions. Mean CRPS is usually
+preferred for overall probabilistic model comparison, whereas median CRPS can
+help determine whether the mean score is dominated by a few extreme cases.
+
+#### Logarithmic score
+
+The [`log_score()`](../reference/log_score.html) is another proper score. It
+uses the predictive density assigned to the observed value:
+
+\[
+\mathrm{Log\ score} =
+-\frac{1}{n}
+\sum_{i=1}^{n}
+\log f_i(y_i).
+\]
+
+For the normal predictive distributions:
+
+```{r}
+density_at_obs <- stats::dnorm(
+  obs,
+  mean = pred,
+  sd = predictive_sd
+)
+
+log_score(
+  obs,
+  density_at_obs
+)
+
+```
+
+Lower values are better.
+
+The logarithmic score strongly penalizes observations that were assigned very
+low predictive density. It can therefore be particularly sensitive to failures
+in the tails of the predictive distribution.
+
+## Case B: full predictive distributions supplied as samples
+
+Many probabilistic models do not return only a predictive mean and standard
+deviation. Instead, they provide a set of possible values from the predictive
+distribution for every validation case.
+
+Typical examples include:
+
+- posterior predictive draws from Bayesian models;
+- simulation-based models;
+- ensemble predictions;
+- bootstrap predictive distributions;
+- some machine-learning methods;
+- Monte Carlo uncertainty propagation.
+
+`modelskill` represents this type of prediction as a matrix with:
+
+- one **row** per validation observation;
+- one **column** per predictive draw.
+
+We generate 200 predictive draws for each observation:
+
+```{r}
+set.seed(456)
+
+n_draws <- 200
+
+predictive_samples <- sapply(
+  seq_len(n_draws),
+  function(j) {
+    stats::rnorm(
+      n,
+      mean = pred,
+      sd = predictive_sd
+    )
+  }
+)
+
+dim(predictive_samples)
+
+```
+
+Each row of `predictive_samples` now represents an empirical approximation to
+the predictive distribution for one observation.
+
+#### Prediction intervals from predictive samples
+
+Prediction intervals can be obtained from the appropriate quantiles of the
+predictive samples.
+
+For a 95% central interval:
+
+```{r}
+lower95_samples <- apply(
+  predictive_samples,
+  1,
+  stats::quantile,
+  probs = 0.025,
+  names = FALSE
+)
+
+upper95_samples <- apply(
+  predictive_samples,
+  1,
+  stats::quantile,
+  probs = 0.975,
+  names = FALSE
+)
+
+uncertainty_metrics(
+  obs,
+  lower = lower95_samples,
+  upper = upper95_samples,
+  level = 0.95
+)
+
+```
+
+The interpretation of PICP, interval width, coverage error, and interval score
+is exactly the same as when the intervals were derived from a predictive mean
+and standard deviation.
+
+The validation tools depend on the resulting predictive uncertainty, not on the
+algorithm used to generate it.
+
+### Reliability across interval levels from predictive samples
+
+When only predictive samples are available, central prediction intervals can be
+constructed for several nominal levels.
+
+```{r}
+interval_levels <- seq(0.10, 0.90, by = 0.10)
+
+lower_list <- lapply(
+  interval_levels,
+  function(level) {
+    alpha <- (1 - level) / 2
+
+    apply(
+      predictive_samples,
+      1,
+      stats::quantile,
+      probs = alpha,
+      names = FALSE
+    )
+  }
+)
+
+upper_list <- lapply(
+  interval_levels,
+  function(level) {
+    alpha <- (1 - level) / 2
+
+    apply(
+      predictive_samples,
+      1,
+      stats::quantile,
+      probs = 1 - alpha,
+      names = FALSE
+    )
+  }
+)
+
+names(lower_list) <- sprintf("%.2f", interval_levels)
+names(upper_list) <- sprintf("%.2f", interval_levels)
+
+```
+
+These lists can be supplied directly to `gg_coverage()`:
+
+```{r}
+gg_coverage(
+  obs,
+  lower = lower_list,
+  upper = upper_list
+)
+
+```
+
+and to `accuracy_plot_metrics()`:
+
+```{r}
+accuracy_plot_metrics(
+  obs,
+  lower = lower_list,
+  upper = upper_list
+)
+
+```
+
+Thus, `gg_coverage()` can be used both when uncertainty is represented by
+normal predictive means and standard deviations and when intervals have been
+derived from arbitrary predictive distributions.
+
+### Quantile calibration from predictive samples
+
+Predicted quantiles can also be extracted from each predictive distribution.
+
+```{r}
+qhat_samples <- t(
+  apply(
+    predictive_samples,
+    1,
+    stats::quantile,
+    probs = q_levels,
+    names = FALSE
+  )
+)
+
+qcp(
+  obs,
+  quantiles = qhat_samples,
+  levels = q_levels
+)
+
+```
+
+Plot the calibration:
+
+```{r}
+gg_qcp(
+  obs,
+  quantiles = qhat_samples,
+  levels = q_levels
+)
+
+```
+
+This approach does not require any parametric assumption about the shape of the
+predictive distribution.
+
+### PIT from predictive samples
+
+For an analytic distribution, PIT is calculated by evaluating the predictive
+CDF at the observation.
+
+With predictive samples, the predictive CDF can instead be approximated by the
+fraction of predictive draws less than or equal to the observation:
+
+```{r}
+cdf_at_obs_samples <- rowMeans(
+  sweep(
+    predictive_samples,
+    1,
+    obs,
+    FUN = "<="
+  )
+)
+
+pit_samples <- pit(cdf_at_obs_samples)
+
+gg_pit(pit_samples)
+
+```
+
+For calibrated predictive distributions, the resulting PIT histogram should
+again be approximately uniform.
+
+The difference is only how \(F_i(y_i)\) was obtained:
+
+- with an analytic distribution, evaluate its CDF directly;
+- with predictive samples, approximate the CDF empirically.
+
+### CRPS from predictive samples
+
+`crps()` accepts the predictive sample matrix directly:
+
+```{r}
+crps(
+  obs,
+  distribution = predictive_samples
+)
+
+```
+
+No normality assumption is required.
+
+This is useful when predictive distributions are asymmetric, multimodal, or
+otherwise poorly summarized by a mean and standard deviation.
+
+The median case-wise CRPS is similarly available:
+
+```{r}
+median_crps(
+  obs,
+  distribution = predictive_samples
+)
+
+```
+
+### CRPS reliability decomposition
+
+When equally weighted predictive samples are available,
+[`crps_decomposition()`](../reference/crps_decomposition.html) decomposes CRPS
+into a reliability component and potential CRPS:
+
+```{r}
+crps_decomposition(
+  obs,
+  distribution = predictive_samples
+)
+
+```
+
+The output contains:
+
+- `crps`: the total CRPS;
+- `reliability`: the RELI component;
+- `potential_crps`: the remaining component after removing reliability error.
+
+The reliability component is non-negative and has an ideal value of zero.
+It provides a numerical summary of distributional calibration.
+
+Schmidinger and Heuvelink (2023) showed that RELI summarizes patterns also
+visible in PICP, QCP, and PIT diagnostics, whereas the total CRPS additionally
+reflects sharpness and predictive performance.
+
+`crps_decomposition()` in `modelskill` is intended for equally weighted
+predictive samples. It is therefore not called directly with a predictive mean
+and standard deviation.
+
+### What about the logarithmic score with predictive samples?
+
+`log_score()` requires the predictive density evaluated at each observation.
+
+If a model provides an analytic density, calculate these density values and
+supply them directly.
+
+For example, in the normal case:
+
+```{r}
+density_at_obs <- stats::dnorm(
+  obs,
+  mean = pred,
+  sd = predictive_sd
+)
+
+log_score(obs, density_at_obs)
+
+```
+
+Predictive samples alone do not uniquely define a smooth probability density.
+A density-estimation method would first be required. `modelskill` therefore
+does not automatically estimate a density from predictive samples before
+calculating the logarithmic score.
+
+## Comparing the two input formats
+
+The two examples above represent the same conceptual predictive uncertainty in
+different ways.
+
+| TaskMean + SDPredictive samples |                                |                                   |
+| ------------------------------- | ------------------------------ | --------------------------------- |
+| Construct intervals             | Normal quantiles               | Empirical quantiles               |
+| `uncertainty_metrics()`         | Yes, after constructing bounds | Yes, after constructing bounds    |
+| `gg_coverage()`                 | Directly                       | Via interval lists                |
+| `qcp()` / `gg_qcp()`            | From normal quantiles          | From empirical quantiles          |
+| `pit()` / `gg_pit()`            | From analytic CDF              | From empirical CDF                |
+| `crps()`                        | Directly                       | Directly                          |
+| `median_crps()`                 | Directly                       | Directly                          |
+| `crps_decomposition()`          | No                             | Yes                               |
+| `log_score()`                   | From analytic density          | Requires density estimation first |
+
+The appropriate representation depends on what the prediction model provides.
+There is generally no reason to reduce a rich predictive distribution to a mean
+and standard deviation solely for validation if predictive samples or quantiles
+are already available.
+
+## A practical workflow
+
+There is no single statistic that completely evaluates predictive uncertainty.
+Different diagnostics answer different questions.
+
+### If you only have prediction intervals
+
+Start with:
+
+```r
+uncertainty_metrics(...)
+
+```
+
+and interpret PICP and interval width together. If intervals are available at
+several nominal levels, also use:
+
+```r
+gg_coverage(...)
+accuracy_plot_metrics(...)
+
+```
+
+### If you have predicted quantiles
+
+Use:
+
+```r
+qcp(...)
+gg_qcp(...)
+
+```
+
+QCP is particularly useful because it can expose directional quantile bias that
+may be hidden by central interval coverage.
+
+### If you have a predictive mean and standard deviation
+
+When a normal predictive distribution is scientifically appropriate, you can
+evaluate nearly the complete distribution using:
+
+```r
+gg_coverage(...)
+pit(...)
+gg_pit(...)
+crps(...)
+median_crps(...)
+log_score(...)
+
+```
+
+Prediction intervals and quantiles can also be generated from the normal
+distribution as shown above.
+
+### If you have full predictive samples
+
+Retain them rather than reducing them unnecessarily to a mean and standard
+deviation.
+
+Use them to derive:
+
+```r
+# Intervals
+uncertainty_metrics(...)
+
+# Quantiles
+qcp(...)
+gg_qcp(...)
+
+# Empirical CDF values
+pit(...)
+gg_pit(...)
+
+# Proper scores
+crps(...)
+median_crps(...)
+crps_decomposition(...)
+
+```
+
+This preserves asymmetry and other features of the predictive distribution.
+
+## Recommended interpretation
+
+A practical uncertainty-validation analysis should generally combine several
+complementary diagnostics.
+
+1. **Check calibration.**
+   Use PICP, QCP, PIT, or preferably more than one of these diagnostics.
+2. **Check sharpness.**
+   Examine prediction interval width, but only after verifying calibration.
+3. **Inspect the whole distribution when possible.**
+   QCP and PIT can reveal problems that a single central PICP cannot.
+4. **Use proper scores when comparing models.**
+   CRPS and interval score combine calibration and sharpness into numerical
+   criteria suitable for relative model comparison.
+5. **Do not select a model from one diagnostic alone.**
+   Different metrics emphasize different aspects of probabilistic prediction
+   quality and can therefore lead to different model rankings.
+
+Schmidinger and Heuvelink (2023) demonstrated this explicitly for probabilistic
+digital soil mapping: PICP could hide one-sided bias, whereas QCP and PIT
+revealed it, and scoring rules provided additional information when comparing
+competing probabilistic models.
+
+## References
+
+- Gneiting, T., Balabdaoui, F., and Raftery, A. E. (2007). Probabilistic
+  forecasts, calibration and sharpness. *Journal of the Royal Statistical*
+  *Society: Series B*, 69, 243-268.
+  [https://doi.org/10.1111/j.1467-9868.2007.00587.x](https://doi.org/10.1111/j.1467-9868.2007.00587.x)
+- Gneiting, T. and Raftery, A. E. (2007). Strictly proper scoring rules,
+  prediction, and estimation. *Journal of the American Statistical*
+  *Association*, 102, 359-378.
+  [https://doi.org/10.1198/016214506000001437](https://doi.org/10.1198/016214506000001437)
+- Goovaerts, P. (2001). Geostatistical modelling of uncertainty in soil
+  science. *Geoderma*, 103, 3-26.
+  <https://doi.org/10.1016/S0016-7061(01)00067-2>
+- Hersbach, H. (2000). Decomposition of the continuous ranked probability
+  score for ensemble prediction systems. *Weather and Forecasting*, 15,
+  559-570.
+  <https://doi.org/10.1175/1520-0434(2000)015%3C0559:DOTCRP%3E2.0.CO;2>
+- Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+  predictions in digital soil mapping. *Geoderma*, 437, 116585.
+  [https://doi.org/10.1016/j.geoderma.2023.116585](https://doi.org/10.1016/j.geoderma.2023.116585)
