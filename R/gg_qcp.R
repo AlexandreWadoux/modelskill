@@ -134,6 +134,7 @@ gg_qcp <- function(obs,
         },
         numeric(length(x$obs))
       )
+      dim(quantiles) <- c(length(x$obs), length(levels))
 
       values <- qcp(
         x$obs,

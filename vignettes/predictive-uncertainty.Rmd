@@ -438,6 +438,12 @@ evaluated interval levels. This measure summarizes the magnitude of
 miscalibration but does not, by itself, indicate whether predictive uncertainty
 is predominantly overestimated or underestimated.
 
+The calculation integrates the piecewise-linear coverage curve exactly,
+splitting segments where they cross the 1:1 line. The endpoints `(0, 0)` and
+`(1, 1)` are assumed rather than measured, so the area depends on the supplied
+levels and interpolation. With interval lists, `gg_coverage()` and
+`accuracy_plot_metrics()` use only cases complete across all supplied levels.
+
 The total deviation can therefore be separated into the area above the 1:1
 line,
 
@@ -900,6 +906,7 @@ median_crps(
 Mean and median CRPS answer slightly different questions. Mean CRPS is usually
 preferred for overall probabilistic model comparison, whereas median CRPS can
 help determine whether the mean score is dominated by a few extreme cases.
+Median aggregation is a descriptive summary, not itself a proper scoring rule.
 
 #### 5.7.3 Logarithmic score
 
@@ -1150,8 +1157,10 @@ gg_pit(pit_samples)
 
 ```
 
-For calibrated predictive distributions, the resulting PIT histogram should
-again be approximately uniform.
+For calibrated continuous predictive distributions, PIT values are uniform.
+Here the CDF is estimated from a finite ensemble: empirical PIT values lie on
+a discrete grid and are not exactly continuous-uniform, even for calibrated
+draws. Interpret the histogram with this finite-ensemble limitation in mind.
 
 The difference is only how \(F_i(y_i)\) was obtained:
 

@@ -50,11 +50,12 @@ Concordance uses population variances (divisor n); rhoC = r * Cb.
 Missing pairs are removed separately for each model, so comparisons may use
 different subsets. NA and NaN are missing; infinite values are rejected.
 Repeated observations are retained with equal weight.
-With fewer than two pairs, correlation, efficiency and concordance are NA.
+With fewer than two pairs, correlation and efficiency are NA.
 Constant inputs return NA for r and r2 because Pearson correlation is
-undefined. Constant observations give NA efficiency
-and concordance. Constant predictions with varying observations give zero
-Cb and rhoC (the continuous limiting value). All-missing models return NA.
+undefined. Constant observations give NA efficiency. If either vector is
+constant, Cb and rhoC are zero when the concordance denominator is positive;
+both are NA for identical constant vectors (zero denominator).
+All-missing models return NA.
 }
 \section{Bias correction factor}{
 

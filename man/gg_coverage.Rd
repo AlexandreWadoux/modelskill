@@ -36,7 +36,10 @@ also supply \code{lower} or \code{upper}.}
 when \code{pred} and \code{predictive_sd} are supplied. Values must lie strictly
 between zero and one. Defaults to every percentage from 1\% to 99\%.}
 
-\item{na.rm}{Logical; remove incomplete observation/interval combinations?}
+\item{na.rm}{Logical; remove incomplete observation/interval combinations?
+With interval lists, only cases complete in \code{obs} and both bounds at every
+supplied level are used, so all levels share the same validation sample.
+If \code{FALSE}, any incomplete case makes coverage missing at every level.}
 
 \item{point_size}{Positive numeric point size.}
 

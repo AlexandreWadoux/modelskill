@@ -1,5 +1,19 @@
 # modelskill 0.0.0.9000
 
+## Scientific-audit corrections
+
+* Include observations tied with ensemble members in CRPS decomposition bins.
+* Integrate accuracy-plot areas across identity-line crossings and return
+  missing summaries with an informative warning when coverage is unavailable.
+* Use a common complete-case sample across levels in coverage plots and areas.
+* Make CCC symmetric for constant inputs: return zero for a positive
+  denominator, and NA for identical constants with a zero denominator.
+* Preserve matrix dimensions in normal QCP plots with one retained case.
+* Scale extended-metric calculations to avoid intermediate overflow and
+  underflow without changing their mathematical definitions.
+* Document the RELI calculation, area interpolation and endpoint assumptions,
+  finite-ensemble PIT limitations, and the descriptive status of median CRPS.
+
 ## Author decisions
 
 * Preserve the original sample-SD normalization.

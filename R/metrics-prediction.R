@@ -428,10 +428,12 @@ sd_ratio <- function(obs, pred, na.rm = TRUE) metric_value(obs, pred, na.rm, "sd
 #' magnitude and sources of prediction error.
 #'
 #' Population variances (divisor \eqn{n}) are used, matching the package
-#' convention. The function returns `NA` with a warning when fewer than two
-#' valid observation-prediction pairs remain or when the observations have
-#' zero variance. It returns zero for constant predictions when observations
-#' vary. Missing-value handling follows [bias()].
+#' convention. If either vector is constant and the displayed denominator is
+#' positive, CCC is zero, including a single unequal observation-prediction
+#' pair. Identical constant vectors have a zero denominator and return `NA`
+#' with a warning, as do inputs with no valid pairs. These conventions are
+#' symmetric in observations and predictions. Missing-value handling follows
+#' [bias()].
 #'
 #' @inheritParams bias
 #' @return One numeric value between -1 and 1, with 1 indicating perfect
@@ -470,26 +472,29 @@ ccc <- function(obs, pred, na.rm = TRUE) {
 extended_components <- function(obs, pred, na.rm = TRUE) {
   x <- prepare_metric_vectors(obs = obs, pred = pred, na.rm = na.rm)
   if (is.null(x) || !length(x$obs)) return(stats::setNames(rep(NA_real_, 13), c("mdae", "rpd", "rpiq", "sep", "rer", "mape", "mpe", "smape", "msle", "rmsle", "rae", "rrmse", "willmott_d")))
-  error <- x$obs - x$pred; root <- sqrt(mean(error^2)); n <- length(error)
-  obs_sd <- if (n < 2L) NA_real_ else stats::sd(x$obs)
-  obs_iqr <- stats::IQR(x$obs)
-  obs_range <- diff(range(x$obs))
-  out <- c(mdae = stats::median(abs(error)),
+  m <- pair_moments(x$pred, x$obs)
+  error <- m$o - m$p
+  root <- root_mean_square(error)
+  n <- length(error)
+  obs_sd <- if (n < 2L) NA_real_ else m$so * sqrt(n / (n - 1))
+  obs_iqr <- stats::IQR(m$o)
+  obs_range <- diff(range(m$o))
+  out <- c(mdae = stats::median(abs(error)) * m$scale,
     rpd = if (n < 2) NA_real_ else if (root == 0) if (obs_sd == 0) NA_real_ else Inf else obs_sd / root,
     rpiq = if (root == 0) if (obs_iqr == 0) NA_real_ else Inf else obs_iqr / root,
-    sep = if (n < 2) NA_real_ else sqrt(sum((error - mean(error))^2) / (n - 1)),
+    sep = if (n < 2) NA_real_ else root_mean_square(error - mean(error)) * sqrt(n / (n - 1)) * m$scale,
     rer = if (root == 0) if (obs_range == 0) NA_real_ else Inf else obs_range / root,
-    mape = if (any(x$obs == 0)) NA_real_ else 100 * mean(abs(error / x$obs)),
-    mpe = if (any(x$obs == 0)) NA_real_ else 100 * mean(error / x$obs),
-    smape = 100 * mean(ifelse(x$obs == 0 & x$pred == 0, 0, 2 * abs(error) / (abs(x$obs) + abs(x$pred))), na.rm = TRUE),
+    mape = if (any(x$obs == 0)) NA_real_ else 100 * mean(abs(error / m$o)),
+    mpe = if (any(x$obs == 0)) NA_real_ else 100 * mean(error / m$o),
+    smape = 100 * mean(ifelse(m$o == 0 & m$p == 0, 0, 2 * abs(error) / (abs(m$o) + abs(m$p))), na.rm = TRUE),
     msle = if (any(x$obs < 0 | x$pred < 0)) NA_real_ else mean((log1p(x$obs) - log1p(x$pred))^2),
     rmsle = NA_real_,
-    rae = if (sum(abs(x$obs - mean(x$obs))) == 0) NA_real_ else sum(abs(error)) / sum(abs(x$obs - mean(x$obs))),
-    rrmse = if (mean(x$obs) == 0) NA_real_ else 100 * root / abs(mean(x$obs)),
+    rae = if (is_constant(x$obs)) NA_real_ else mean(abs(error)) / mean(abs(m$o - mean(m$o))),
+    rrmse = if (mean(x$obs) == 0) NA_real_ else 100 * root / abs(mean(m$o)),
     willmott_d = NA_real_)
   out["rmsle"] <- sqrt(out["msle"])
-  potential_error <- sum((abs(x$pred - mean(x$obs)) + abs(x$obs - mean(x$obs)))^2)
-  out["willmott_d"] <- if (potential_error == 0) NA_real_ else 1 - sum(error^2) / potential_error
+  potential_error <- root_mean_square(abs(m$p - mean(m$o)) + abs(m$o - mean(m$o)))
+  out["willmott_d"] <- if (potential_error == 0) NA_real_ else 1 - (root / potential_error)^2
   out
 }
 
@@ -503,27 +508,25 @@ extended_metric_label <- function(name) {
 
 extended_metric_undefined_reason <- function(x, name) {
   n <- length(x$obs)
-  error <- x$obs - x$pred
-  root <- sqrt(mean(error^2))
+  perfect <- all(x$obs == x$pred)
   if (name == "sep" && n < 2L) return("fewer than two valid observation-prediction pairs remain")
   if (name %in% c("mape", "mpe") && any(x$obs == 0)) return("observations contain zero values")
   if (name %in% c("msle", "rmsle") && any(x$obs < 0 | x$pred < 0)) {
     return("observations or predictions contain negative values")
   }
   if (name == "rrmse" && mean(x$obs) == 0) return("the mean of the observations is zero")
-  if (name == "rae" && sum(abs(x$obs - mean(x$obs))) == 0) return("the observations are constant, giving a zero denominator")
+  if (name == "rae" && is_constant(x$obs)) return("the observations are constant, giving a zero denominator")
   if (name == "willmott_d") {
-    denominator <- sum((abs(x$pred - mean(x$obs)) + abs(x$obs - mean(x$obs)))^2)
-    if (denominator == 0) return("the potential-error denominator is zero")
+    if (perfect && is_constant(x$obs)) return("the potential-error denominator is zero")
   }
   if (name == "rpd") {
     if (n < 2L) return("fewer than two valid observation-prediction pairs remain")
-    if (root == 0 && stats::sd(x$obs) == 0) return("the observations have zero variance and RMSE is zero")
+    if (perfect && is_constant(x$obs)) return("the observations have zero variance and RMSE is zero")
   }
-  if (name == "rpiq" && root == 0 && stats::IQR(x$obs) == 0) {
+  if (name == "rpiq" && perfect && stats::IQR(x$obs / max(1, max(abs(x$obs)))) == 0) {
     return("the observation interquartile range and RMSE are both zero")
   }
-  if (name == "rer" && root == 0 && diff(range(x$obs)) == 0) {
+  if (name == "rer" && perfect && is_constant(x$obs)) {
     return("the observation range and RMSE are both zero")
   }
   NULL
@@ -889,7 +892,8 @@ kge <- function(obs, pred, na.rm = TRUE) {
   }
   reason <- kge_undefined_reason(x)
   if (!is.null(reason)) return(undefined_metric("KGE", reason))
-  1 - sqrt((stats::cor(x$obs, x$pred) - 1)^2 + (stats::sd(x$pred) / stats::sd(x$obs) - 1)^2 + (mean(x$pred) / mean(x$obs) - 1)^2)
+  m <- pair_moments(x$pred, x$obs)
+  1 - sqrt((m$r - 1)^2 + (m$sp / m$so - 1)^2 + (mean(m$p) / mean(m$o) - 1)^2)
 }
 
 kge_undefined_reason <- function(x) {
@@ -924,14 +928,17 @@ is_constant <- function(x) length(x) > 0L && all(x == x[[1L]])
 
 core_metric_undefined_reason <- function(x, name) {
   n <- length(x$obs)
-  if (name %in% c("nrmse", "nse", "sd_ratio", "correlation", "r2", "ccc") && n < 2L) {
+  if (name %in% c("nrmse", "nse", "sd_ratio", "correlation", "r2") && n < 2L) {
     return("fewer than two valid observation-prediction pairs remain")
   }
-  if (name %in% c("nrmse", "nse", "sd_ratio", "correlation", "r2", "ccc") && is_constant(x$obs)) {
+  if (name %in% c("nrmse", "nse", "sd_ratio", "correlation", "r2") && is_constant(x$obs)) {
     return("the observations have zero variance")
   }
   if (name %in% c("correlation", "r2") && is_constant(x$pred)) {
     return("the predictions have zero variance")
+  }
+  if (name == "ccc" && is_constant(x$obs) && all(x$obs == x$pred)) {
+    return("the concordance denominator is zero (identical constant values)")
   }
   NULL
 }
@@ -963,20 +970,21 @@ metric_components <- function(obs, pred) {
   result["rmse"] <- root_mean_square(error) * m$scale
   result["mse"] <- result["rmse"]^2
   result["crmse"] <- root_mean_square(error - mean(error)) * m$scale
+  shift <- mean(m$p) - mean(m$o)
+  denom_scale <- max(m$sp, m$so, abs(shift))
+  if (denom_scale > 0) {
+    sp <- m$sp / denom_scale
+    so <- m$so / denom_scale
+    result["cb"] <- 2 * sp * so / (sp^2 + so^2 + (shift / denom_scale)^2)
+    result["ccc"] <- m$r * result["cb"]
+  }
   if (n < 2L || m$so == 0) return(result)
-  sample_obs_sd <- m$so * m$scale * sqrt(n / (n - 1))
-  result["nrmse"] <- result["rmse"] / sample_obs_sd
+  result["nrmse"] <- root_mean_square(error) / (m$so * sqrt(n / (n - 1)))
   result["sd_ratio"] <- m$sp / m$so
   result["nse"] <- 1 - (root_mean_square(error) / m$so)^2
   if (m$sp > 0) {
     result["correlation"] <- m$r
     result["r2"] <- m$r^2
   }
-  shift <- mean(m$p) - mean(m$o)
-  denom_scale <- max(m$sp, m$so, abs(shift))
-  sp <- m$sp / denom_scale
-  so <- m$so / denom_scale
-  result["cb"] <- 2 * sp * so / (sp^2 + so^2 + (shift / denom_scale)^2)
-  result["ccc"] <- if (m$sp > 0) m$r * result["cb"] else 0
   result
 }

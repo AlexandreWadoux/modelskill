@@ -34,7 +34,10 @@ also supply \code{lower} or \code{upper}.}
 when \code{pred} and \code{predictive_sd} are supplied. Values must lie strictly
 between zero and one. Defaults to every percentage from 1\% to 99\%.}
 
-\item{na.rm}{Logical; remove incomplete observation/interval combinations?}
+\item{na.rm}{Logical; remove incomplete observation/interval combinations?
+With interval lists, only cases complete in \code{obs} and both bounds at every
+supplied level are used, so all levels share the same validation sample.
+If \code{FALSE}, any incomplete case makes coverage missing at every level.}
 }
 \value{
 A one-row data frame containing:
@@ -69,8 +72,9 @@ The overall departure from this line is summarized by the absolute area
 A = \int_0^1 |\mathrm{PICP}(p)-p|\,dp.
 }
 
-\code{absolute_deviation} is a numerical approximation of this area using
-trapezoidal integration. A value of zero indicates perfect calibration;
+\code{absolute_deviation} is the exact area for the piecewise-linear interpolant
+of the evaluated coverage curve. Integration splits segments at crossings
+of the 1:1 line before applying the trapezoidal rule. A value of zero indicates perfect calibration;
 larger values indicate greater overall disagreement between nominal and
 empirical coverage.
 
@@ -107,6 +111,12 @@ the endpoints \verb{(0, 0)} and \verb{(1, 1)} to the reliability curve. For a no
 predictive distribution, supplying \code{pred} and \code{predictive_sd} without
 \code{levels} evaluates the default sequence of nominal interval levels from 1\%
 to 99\%.
+The added endpoints are assumptions, not measured coverage values; the
+resulting areas depend on the supplied grid and this interpolation.
+Interval lists use cases complete across all levels, as in \code{\link[=gg_coverage]{gg_coverage()}}.
+If coverage cannot be calculated, all five summaries are \code{NA} with a warning.
+When total deviation is zero, the two percentage contributions are \code{NA}
+because there is no deviation to apportion; this does not issue a warning.
 
 These summaries describe calibration rather than sharpness. They should
 therefore be interpreted together with measures such as prediction interval

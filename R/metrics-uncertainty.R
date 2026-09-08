@@ -481,6 +481,27 @@ crps_casewise <- function(obs, distribution = NULL, pred = NULL,
 #' indicate better distributional calibration. `potential_crps` is the
 #' remainder after removing reliability error. The decomposition is applicable
 #' here only to equally weighted predictive samples.
+#'
+#' For each retained case \eqn{i=1,\ldots,n}, let
+#' \eqn{x_{i,1}\leq\cdots\leq x_{i,m}} be the sorted ensemble members and
+#' \eqn{p_j=j/m}. For interior bins \eqn{j=1,\ldots,m-1}, define
+#' \deqn{\alpha_{i,j}=\max\{0,\min(obs_i,x_{i,j+1})-x_{i,j}\},
+#' \qquad \beta_{i,j}=\max\{0,x_{i,j+1}-\max(obs_i,x_{i,j})\}.}
+#' These are the portions of a bin below and above the observation. Equality
+#' at a bin edge assigns the full width to the appropriate portion; tied
+#' ensemble members have zero width. With bars denoting means over cases,
+#' \deqn{g_j=\bar{\alpha}_j+\bar{\beta}_j,\qquad
+#' o_j=\frac{\bar{\beta}_j}{g_j}.}
+#' If \eqn{g_j=0}, set \eqn{o_j=p_j}; this bin contributes zero.
+#' The two exterior bins use
+#' \deqn{o_0=\frac{1}{n}\sum_{i=1}^n I(obs_i\leq x_{i,1}),\qquad
+#' o_m=\frac{1}{n}\sum_{i=1}^n I(obs_i\leq x_{i,m}),}
+#' \deqn{g_0=\frac{\frac{1}{n}\sum_{i=1}^n\max(x_{i,1}-obs_i,0)}{o_0},
+#' \qquad g_m=\frac{\frac{1}{n}\sum_{i=1}^n\max(obs_i-x_{i,m},0)}{1-o_m}.}
+#' Set \eqn{g_0=0} when \eqn{o_0=0} and \eqn{g_m=0} when \eqn{o_m=1}.
+#' The components, in response units, are then
+#' \deqn{\mathrm{RELI}=\sum_{j=0}^m g_j(o_j-p_j)^2,\qquad
+#' \mathrm{potential\ CRPS}=\sum_{j=0}^m g_j o_j(1-o_j).}
 #' @inheritParams crps
 #' @return One-row data frame with `crps`, `reliability`, and `potential_crps`.
 #' @references Hersbach, H. (2000). Decomposition of the continuous ranked
@@ -504,8 +525,8 @@ crps_decomposition <- function(obs, distribution, na.rm = TRUE) {
   alpha[above, members + 1L] <- x$obs[above] - ensemble[above, members]
   for (j in seq_len(members - 1L)) {
     width <- ensemble[, j + 1L] - ensemble[, j]
-    alpha[x$obs > ensemble[, j + 1L], j + 1L] <- width[x$obs > ensemble[, j + 1L]]
-    beta[x$obs < ensemble[, j], j + 1L] <- width[x$obs < ensemble[, j]]
+    alpha[x$obs >= ensemble[, j + 1L], j + 1L] <- width[x$obs >= ensemble[, j + 1L]]
+    beta[x$obs <= ensemble[, j], j + 1L] <- width[x$obs <= ensemble[, j]]
     inside <- x$obs > ensemble[, j] & x$obs < ensemble[, j + 1L]
     alpha[inside, j + 1L] <- x$obs[inside] - ensemble[inside, j]
     beta[inside, j + 1L] <- ensemble[inside, j + 1L] - x$obs[inside]

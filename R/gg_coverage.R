@@ -67,6 +67,9 @@
 #'   when `pred` and `predictive_sd` are supplied. Values must lie strictly
 #'   between zero and one. Defaults to every percentage from 1% to 99%.
 #' @param na.rm Logical; remove incomplete observation/interval combinations?
+#'   With interval lists, only cases complete in `obs` and both bounds at every
+#'   supplied level are used, so all levels share the same validation sample.
+#'   If `FALSE`, any incomplete case makes coverage missing at every level.
 #' @param point_size Positive numeric point size.
 #' @param line_width Positive numeric width of the 1:1 reference line.
 #'
@@ -187,6 +190,7 @@ coverage_intervals <- function(obs, lower, upper, level, na.rm,
                                pred = NULL, predictive_sd = NULL,
                                levels = NULL) {
 
+  check_flag(na.rm, "na.rm")
   normal_mode <- !is.null(pred) || !is.null(predictive_sd)
 
   if (normal_mode) {
@@ -222,10 +226,10 @@ coverage_intervals <- function(obs, lower, upper, level, na.rm,
       na.rm
     )
 
-    if (is.null(x)) {
+    if (is.null(x) || !length(x$obs)) {
       return(
         data.frame(
-          nominal = levels,
+          nominal = sort(unique(levels)),
           picp = NA_real_
         )
       )
@@ -292,18 +296,18 @@ coverage_intervals <- function(obs, lower, upper, level, na.rm,
       )
     }
 
-    picp_values <- vapply(
-      seq_along(lower),
-      function(i) {
-        picp(
-          obs,
-          lower[[i]],
-          upper[[i]],
-          na.rm
-        )
-      },
-      numeric(1)
-    )
+    # Validate each interval before selecting a common validation sample.
+    for (i in seq_along(lower)) {
+      prepare_interval_vectors(obs, lower[[i]], upper[[i]], na.rm = TRUE)
+    }
+    keep <- stats::complete.cases(c(list(obs), unname(lower), unname(upper)))
+    if ((!na.rm && !all(keep)) || !any(keep)) {
+      picp_values <- rep(NA_real_, length(nominal))
+    } else {
+      picp_values <- vapply(seq_along(lower), function(i) {
+        mean(obs[keep] >= lower[[i]][keep] & obs[keep] <= upper[[i]][keep])
+      }, numeric(1))
+    }
 
   } else {
 

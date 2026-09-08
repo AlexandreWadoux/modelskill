@@ -66,10 +66,12 @@ overall concordance indicated by CCC to be interpreted together with the
 magnitude and sources of prediction error.
 
 Population variances (divisor \eqn{n}) are used, matching the package
-convention. The function returns \code{NA} with a warning when fewer than two
-valid observation-prediction pairs remain or when the observations have
-zero variance. It returns zero for constant predictions when observations
-vary. Missing-value handling follows \code{\link[=bias]{bias()}}.
+convention. If either vector is constant and the displayed denominator is
+positive, CCC is zero, including a single unequal observation-prediction
+pair. Identical constant vectors have a zero denominator and return \code{NA}
+with a warning, as do inputs with no valid pairs. These conventions are
+symmetric in observations and predictions. Missing-value handling follows
+\code{\link[=bias]{bias()}}.
 }
 \examples{
 obs <- c(1, 2, 3, 4, 5)

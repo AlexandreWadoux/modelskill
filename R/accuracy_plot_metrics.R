@@ -16,8 +16,9 @@
 #' A = \int_0^1 |\mathrm{PICP}(p)-p|\,dp.
 #' }
 #'
-#' `absolute_deviation` is a numerical approximation of this area using
-#' trapezoidal integration. A value of zero indicates perfect calibration;
+#' `absolute_deviation` is the exact area for the piecewise-linear interpolant
+#' of the evaluated coverage curve. Integration splits segments at crossings
+#' of the 1:1 line before applying the trapezoidal rule. A value of zero indicates perfect calibration;
 #' larger values indicate greater overall disagreement between nominal and
 #' empirical coverage.
 #'
@@ -54,6 +55,12 @@
 #' predictive distribution, supplying `pred` and `predictive_sd` without
 #' `levels` evaluates the default sequence of nominal interval levels from 1%
 #' to 99%.
+#' The added endpoints are assumptions, not measured coverage values; the
+#' resulting areas depend on the supplied grid and this interpolation.
+#' Interval lists use cases complete across all levels, as in [gg_coverage()].
+#' If coverage cannot be calculated, all five summaries are `NA` with a warning.
+#' When total deviation is zero, the two percentage contributions are `NA`
+#' because there is no deviation to apportion; this does not issue a warning.
 #'
 #' These summaries describe calibration rather than sharpness. They should
 #' therefore be interpreted together with measures such as prediction interval
@@ -118,11 +125,35 @@ accuracy_plot_metrics <- function(obs, lower = NULL, upper = NULL, level = NULL,
     obs, lower, upper, level, na.rm,
     pred, predictive_sd, levels
   )
+  if (anyNA(curve$picp)) {
+    reason <- if (na.rm) {
+      "no complete validation cases remain across the supplied interval levels"
+    } else {
+      "inputs contain missing values and `na.rm = FALSE`"
+    }
+    warning(paste0("Accuracy-plot metrics are undefined because ", reason, "."),
+            call. = FALSE)
+    return(data.frame(absolute_deviation = NA_real_, over_uncertainty = NA_real_,
+                      under_uncertainty = NA_real_, over_percent = NA_real_,
+                      under_percent = NA_real_))
+  }
 
   curve <- curve[order(curve$nominal), ]
 
   x <- c(0, curve$nominal, 1)
   d <- c(0, curve$picp - curve$nominal, 0)
+
+  # Split at crossings so each trapezoid lies on one side of the identity line.
+  crossing <- which(utils::head(d, -1) * utils::tail(d, -1) < 0)
+  if (length(crossing)) {
+    zeros <- x[crossing] + (x[crossing + 1L] - x[crossing]) *
+      abs(d[crossing]) / (abs(d[crossing]) + abs(d[crossing + 1L]))
+    x <- c(x, zeros)
+    d <- c(d, rep(0, length(zeros)))
+    index <- order(x)
+    x <- x[index]
+    d <- d[index]
+  }
 
   area <- function(y) {
     sum(
