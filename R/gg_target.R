@@ -279,14 +279,15 @@ gg_target <- function(
         colour = "black",
         linewidth = 0.8
       ) +
-      ggplot2::geom_text(
+      ggplot2::geom_label(
         data = circle_labels,
         ggplot2::aes(x = x, y = y, label = label),
         inherit.aes = FALSE,
-        vjust = 1,
-        hjust = -0.1,
         size = 3.5,
-        colour = "black"
+        colour = "black",
+        fill = "white",
+        linewidth = 0,
+        label.padding = grid::unit(0.08, "lines")
       )
   }
 
