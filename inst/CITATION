@@ -1,3 +1,8 @@
+citHeader("To cite modelskill in publications use:")
+
+year <- format(Sys.Date(), "%Y")
+vers <- paste("R package version", meta$Version)
+
 bibentry(
   bibtype = "Manual",
   title = "modelskill: Assessing and Visualising the Performance of Prediction Models",
@@ -5,13 +10,13 @@ bibentry(
     given = "A.M.J.-C.",
     family = "Wadoux"
   ),
-  year = "2026",
-  note = "R package version 0.0.0.9000",
+  year = year,
+  note = vers,
   url = "https://github.com/AlexandreWadoux/modelskill",
   textVersion = paste(
-    "Wadoux, A.M.J.-C. (2026).",
+    paste0("Wadoux, A.M.J.-C. (", year, ")."),
     "modelskill: Assessing and Visualising the Performance of Prediction Models.",
-    "R package version 0.0.0.9000.",
+    paste0(vers, "."),
     "https://github.com/AlexandreWadoux/modelskill"
   )
 )
