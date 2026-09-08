@@ -25,11 +25,12 @@ predictions with that of observations.
 \sqrt{\frac{\sum_{i=1}^{n}(pred_i-\bar{pred})^2}
 {\sum_{i=1}^{n}(obs_i-\bar{obs})^2}}.}
 
-The ratio is non-negative and one indicates equal spread. Values below one
-indicate under-dispersed predictions; values above one indicate
-over-dispersed predictions. It assesses spread, not mean bias or association,
-and returns \code{NA} with a warning when fewer than two valid pairs remain or
-the observations have zero variance. Missing-value handling follows \code{\link[=bias]{bias()}}.
+The ratio is non-negative and one indicates equal variability. Values below
+one indicate that predictions have less variability than the observations;
+values above one indicate that predictions have more variability than the
+observations. It assesses variability, not mean bias or association, and
+returns \code{NA} with a warning when fewer than two valid pairs remain or the
+observations have zero variance. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
 sd_ratio(1:3, c(1, 3, 2))
