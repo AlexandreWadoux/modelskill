@@ -19,10 +19,10 @@
 #'   \item{mean_error}{Mean error, calculated as observation minus prediction,
 #'   in the original response units.}
 #'   \item{nME}{Normalized mean error (ME*), obtained by dividing mean error by
-#'   the sample standard deviation of the observations.}
+#'   the population-moment standard deviation of the observations.}
 #'   \item{sde}{Standardized standard deviation of the error (SDE*), obtained by
-#'   dividing the sample standard deviation of the errors by the sample standard
-#'   deviation of the observations.}
+#'   dividing the population-moment standard deviation of the errors by the
+#'   population-moment standard deviation of the observations.}
 #'   \item{signed_sde}{SDE* multiplied by the sign of the difference between
 #'   prediction and observation standard deviations.}
 #' }
@@ -31,35 +31,41 @@
 #' Inputs are paired by position. At least two complete pairs and non-zero
 #' observation standard deviation are required for every model.
 #'
+#' For the diagram geometry, standard deviations are calculated as population
+#' moments, using divisor \eqn{n}, rather than the \eqn{n - 1} sample standard
+#' deviation returned by `stats::sd()`. This convention makes the normalized
+#' error decomposition exact for finite samples.
+#'
 #' Let
 #'
 #' \deqn{e_i = obs_i - pred_i}
 #'
-#' denote the prediction error, and let \eqn{s_p} and \eqn{s_o} denote the
-#' sample standard deviations of predictions and observations, respectively.
+#' denote the prediction error, and let \eqn{\sigma_p} and \eqn{\sigma_o}
+#' denote the population-moment standard deviations of predictions and
+#' observations, respectively.
 #'
 #' The standard-deviation ratio is
 #'
 #' \deqn{
-#' \sigma^* = \frac{s_p}{s_o}.
+#' \sigma^* = \frac{\sigma_p}{\sigma_o}.
 #' }
 #'
 #' The normalized mean error is
 #'
 #' \deqn{
 #' \mathrm{ME}^* =
-#' \frac{\bar{e}}{s_o}.
+#' \frac{\bar{e}}{\sigma_o}.
 #' }
 #'
 #' Positive ME* indicates underprediction and negative ME* indicates
 #' overprediction under the package convention `obs - pred`.
 #'
-#' Let \eqn{s_e} denote the sample standard deviation of the errors. The
-#' standardized error standard deviation is
+#' Let \eqn{\sigma_e} denote the population-moment standard deviation of the
+#' errors. The standardized error standard deviation is
 #'
 #' \deqn{
 #' \mathrm{SDE}^* =
-#' \frac{s_e}{s_o}.
+#' \frac{\sigma_e}{\sigma_o}.
 #' }
 #'
 #' Using the relationship between the variances of observations, predictions,
@@ -74,30 +80,29 @@
 #'
 #' The sign used for `signed_sde` indicates whether the prediction standard
 #' deviation is smaller or larger than the observation standard deviation:
-#' negative when \eqn{s_p < s_o} and positive when \eqn{s_p \geq s_o}.
-#' Equal standard deviations therefore receive a positive sign, following the
-#' original diagram implementation.
+#' negative when \eqn{\sigma_p < \sigma_o} and positive when
+#' \eqn{\sigma_p \geq \sigma_o}. Equal standard deviations therefore receive a
+#' positive sign, following the original diagram implementation.
 #'
 #' Constant predictions have undefined Pearson correlation and are returned
 #' with Pearson correlation set to `NA`, an SD ratio of zero, and SDE equal to
 #' one. Their diagram geometry remains
 #' defined even though their correlation is not.
 #'
-#' Because mean squared error uses divisor \eqn{n}, whereas `nME` and `sde`
-#' use sample standard deviations with divisor \eqn{n - 1}, their exact
-#' finite-sample relationship with RMSE is
+#' With this common population-moment normalization, the exact finite-sample
+#' relationship is
 #'
 #' \deqn{
-#' \frac{\mathrm{RMSE}^2}{s_o^2}
+#' \frac{\mathrm{RMSE}^2}{\sigma_o^2}
 #' =
 #' \mathrm{ME}^{*2}
 #' +
-#' \frac{n-1}{n}\mathrm{SDE}^{*2}.
+#' \mathrm{SDE}^{*2}.
 #' }
 #'
-#' Consequently, \eqn{\mathrm{ME}^{*2}+\mathrm{SDE}^{*2}} is not exactly
-#' equal to squared RMSE normalized by the sample observation standard deviation
-#' for finite samples. The difference becomes negligible as \eqn{n} increases.
+#' Thus Euclidean distance from the origin in the solar and target diagrams is
+#' exactly RMSE normalized by the population-moment observation standard
+#' deviation.
 #'
 #' @seealso [model_metrics()], [gg_taylor()], [gg_solar()], [gg_target()]
 #'
@@ -185,7 +190,7 @@ diagram_stats <- function(mods, obs, na.rm = TRUE) {
       r = if (m$sp == 0) NA_real_ else m$r,
       sd_ratio = m$sp / m$so,
       mean_error = mean_error_scaled * m$scale,
-      nME = mean_error_scaled / m$so * sqrt((n - 1) / n),
+      nME = mean_error_scaled / m$so,
       sde = sde,
       signed_sde = sign_sd * sde
     )
