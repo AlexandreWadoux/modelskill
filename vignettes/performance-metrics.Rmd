@@ -411,7 +411,7 @@ model_metrics(
 ```
 
 The extended output adds robust error measures, scale-normalised metrics,
-percentage errors, agreement measures, and KGE.
+percentage errors, agreement measures, and KGE (2009).
 
 These metrics should be selected because they answer a relevant scientific
 question, not simply because they are available.
@@ -426,7 +426,8 @@ mdae(
 )
 ```
 
-Kling-Gupta efficiency combines correlation, variability, and mean agreement:
+KGE (2009), the original Kling-Gupta efficiency formulation, combines
+correlation, variability, and mean agreement:
 
 ```{r kge-example}
 kge(
@@ -452,7 +453,7 @@ kge(
 | **RAE** [`rae()`](../reference/rae.html) | \(\frac{\sum_i\lvert o_i-p_i\rvert}{\sum_i\lvert o_i-\bar{o}\rvert}\) | 0 | Absolute error relative to predicting the observed mean; 1 is the benchmark. | [@hyndman2006] |
 | **RRMSE** [`rrmse()`](../reference/rrmse.html) | \(100\,\mathrm{RMSE}/\lvert\bar{o}\rvert\) | 0 | RMSE as a percentage of the absolute observed mean. | [@willmott1985] |
 | **Willmott's \(d\)** [`willmott_d()`](../reference/willmott_d.html) | \(1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(\lvert p_i-\bar{o}\rvert+\lvert o_i-\bar{o}\rvert)^2}\) | 1 | Index of agreement; sensitive to large errors. | [@willmott1985] |
-| **KGE** [`kge()`](../reference/kge.html) | \(1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar{p}/\bar{o}-1)^2}\) | 1 | Combines correlation, variability ratio, and mean ratio. | [@gupta2009] |
+| **KGE (2009)** [`kge()`](../reference/kge.html) | \(1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar{p}/\bar{o}-1)^2}\) | 1 | Combines correlation, variability ratio, and mean ratio. | [@gupta2009] |
 
 `MAPE`, `MPE`, `sMAPE`, and `RRMSE` are returned as percentages. `sMAPE`
 ranges from 0 to 200%; the other percentage metrics are unbounded above.
@@ -521,8 +522,8 @@ This combination answers several distinct questions:
 * `ccc()` — how closely do predicted values agree with observations overall?
 
 The precise set should depend on the application. There is no universal
-threshold at which RMSE, correlation, CCC, KGE, or another metric automatically
-becomes "good".
+threshold at which RMSE, correlation, CCC, KGE (2009), or another metric
+automatically becomes "good".
 
 # 12. Related and redundant metrics
 
@@ -581,8 +582,8 @@ Some metrics are undefined in particular situations:
 * percentage metrics can be undefined or unstable when their denominators are
   zero or close to zero;
 * MSLE and RMSLE require non-negative observations and predictions;
-* KGE requires variation in both observations and predictions and a non-zero
-  observed mean.
+* KGE (2009) requires variation in both observations and predictions and a
+  non-zero observed mean.
 
 The individual function documentation describes these cases in detail.
 
@@ -608,8 +609,8 @@ For most prediction-validation analyses:
    performance with the observed-mean benchmark.
 
 6. **Use specialised metrics only when their interpretation fits the problem.**  
-   Percentage errors, RPD, RPIQ, KGE, and quantile loss can be useful, but
-   should not automatically be reported for every application.
+   Percentage errors, RPD, RPIQ, KGE (2009), and quantile loss can be useful,
+   but should not automatically be reported for every application.
 
 7. **Do not select a model from one metric alone.**  
    Different metrics describe different aspects of prediction quality.
