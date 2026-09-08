@@ -9,115 +9,885 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 6)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 6
+)
 ```
 
-Taylor, solar, and target diagrams provide complementary graphical summaries
-for comparing continuous prediction models. They return ordinary `ggplot2`
-objects and are most informative when interpreted alongside numerical metrics.
-They deliberately show different aspects of predictive performance, so one
-diagram should not be used as a substitute for the others.
+## Why use summary diagrams?
+
+The performance of a quantitative prediction cannot usually be described
+adequately by a single statistic. Bias, overall prediction error, correlation,
+and the ability to reproduce the variability of the observations describe
+different aspects of predictive performance.
+
+Summary diagrams combine several related statistics into a single graphical
+representation. This can make differences among models easier to understand
+than comparing a long table of individual metrics.
+
+`modelskill` provides three complementary summary diagrams:
+
+| Diagram | Main information shown | Main function |
+|:--|:--|:--|
+| **Solar diagram** | Mean error, centred error, total RMSE, model efficiency, and lower bounds on correlation | [`gg_solar()`](../reference/gg_solar.html) |
+| **Target diagram** | Mean error, centred error, total RMSE, and whether prediction variability is smaller or larger than observed variability | [`gg_target()`](../reference/gg_target.html) |
+| **Taylor diagram** | Correlation, relative standard deviation, and centred error | [`gg_taylor()`](../reference/gg_taylor.html) |
+
+The three diagrams are related but answer different questions. In particular,
+the Taylor diagram focuses on pattern and variability and does **not** represent
+mean bias. The solar and target diagrams include bias explicitly.
+
+The numerical quantities underlying all three diagrams can be obtained with
+[`diagram_stats()`](../reference/diagram_stats.html).
+
+## Example data
+
+We create five deliberately different prediction models so that the graphical
+interpretation of the diagrams is clear.
 
 ```{r data}
 library(modelskill)
+
 set.seed(123)
-obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
-models <- list(Good = obs + rnorm(100, sd = 0.5),
-               Biased = obs + 1,
-               Noisy = obs + rnorm(100, sd = 2))
+
+n <- 150
+
+obs <- seq(0, 10, length.out = n) +
+  rnorm(n, sd = 1)
+
+models <- list(
+  Good = obs + rnorm(n, sd = 0.5),
+
+  # Constant positive offset: strong bias, but correlation and
+  # variability are almost unchanged.
+  Biased = obs + 1.5,
+
+  # Reduced variability around the observed mean.
+  Smooth = mean(obs) +
+    0.55 * (obs - mean(obs)) +
+    rnorm(n, sd = 0.15),
+
+  # Similar mean but much larger random error.
+  Noisy = obs + rnorm(n, sd = 2),
+
+  # Similar variability but approximately reversed pattern.
+  Reversed = rev(obs)
+)
 ```
 
-## Taylor diagram
+Before drawing the diagrams, it is useful to inspect the statistics from which
+their coordinates are calculated:
 
-The Taylor diagram combines correlation, relative spread, and centred error.
-Its radial coordinate is the standard-deviation ratio, its polar angle is the
-inverse cosine of Pearson correlation, and its reference point represents a
-perfectly matching prediction:
-
-\[
-\sigma^* = \frac{\mathrm{sd}(pred)}{\mathrm{sd}(obs)},\qquad
-\theta = \arccos(r),\qquad (\sigma^*, r) = (1, 1).
-\]
-
-The distance from a model point to this reference is the standardized centred
-root mean square difference (SDE\*):
-
-\[
-\mathrm{SDE}^* = \sqrt{1 + \sigma^{*2} - 2\sigma^*r}.
-\]
-
-`Good` should be near the reference point. `Noisy` should be farther away and
-at a larger polar angle because it has weaker pattern agreement. A radius below
-one indicates smoothing (too little variation); a radius above one indicates
-too much variation. A Taylor diagram does **not** show mean error: `Biased`
-can be near the reference point because its constant offset leaves correlation
-and spread unchanged.
-
-```{r taylor}
-gg_taylor(models, obs, label = TRUE)
+```{r diagram-stats}
+diagram_stats(models, obs)
 ```
 
-## Solar diagram
+The output contains:
 
-The solar diagram makes explicit the mean error omitted by a Taylor diagram.
-It uses the standardized decomposition:
+* `r`: Pearson correlation;
+* `sd_ratio`: prediction standard deviation divided by observation standard
+  deviation;
+* `mean_error`: mean prediction error using the package convention
+  `obs - pred`;
+* `nME`: standardized mean error;
+* `sde`: standardized centred error;
+* `signed_sde`: centred error with a sign indicating whether prediction
+  variability is smaller or larger than observation variability.
 
-\[
-\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2}.
-\]
-
-Horizontal position is normalized mean error (ME\*) and vertical position is
-SDE\*. Distance from the origin is RMSE\*. Under the package convention
-`obs - pred`, points to the left overpredict and points to the right
-underpredict. Thus `Biased` falls to the left, `Good` should be near the
-origin, and `Noisy` should lie higher on the SDE\* axis.
-
-The outer circle at \(\mathrm{RMSE}^*=1\) marks the mean-prediction benchmark:
-points inside it have positive model efficiency (MEC/NSE/uppercase R2). The
-pale regions are lower bounds on correlation, not exact correlation values.
-
-```{r solar}
-gg_solar(models, obs, label = TRUE, x.axis_begin = -1.5,
-         x.axis_end = 1.5, y.axis_end = 2, by = 0.25)
-```
-
-## Target diagram
-
-The target diagram uses the same RMSE* decomposition:
+Throughout `modelskill`, prediction error is defined as
 
 \[
-\mathrm{RMSE}^{*2} = \mathrm{ME}^{*2} + \mathrm{SDE}^{*2}.
+e_i = obs_i-pred_i.
 \]
 
-It additionally gives SDE\* a sign according to whether prediction variability
-is lower or higher than observed variability. The signed SDE coordinate thus
-distinguishes smoother predictions from predictions that are too variable,
-while ME* distinguishes overprediction from underprediction. Distance from the
-origin remains RMSE\*, so `Good` should be nearest the origin. `Biased` is
-chiefly displaced by mean error, whereas a model displaced along signed SDE\*
-chiefly differs in variation or pattern.
+Consequently, a **negative mean error indicates overprediction**, whereas a
+**positive mean error indicates underprediction**.
 
-The displayed axis titles preserve the original diagram orientation. Consult
-the function documentation for the exact coordinate definitions when
-interpreting horizontal and vertical position.
+# Solar diagram
 
-```{r target}
-gg_target(models, obs, label = TRUE, axis_begin = -2, axis_end = 2, by = 0.5)
+The **solar diagram** is a summary diagram proposed for the integrated
+evaluation of quantitative maps and predictions by Wadoux, Walvoort, and Brus
+(2022). It is derived from the decomposition of root mean square error into
+mean error and centred error.
+
+Let
+
+\[
+\mathrm{ME}
+=
+\frac{1}{n}
+\sum_{i=1}^{n}
+(obs_i-pred_i),
+\]
+
+and let SDE denote the standard deviation, or centred component, of the
+prediction errors. Then
+
+\[
+\mathrm{RMSE}^{2}
+=
+\mathrm{ME}^{2}
++
+\mathrm{SDE}^{2}.
+\]
+
+For the diagram these quantities are standardized relative to the variability
+of the observations:
+
+\[
+\mathrm{ME}^{*}
+=
+\frac{\mathrm{ME}}{\mathrm{sd}(obs)}
+\]
+
+and
+
+\[
+\mathrm{SDE}^{*}
+=
+\frac{\mathrm{SDE}}{\mathrm{sd}(obs)}.
+\]
+
+The resulting geometric relationship is
+
+\[
+\mathrm{RMSE}^{*2}
+=
+\mathrm{ME}^{*2}
++
+\mathrm{SDE}^{*2}.
+\]
+
+`modelskill` preserves the finite-sample scaling used in the original
+implementation. See [`diagram_stats()`](../reference/diagram_stats.html) for
+the exact computational definitions.
+
+## Reading a solar diagram
+
+In the solar diagram:
+
+* the **horizontal position** represents standardized mean error,
+  \(\mathrm{ME}^{*}\);
+* the **vertical position** represents standardized centred error,
+  \(\mathrm{SDE}^{*}\);
+* the **distance from the origin** represents standardized RMSE,
+  \(\mathrm{RMSE}^{*}\).
+
+The origin therefore represents perfect prediction.
+
+Because error is defined as `obs - pred`:
+
+* points to the **left** have negative ME and systematically overpredict;
+* points to the **right** have positive ME and systematically underpredict;
+* points near the vertical axis have little systematic bias;
+* points high on the diagram have substantial centred error even when their
+  mean error is small.
+
+The outer reference semicircle corresponds to
+
+\[
+\mathrm{RMSE}^{*}=1.
+\]
+
+A point inside this circle performs better, in squared-error terms, than using
+the mean of the observations as the prediction. This boundary is directly
+related to the model-efficiency coefficient:
+
+\[
+\mathrm{MEC}
+=
+1-\mathrm{RMSE}^{*2}.
+\]
+
+Thus, points inside the circle have positive MEC/NSE/uppercase `R2()`.
+
+The pale regions represent **lower bounds on Pearson correlation**, not exact
+correlation values. A point inside the \(r>0.9\) region, for example, must have
+correlation greater than approximately 0.9, but its precise correlation cannot
+be read from the region alone.
+
+## Basic solar diagram
+
+```{r solar-basic}
+gg_solar(
+  models,
+  obs,
+  label = TRUE
+)
 ```
 
-## Customisation
+The expected patterns are informative:
 
-All three functions return normal ggplot objects. Their defaults retain the
-scientific reference geometry and visual style, but standard ggplot additions
-remain available:
+* `Good` should lie close to the origin;
+* `Biased` should be displaced mainly along the horizontal axis;
+* `Smooth` should have relatively little bias but a larger centred-error
+  component because it does not reproduce the full variability of the
+  observations;
+* `Noisy` should lie high on the diagram;
+* `Reversed` should perform poorly because its pattern is inconsistent with
+  the observations.
 
-```{r customise}
-gg_taylor(models, obs) +
-  ggplot2::labs(title = "Model comparison") +
+One important advantage of the solar diagram over the Taylor diagram is that
+mean bias contributes directly to position and distance from the optimum.
+
+## Colour models instead of writing labels
+
+For several models, direct labels may become crowded. Use
+`colour_by = "model"` to identify models through a legend:
+
+```{r solar-model-colours}
+gg_solar(
+  models,
+  obs,
+  colour_by = "model"
+)
+```
+
+By default, however, point colour represents model efficiency:
+
+```{r solar-efficiency}
+gg_solar(
+  models,
+  obs
+)
+```
+
+The default efficiency colour is uppercase \(R^2\), which in `modelskill` is
+equivalent to NSE and MEC. This should not be confused with lowercase
+[`r2()`](../reference/r2.html), which is squared Pearson correlation.
+
+Other available colour mappings are:
+
+```{r solar-colour-options}
+gg_solar(
+  models,
+  obs,
+  colour_by = "correlation"
+)
+
+gg_solar(
+  models,
+  obs,
+  colour_by = "r2"
+)
+```
+
+## Control the reference geometry
+
+The manually drawn reference axes can be adjusted with `x.axis_begin`,
+`x.axis_end`, `y.axis_end`, and `by`.
+
+```{r solar-axes}
+gg_solar(
+  models,
+  obs,
+  colour_by = "model",
+  x.axis_begin = -2,
+  x.axis_end = 2,
+  y.axis_end = 2,
+  by = 0.5
+)
+```
+
+The reference regions can also be removed:
+
+```{r solar-no-reference}
+gg_solar(
+  models,
+  obs,
+  colour_by = "model",
+  reference = FALSE
+)
+```
+
+This can be useful when the main objective is to compare model positions
+without displaying the correlation regions.
+
+# Target diagram
+
+The **target diagram** was developed by Jolliff et al. (2009) as a compact
+representation of bias and centred root mean square difference.
+
+Like the solar diagram, it is based on
+
+\[
+\mathrm{RMSE}^{*2}
+=
+\mathrm{ME}^{*2}
++
+\mathrm{SDE}^{*2}.
+\]
+
+The important difference is that the target diagram gives the centred-error
+component a sign according to the relative variability of predictions and
+observations:
+
+\[
+\mathrm{signed\ SDE}^{*}
+=
+\mathrm{sign}
+\left[
+\mathrm{sd}(pred)-\mathrm{sd}(obs)
+\right]
+\mathrm{SDE}^{*}.
+\]
+
+Consequently:
+
+* a **negative signed SDE\*** indicates prediction variability smaller than
+  observation variability;
+* a **positive signed SDE\*** indicates prediction variability equal to or
+  greater than observation variability.
+
+This makes the target diagram useful when it is important to distinguish
+predictions that are too smooth from predictions that are too variable.
+
+## Reading a target diagram
+
+The distance from the origin remains standardized RMSE:
+
+\[
+\mathrm{RMSE}^{*}
+=
+\sqrt{
+\mathrm{ME}^{*2}
++
+\mathrm{SDE}^{*2}
+}.
+\]
+
+Points close to the origin therefore have smaller overall error.
+
+The two components answer different questions:
+
+* **ME\*** identifies systematic overprediction or underprediction;
+* **signed SDE\*** combines centred error with information about whether
+  predictive variability is smaller or larger than observed variability.
+
+A prediction with the correct mean but too little variation will therefore be
+separated from a prediction with the correct mean but excessive variation.
+
+This additional sign information is useful diagnostically, but it also means
+that models with similar absolute SDE and RMSE can appear on opposite sides of
+the diagram. The target diagram should therefore be interpreted in terms of
+its components rather than simply by comparing the apparent separation between
+points.
+
+### Note on the `modelskill` coordinate convention
+
+Internally, [`gg_target()`](../reference/gg_target.html) plots **signed SDE\***
+on the horizontal coordinate and **ME\*** on the vertical coordinate. The
+current graphical implementation retains the historical axis-title orientation
+of the package. When interpreting model positions, the coordinate definitions
+given here and in the function documentation are authoritative.
+
+## Basic target diagram
+
+```{r target-basic}
+gg_target(
+  models,
+  obs,
+  label = TRUE
+)
+```
+
+For the example models:
+
+* `Good` should lie nearest the origin;
+* `Biased` should be displaced mainly by its mean-error component;
+* `Smooth` should fall on the side associated with prediction variability
+  smaller than the observed variability;
+* `Noisy` should fall on the side associated with excessive prediction
+  variability.
+
+## Colour models with a legend
+
+```{r target-model-colours}
+gg_target(
+  models,
+  obs,
+  colour_by = "model"
+)
+```
+
+As in the solar diagram, the default colour variable is model efficiency:
+
+```{r target-efficiency}
+gg_target(
+  models,
+  obs
+)
+```
+
+Correlation and squared correlation can also be used:
+
+```{r target-correlation}
+gg_target(
+  models,
+  obs,
+  colour_by = "correlation"
+)
+```
+
+## Change the displayed range
+
+`axis_begin`, `axis_end`, and `by` control the manually drawn target-diagram
+axes:
+
+```{r target-axes}
+gg_target(
+  models,
+  obs,
+  colour_by = "model",
+  axis_begin = -2,
+  axis_end = 2,
+  by = 0.5
+)
+```
+
+The reference circles can be removed with:
+
+```{r target-no-reference}
+gg_target(
+  models,
+  obs,
+  colour_by = "model",
+  reference = FALSE
+)
+```
+
+# Taylor diagram
+
+The **Taylor diagram** was introduced by Taylor (2001) to summarize several
+aspects of pattern agreement between predictions and observations.
+
+It simultaneously represents:
+
+* Pearson correlation \(r\);
+* the ratio of prediction to observation standard deviation;
+* centred root mean square difference.
+
+Let
+
+\[
+\sigma^{*}
+=
+\frac{\mathrm{sd}(pred)}
+{\mathrm{sd}(obs)}.
+\]
+
+The radial coordinate of a Taylor diagram is \(\sigma^{*}\), while the angular
+coordinate is
+
+\[
+\theta = \arccos(r).
+\]
+
+The centred standardized error is related to these quantities by the law of
+cosines:
+
+\[
+\mathrm{SDE}^{*}
+=
+\sqrt{
+1+\sigma^{*2}-2\sigma^{*}r
+}.
+\]
+
+Again, `modelskill` retains the finite-sample convention of the original
+implementation; [`diagram_stats()`](../reference/diagram_stats.html) documents
+the exact scaling used by the package.
+
+## The reference point
+
+Perfect predictions have
+
+\[
+r=1
+\qquad\text{and}\qquad
+\sigma^{*}=1.
+\]
+
+They therefore occupy the reference point on the positive horizontal axis.
+
+Distance from a model point to this reference is proportional to centred error:
+points nearer the reference have smaller \(\mathrm{SDE}^{*}\).
+
+The diagram can therefore be read in three complementary ways:
+
+* **angle**: correlation or pattern agreement;
+* **radius**: prediction variability relative to observed variability;
+* **distance from the reference point**: centred prediction error.
+
+A point inside the unit-radius arc has less variation than the observations and
+therefore represents a smoother prediction. A point outside that arc has
+greater variation.
+
+## Full Taylor diagram
+
+By default, `gg_taylor()` displays correlations from -1 to 1:
+
+```{r taylor-full}
+gg_taylor(
+  models,
+  obs,
+  label = TRUE
+)
+```
+
+This is particularly useful when negative correlations are scientifically
+possible.
+
+The `Reversed` model in the example should appear on the negative-correlation
+side of the diagram because its pattern is approximately reversed relative to
+the observations.
+
+## Half Taylor diagram
+
+In many prediction problems only positive correlations are of practical
+interest. Set `half = TRUE` to show only correlations from 0 to 1:
+
+```{r taylor-half}
+gg_taylor(
+  models,
+  obs,
+  legend = TRUE,
+  half = TRUE
+)
+```
+
+Models with negative correlation are omitted from the half diagram. Thus the
+`Reversed` model shown in the full Taylor diagram is not displayed here.
+
+The half diagram is often easier to read when all relevant models are
+positively correlated.
+
+## Labels or legend
+
+Use `label = TRUE` when the number of models is small:
+
+```{r taylor-labels}
+gg_taylor(
+  models,
+  obs,
+  label = TRUE,
+  half = TRUE
+)
+```
+
+Alternatively, use `legend = TRUE`:
+
+```{r taylor-legend}
+gg_taylor(
+  models,
+  obs,
+  legend = TRUE,
+  half = TRUE
+)
+```
+
+For `gg_taylor()`, `label = TRUE` and `legend = TRUE` are alternative ways of
+identifying models and should not be requested simultaneously.
+
+## Centred RMSD contours
+
+The curved contours around the reference point represent standardized centred
+RMSD or SDE.
+
+They are displayed by default.
+
+Remove them with:
+
+```{r taylor-no-rmsd}
+gg_taylor(
+  models,
+  obs,
+  legend = TRUE,
+  half = TRUE,
+  rmsd = FALSE
+)
+```
+
+Change their colour with:
+
+```{r taylor-rmsd-colour}
+gg_taylor(
+  models,
+  obs,
+  legend = TRUE,
+  half = TRUE,
+  rmsd_colour = "grey40"
+)
+```
+
+Or specify the contour values directly:
+
+```{r taylor-rmsd-breaks}
+gg_taylor(
+  models,
+  obs,
+  legend = TRUE,
+  half = TRUE,
+  rmsd_breaks = c(0.25, 0.5, 1, 1.5, 2)
+)
+```
+
+## A limitation of the Taylor diagram
+
+The Taylor diagram deliberately works with centred quantities and therefore
+does **not** show mean error.
+
+This can produce an apparently surprising result for the `Biased` model:
+
+```{r compare-biased}
+diagram_stats(
+  models[c("Good", "Biased")],
+  obs
+)
+
+gg_taylor(
+  models[c("Good", "Biased")],
+  obs,
+  label = TRUE,
+  half = TRUE
+)
+```
+
+Adding a constant to every prediction changes its mean error but leaves its
+correlation and standard deviation essentially unchanged. The biased model can
+therefore appear close to the Taylor reference point despite having a large
+systematic error.
+
+This is one reason the Taylor diagram should be interpreted together with bias
+statistics or with a diagram that explicitly includes mean error, such as the
+solar or target diagram.
+
+# Which diagram should I use?
+
+The three diagrams are complementary rather than competing alternatives.
+
+| Question | Solar | Target | Taylor |
+|:--|:--:|:--:|:--:|
+| Is the model biased? | **Yes** | **Yes** | No |
+| What is the total standardized RMSE? | **Yes** | **Yes** | No |
+| What is the centred error? | **Yes** | **Yes** | **Yes** |
+| Is prediction variability too small or too large? | Indirectly | **Yes** | **Yes** |
+| What is the exact Pearson correlation? | No | No | **Yes** |
+| Can negative correlation be displayed explicitly? | No | No | **Yes**, with full diagram |
+| Is performance relative to the mean benchmark visible? | **Yes** | **Yes** | No |
+
+A useful practical approach is:
+
+1. **Start with the solar diagram** when the objective is a broad assessment of
+   prediction performance, because it includes both systematic and centred
+   error.
+
+2. **Use the target diagram** when distinguishing under-dispersed from
+   over-dispersed predictions is particularly important.
+
+3. **Use the Taylor diagram** when the primary interest is pattern agreement,
+   correlation, and reproduction of variability.
+
+No diagram should replace the underlying numerical metrics. Summary diagrams
+are most useful when they help interpret several complementary statistics
+together.
+
+# Customising the diagrams with ggplot2
+
+All three plotting functions return ordinary `ggplot2` objects. This means that
+standard ggplot additions can be applied after the diagram has been created.
+
+## Add titles and change the theme
+
+```{r customise-title}
+p <- gg_solar(
+  models,
+  obs,
+  colour_by = "model"
+)
+
+p +
+  ggplot2::labs(
+    title = "Comparison of prediction models",
+    subtitle = "Solar diagram"
+  ) +
   ggplot2::theme_minimal()
 ```
 
-Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An
-integrated approach for the evaluation of quantitative soil maps through
-Taylor and solar diagrams. *Geoderma*, 405, 115332.
-<https://doi.org/10.1016/j.geoderma.2021.115332>
+## Move the legend
+
+```{r customise-legend}
+gg_solar(
+  models,
+  obs,
+  colour_by = "model"
+) +
+  ggplot2::theme(
+    legend.position = "bottom"
+  )
+```
+
+The same approach works for the target and Taylor diagrams.
+
+## Change the model colour palette
+
+For the Taylor diagram, models are mapped to the `colour` aesthetic when
+`legend = TRUE`:
+
+```{r customise-taylor-colours}
+gg_taylor(
+  models,
+  obs,
+  legend = TRUE,
+  half = TRUE
+) +
+  ggplot2::scale_colour_brewer(
+    palette = "Dark2"
+  ) +
+  ggplot2::theme(
+    legend.position = "bottom"
+  )
+```
+
+For the target diagram, model colours use the `fill` aesthetic:
+
+```{r customise-target-colours}
+gg_target(
+  models,
+  obs,
+  colour_by = "model"
+) +
+  ggplot2::scale_fill_brewer(
+    palette = "Dark2"
+  ) +
+  ggplot2::theme(
+    legend.position = "bottom"
+  )
+```
+
+Adding a new scale replaces the default scale defined by the diagram function.
+
+## Change the target axis titles
+
+Because a `gg_target()` result is a normal ggplot object, the displayed labels
+can be replaced without changing the underlying coordinates.
+
+For example, to label the coordinates explicitly according to the values
+stored by `modelskill`:
+
+```{r customise-target-labels}
+gg_target(
+  models,
+  obs,
+  colour_by = "model"
+) +
+  ggplot2::labs(
+    x = "Signed SDE*",
+    y = "ME*",
+    title = "Target diagram"
+  )
+```
+
+## Zoom without changing the statistics
+
+The axis arguments of `gg_solar()` and `gg_target()` define their manually drawn
+reference geometry rather than clipping the data.
+
+Because the returned plots are ggplot objects, a custom coordinate window can
+also be added when a closer view is useful:
+
+```{r customise-zoom}
+gg_solar(
+  models,
+  obs,
+  colour_by = "model"
+) +
+  ggplot2::coord_fixed(
+    xlim = c(-1.5, 1.5),
+    ylim = c(0, 1.5)
+  )
+```
+
+Equal x and y scaling should be retained for solar and target diagrams because
+their interpretation depends on geometric distances and circular reference
+lines.
+
+## Change point and label sizes
+
+Core diagram elements that have direct function arguments should generally be
+changed through those arguments rather than by adding ggplot layers:
+
+```{r customise-sizes}
+gg_solar(
+  models,
+  obs,
+  label = TRUE,
+  point_size = 5,
+  label_size = 3.5
+)
+```
+
+Similarly:
+
+```{r customise-taylor-sizes}
+gg_taylor(
+  models,
+  obs,
+  label = TRUE,
+  half = TRUE,
+  point_size = 5,
+  label_size = 3.5
+)
+```
+
+# Practical recommendations
+
+When using summary diagrams:
+
+1. Use the **same validation observations** for all models being compared.
+
+2. Check the numerical statistics with
+   [`diagram_stats()`](../reference/diagram_stats.html) when a model position
+   requires closer interpretation.
+
+3. Remember the error convention `obs - pred`: negative mean error means
+   overprediction and positive mean error means underprediction.
+
+4. Do not interpret a Taylor diagram as a measure of overall prediction
+   accuracy because it does not include mean bias.
+
+5. Do not interpret the solar correlation regions as exact correlation values;
+   they represent lower bounds.
+
+6. In a target diagram, consider both the absolute distance from the origin and
+   the sign of the centred-error component.
+
+7. Use the diagrams alongside numerical performance metrics rather than as
+   substitutes for them.
+
+The central benefit of these diagrams is that they make statistical
+relationships visible. A model can have excellent correlation but substantial
+bias, low total error but excessive smoothing, or similar RMSE to another model
+for very different reasons. Summary diagrams help distinguish these situations
+without relying on a single performance statistic.
+
+# References
+
+* Jolliff, J. K., Kindle, J. C., Shulman, I., Penta, B., Friedrichs,
+  M. A. M., Helber, R., and Arnone, R. A. (2009). Summary diagrams for
+  coupled hydrodynamic-ecosystem model skill assessment.
+  *Journal of Marine Systems*, 76, 64-82.
+  <https://doi.org/10.1016/j.jmarsys.2008.05.014>
+
+* Taylor, K. E. (2001). Summarizing multiple aspects of model performance in
+  a single diagram. *Journal of Geophysical Research: Atmospheres*,
+  106(D7), 7183-7192.
+  <https://doi.org/10.1029/2000JD900719>
+
+* Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022).
+  An integrated approach for the evaluation of quantitative soil maps through
+  Taylor and solar diagrams. *Geoderma*, 405, 115332.
+  <https://doi.org/10.1016/j.geoderma.2021.115332>
