@@ -131,34 +131,95 @@ interval_score <- function(obs, lower, upper, level = 0.95, na.rm = TRUE) {
 
 #' Quantile coverage probability
 #'
-#' Calculates QCP at each supplied quantile level: the empirical proportion of
-#' observations less than or equal to the predicted quantile. A calibrated
-#' predictive distribution has QCP close to the nominal quantile level. Unlike
-#' PICP, QCP can reveal one-sided quantile bias.
+#' Quantile coverage probability (QCP) evaluates the calibration of individual
+#' predictive quantiles. For a predicted quantile at nominal probability `p`,
+#' QCP is the empirical proportion of observations that are less than or equal
+#' to that predicted quantile.
 #'
-#' \deqn{\mathrm{QCP}(p) = \frac{1}{n}\sum_{i=1}^{n}I(obs_i \leq q_{i,p})}
+#' \deqn{
+#' \mathrm{QCP}(p) =
+#' \frac{1}{n}
+#' \sum_{i=1}^{n}
+#' I(obs_i \leq q_{i,p})
+#' }
 #'
-#' For each level `p`, QCP close to `p` indicates calibration. Values above `p`
-#' mean the predicted quantile is generally too high; values below `p` mean it
-#' is generally too low.
+#' For a calibrated predictive distribution, QCP should be close to the nominal
+#' quantile probability `p`. For example, approximately 5% of observations
+#' should fall below predicted 0.05 quantiles, approximately 50% below predicted
+#' medians, and approximately 95% below predicted 0.95 quantiles.
+#'
+#' Values above `p` indicate that observations fall below the predicted quantile
+#' more frequently than expected, whereas values below `p` indicate that they do
+#' so less frequently than expected.
+#'
+#' QCP differs from prediction interval coverage probability ([picp()]).
+#' PICP evaluates the joint coverage of a lower and upper prediction-interval
+#' bound, whereas QCP evaluates each predictive quantile separately. QCP can
+#' therefore reveal asymmetric or one-sided miscalibration that may be hidden by
+#' apparently satisfactory central prediction-interval coverage.
+#'
+#' Quantile calibration is generally most informative when evaluated across
+#' several probability levels rather than at a single quantile. A dense sequence
+#' of quantiles provides a more complete view of distributional calibration,
+#' although selected levels remain useful when only specific predictive
+#' quantiles are available.
+#'
 #' @param obs Numeric observation vector.
 #' @param quantiles Numeric matrix or data frame with observations in rows and
 #'   predicted quantiles in columns.
-#' @param levels Strictly increasing quantile probabilities, one per column.
+#' @param levels Strictly increasing quantile probabilities, one per column of
+#'   `quantiles`. Values must lie strictly between zero and one.
 #' @param na.rm Logical; remove incomplete observation/quantile rows?
-#' @return Named numeric vector of QCP values on the probability scale.
-#' @references Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of
-#'   uncertainty predictions in digital soil mapping. *Geoderma*, 437, 116585.
-#'   <doi:10.1016/j.geoderma.2023.116585>
+#'
+#' @return Named numeric vector containing one QCP value for each supplied
+#'   quantile level, on the probability scale from zero to one.
+#'
+#' @references
+#' Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+#' predictions in digital soil mapping. *Geoderma*, 437, 116585.
+#' <doi:10.1016/j.geoderma.2023.116585>
+#'
+#' @seealso [gg_qcp()], [picp()], [gg_coverage()], [pit()], [gg_pit()]
+#'
 #' @examples
-#' qcp(1:3, cbind(c(0, 1, 2), c(1, 2, 3)), c(.25, .75))
+#' set.seed(123)
+#'
+#' n <- 500
+#' pred <- seq(0, 10, length.out = n)
+#' predictive_sd <- rep(1, n)
+#' obs <- stats::rnorm(n, mean = pred, sd = predictive_sd)
+#'
+#' levels <- seq(0.05, 0.95, by = 0.05)
+#'
+#' quantiles <- vapply(
+#'   levels,
+#'   function(p) pred + stats::qnorm(p) * predictive_sd,
+#'   numeric(n)
+#' )
+#'
+#' qcp(
+#'   obs,
+#'   quantiles = quantiles,
+#'   levels = levels
+#' )
+#'
 #' @export
 qcp <- function(obs, quantiles, levels, na.rm = TRUE) {
   x <- prepare_quantiles(obs, quantiles, levels, na.rm)
+
   out <- rep(NA_real_, length(levels))
+
   if (!is.null(x) && length(x$obs)) {
-    out <- colMeans(sweep(x$distribution, 1, x$obs, FUN = ">="))
+    out <- colMeans(
+      sweep(
+        x$distribution,
+        1,
+        x$obs,
+        FUN = ">="
+      )
+    )
   }
+
   stats::setNames(out, as.character(levels))
 }
 
