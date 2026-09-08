@@ -12,31 +12,78 @@ qcp(obs, quantiles, levels, na.rm = TRUE)
 \item{quantiles}{Numeric matrix or data frame with observations in rows and
 predicted quantiles in columns.}
 
-\item{levels}{Strictly increasing quantile probabilities, one per column.}
+\item{levels}{Strictly increasing quantile probabilities, one per column of
+\code{quantiles}. Values must lie strictly between zero and one.}
 
 \item{na.rm}{Logical; remove incomplete observation/quantile rows?}
 }
 \value{
-Named numeric vector of QCP values on the probability scale.
+Named numeric vector containing one QCP value for each supplied
+quantile level, on the probability scale from zero to one.
 }
 \description{
-Calculates QCP at each supplied quantile level: the empirical proportion of
-observations less than or equal to the predicted quantile. A calibrated
-predictive distribution has QCP close to the nominal quantile level. Unlike
-PICP, QCP can reveal one-sided quantile bias.
+Quantile coverage probability (QCP) evaluates the calibration of individual
+predictive quantiles. For a predicted quantile at nominal probability \code{p},
+QCP is the empirical proportion of observations that are less than or equal
+to that predicted quantile.
 }
 \details{
-\deqn{\mathrm{QCP}(p) = \frac{1}{n}\sum_{i=1}^{n}I(obs_i \leq q_{i,p})}
+\deqn{
+\mathrm{QCP}(p) =
+\frac{1}{n}
+\sum_{i=1}^{n}
+I(obs_i \leq q_{i,p})
+}
 
-For each level \code{p}, QCP close to \code{p} indicates calibration. Values above \code{p}
-mean the predicted quantile is generally too high; values below \code{p} mean it
-is generally too low.
+For a calibrated predictive distribution, QCP should be close to the nominal
+quantile probability \code{p}. For example, approximately 5\% of observations
+should fall below predicted 0.05 quantiles, approximately 50\% below predicted
+medians, and approximately 95\% below predicted 0.95 quantiles.
+
+Values above \code{p} indicate that observations fall below the predicted quantile
+more frequently than expected, whereas values below \code{p} indicate that they do
+so less frequently than expected.
+
+QCP differs from prediction interval coverage probability (\code{\link[=picp]{picp()}}).
+PICP evaluates the joint coverage of a lower and upper prediction-interval
+bound, whereas QCP evaluates each predictive quantile separately. QCP can
+therefore reveal asymmetric or one-sided miscalibration that may be hidden by
+apparently satisfactory central prediction-interval coverage.
+
+Quantile calibration is generally most informative when evaluated across
+several probability levels rather than at a single quantile. A dense sequence
+of quantiles provides a more complete view of distributional calibration,
+although selected levels remain useful when only specific predictive
+quantiles are available.
 }
 \examples{
-qcp(1:3, cbind(c(0, 1, 2), c(1, 2, 3)), c(.25, .75))
+set.seed(123)
+
+n <- 500
+pred <- seq(0, 10, length.out = n)
+predictive_sd <- rep(1, n)
+obs <- stats::rnorm(n, mean = pred, sd = predictive_sd)
+
+levels <- seq(0.05, 0.95, by = 0.05)
+
+quantiles <- vapply(
+  levels,
+  function(p) pred + stats::qnorm(p) * predictive_sd,
+  numeric(n)
+)
+
+qcp(
+  obs,
+  quantiles = quantiles,
+  levels = levels
+)
+
 }
 \references{
-Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of
-uncertainty predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
 \url{doi:10.1016/j.geoderma.2023.116585}
+}
+\seealso{
+\code{\link[=gg_qcp]{gg_qcp()}}, \code{\link[=picp]{picp()}}, \code{\link[=gg_coverage]{gg_coverage()}}, \code{\link[=pit]{pit()}}, \code{\link[=gg_pit]{gg_pit()}}
 }

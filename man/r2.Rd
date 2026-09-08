@@ -25,12 +25,18 @@ Squared Pearson correlation is the square of \code{\link[=correlation]{correlati
 {\sum_{i=1}^{n}(obs_i-\bar{obs})^2\sum_{i=1}^{n}(pred_i-\bar{pred})^2}.}
 
 It ranges from zero to one and summarizes the strength, but not the sign, of
-linear association. A value of one can occur despite additive bias or
-proportional scale differences, so it is not a measure of agreement or
-prediction accuracy. Do not confuse lowercase \code{r2()} with \code{\link[=nse]{nse()}}, \code{\link[=mec]{mec()}},
-or uppercase \code{R2()}, which are aliases for model efficiency. It returns
-\code{NA} with a warning when fewer than two valid pairs remain or either vector
-has zero variance.
+linear association. It describes the dispersion of predictions and
+observations around their fitted linear relationship rather than their
+departure from the 1:1 line. Consequently, \code{r2()} is insensitive to additive
+bias and proportional scaling: a value of one can occur even when predictions
+are systematically biased or have a different scale from the observations.
+It should therefore not be interpreted as a general measure of predictive
+agreement or accuracy.
+
+Do not confuse lowercase \code{r2()} with \code{\link[=nse]{nse()}}, \code{\link[=mec]{mec()}}, or uppercase \code{\link[=R2]{R2()}},
+which are model-efficiency statistics and are sensitive to departures from
+the line of equality. It returns \code{NA} with a warning when fewer than two
+valid pairs remain or either vector has zero variance.
 }
 \examples{
 r2(1:3, c(1, 3, 2))

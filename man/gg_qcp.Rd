@@ -2,17 +2,34 @@
 % Please edit documentation in R/gg_qcp.R
 \name{gg_qcp}
 \alias{gg_qcp}
-\title{Plot quantile coverage probability calibration}
+\title{Quantile calibration plot}
 \usage{
-gg_qcp(obs, quantiles, levels, na.rm = TRUE, point_size = 3)
+gg_qcp(
+  obs,
+  quantiles = NULL,
+  levels = NULL,
+  pred = NULL,
+  predictive_sd = NULL,
+  na.rm = TRUE,
+  point_size = 3
+)
 }
 \arguments{
 \item{obs}{Numeric observation vector.}
 
-\item{quantiles}{Numeric matrix or data frame with observations in rows and
-predicted quantiles in columns.}
+\item{quantiles}{Numeric matrix or data frame containing predicted quantiles
+in columns. Required unless \code{pred} and \code{predictive_sd} are supplied.}
 
-\item{levels}{Strictly increasing quantile probabilities, one per column.}
+\item{levels}{Numeric vector of nominal quantile probabilities corresponding
+to the columns of \code{quantiles}. When \code{pred} and \code{predictive_sd} are supplied,
+defaults to \code{seq(0.05, 0.95, by = 0.05)}.}
+
+\item{pred}{Optional numeric vector of predictive means. Must be supplied
+together with \code{predictive_sd}; in this mode predictive quantiles are
+generated assuming normal predictive distributions.}
+
+\item{predictive_sd}{Optional numeric vector of predictive standard deviations.
+Must be supplied together with \code{pred}.}
 
 \item{na.rm}{Logical; remove incomplete observation/quantile rows?}
 
@@ -22,10 +39,59 @@ predicted quantiles in columns.}
 A \code{ggplot2} object with \code{nominal} and \code{qcp} data columns.
 }
 \description{
-Plots QCP against nominal quantile level. The dashed 1:1 line indicates
-calibrated quantiles. Unlike central PICP plots, this display can reveal
-one-sided bias.
+Plots empirical quantile coverage probability (QCP) against the corresponding
+nominal predictive quantile levels. For a calibrated predictive distribution,
+approximately a proportion \code{p} of observations should fall below the predicted
+\code{p}-quantile. Points should therefore follow the dashed 1:1 line.
+}
+\details{
+Unlike \code{\link[=gg_coverage]{gg_coverage()}}, which evaluates the joint coverage of central
+prediction intervals, \code{gg_qcp()} evaluates individual predictive quantiles.
+It can therefore reveal asymmetric or one-sided miscalibration that may be
+hidden when lower and upper prediction-interval bounds are assessed together.
+
+Quantiles can be supplied directly through \code{quantiles} and \code{levels}. When the
+predictive distribution is assumed to be normal, they can instead be generated
+automatically from predictive means (\code{pred}) and predictive standard deviations
+(\code{predictive_sd}). In this mode, the default is to evaluate quantiles from 0.05
+to 0.95 in increments of 0.05.
+
+A calibration curve is generally most informative when quantiles are available
+over a reasonably dense range of probability levels. A smaller number of levels
+remains valid when only selected predictive quantiles are available.
 }
 \examples{
-gg_qcp(1:3, cbind(c(0, 1, 2), c(1, 2, 3)), c(.25, .75))
+set.seed(123)
+
+n <- 500
+pred <- seq(0, 10, length.out = n)
+predictive_sd <- rep(1, n)
+obs <- stats::rnorm(n, mean = pred, sd = predictive_sd)
+
+# Generate a quantile-calibration curve directly from a normal
+# predictive distribution
+gg_qcp(
+  obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+# Predicted quantiles can also be supplied directly
+levels <- seq(0.05, 0.95, by = 0.05)
+
+quantiles <- vapply(
+  levels,
+  function(p) pred + stats::qnorm(p) * predictive_sd,
+  numeric(n)
+)
+
+gg_qcp(
+  obs,
+  quantiles = quantiles,
+  levels = levels
+)
+
+}
+\seealso{
+\code{\link[=qcp]{qcp()}}, \code{\link[=gg_coverage]{gg_coverage()}}, \code{\link[=gg_pit]{gg_pit()}}
 }

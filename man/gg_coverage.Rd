@@ -2,7 +2,7 @@
 % Please edit documentation in R/gg_coverage.R
 \name{gg_coverage}
 \alias{gg_coverage}
-\title{Plot PICP calibration (reliability or accuracy plot)}
+\title{Plot prediction-interval calibration}
 \usage{
 gg_coverage(
   obs,
@@ -20,54 +20,141 @@ gg_coverage(
 \arguments{
 \item{obs}{Numeric observation vector.}
 
-\item{lower, upper}{Named lists of interval-bound vectors. Names must be
-nominal levels such as \code{"0.50"} or \code{"0.95"}. A single pair of numeric
-vectors is also accepted when \code{level} is supplied.}
+\item{lower, upper}{Named lists of lower and upper prediction-interval bounds.
+Names must represent nominal coverage levels such as \code{"0.50"} or \code{"0.95"}.
+A single pair of numeric vectors is also accepted when \code{level} is supplied.}
 
-\item{level}{Nominal level for a single numeric lower/upper pair. It must be
-\code{NULL} when named lists are supplied.}
+\item{level}{Nominal central prediction-interval coverage for a single numeric
+\code{lower}/\code{upper} pair. It must be \code{NULL} when named lists are supplied.}
 
-\item{pred, predictive_sd}{Optional predictive means and predictive standard
-deviations. When supplied together, normal central intervals are generated
-for \code{levels}; do not also supply \code{lower} or \code{upper}.}
+\item{pred, predictive_sd}{Optional numeric vectors of predictive means and
+predictive standard deviations. When supplied together, central prediction
+intervals are generated assuming normal predictive distributions. Do not
+also supply \code{lower} or \code{upper}.}
 
-\item{levels}{Nominal levels for normal predictive distributions. Defaults to
-every percentage from 1\% to 99\%.}
+\item{levels}{Nominal central prediction-interval coverage probabilities used
+when \code{pred} and \code{predictive_sd} are supplied. Values must lie strictly
+between zero and one. Defaults to every percentage from 1\% to 99\%.}
 
-\item{na.rm}{Logical; remove incomplete interval triplets?}
+\item{na.rm}{Logical; remove incomplete observation/interval combinations?}
 
 \item{point_size}{Positive numeric point size.}
 
-\item{line_width}{Positive numeric reference-line width.}
+\item{line_width}{Positive numeric width of the 1:1 reference line.}
 }
 \value{
-A \code{ggplot2} object with \code{nominal} and \code{picp} data columns.
+A \code{ggplot2} object. Its plotting data contain:
+\describe{
+\item{nominal}{Nominal prediction-interval coverage probability.}
+\item{picp}{Empirical prediction interval coverage probability.}
+}
 }
 \description{
-Compares prediction interval coverage probability (PICP) at multiple nominal
-central prediction-interval levels. Points on the dashed 1:1 line are
-calibrated; points below it under-cover observations. This is a PICP
-reliability plot. Goovaerts (2001) introduced it to geostatistical
-uncertainty validation as an \emph{accuracy plot}; reliability plot is the more
-generally accepted term across probabilistic-prediction fields. It is an
-extension of a single PICP to multiple interval levels. The result is an
-ordinary ggplot object.
+Produces a prediction interval coverage probability (PICP) reliability plot,
+also known in geostatistics as an accuracy plot. The plot compares empirical
+prediction-interval coverage with the corresponding nominal coverage over one
+or more central prediction-interval levels.
 }
 \details{
-Central PICP curves assess overall interval reliability, but cannot by
-themselves identify asymmetric lower- versus upper-tail non-coverage caused
-by a one-sided bias.
+For a nominal central prediction interval with coverage probability \eqn{p},
+a calibrated predictive uncertainty model should contain approximately a
+proportion \eqn{p} of independent validation observations. Consequently,
+empirical PICP should satisfy
+
+\deqn{\mathrm{PICP}(p) \approx p,}
+
+and a well-calibrated model should follow the dashed 1:1 reference line.
+
+Points below the 1:1 line indicate \strong{under-coverage}: fewer observations are
+contained in the prediction intervals than expected. This generally indicates
+prediction intervals that are too narrow and predictive uncertainty that is
+underestimated.
+
+Points above the 1:1 line indicate \strong{over-coverage}: more observations are
+contained in the prediction intervals than expected. This generally indicates
+prediction intervals that are wider than required and predictive uncertainty
+that is overestimated.
+
+Evaluating several interval levels provides more information than evaluating
+a single PICP value because it shows how calibration changes across the
+predictive distribution. When \code{pred} and \code{predictive_sd} are supplied and
+\code{levels} is left \code{NULL}, central normal prediction intervals are evaluated
+from 1\% to 99\% nominal coverage.
+
+The accuracy-plot approach was developed for direct assessment of local
+uncertainty in geostatistics by Deutsch (1997) and subsequently applied to
+uncertainty evaluation in soil science by Goovaerts (2001). Similar
+reliability diagnostics have also been used in digital soil mapping, including
+Wadoux, Brus, and Heuvelink (2018).
+
+The graphical departures from the 1:1 line can be summarized numerically with
+\code{\link[=accuracy_plot_metrics]{accuracy_plot_metrics()}}, which calculates the total absolute area between
+the empirical coverage curve and the reference line and separates this
+departure into over-coverage and under-coverage components.
+
+Central PICP evaluates the \strong{joint coverage} of lower and upper
+prediction-interval bounds. It therefore does not identify how non-coverage is
+distributed between the two tails. A model can have approximately correct
+central interval coverage while having too many observations below one bound
+and too few above the other. Use \code{\link[=gg_qcp]{gg_qcp()}} or \code{\link[=gg_pit]{gg_pit()}} when tail-specific
+or distributional calibration is also of interest.
+
+Calibration should also be distinguished from sharpness. Good coverage can be
+obtained using unnecessarily wide prediction intervals, so PICP calibration
+should generally be interpreted together with interval width or a proper
+scoring rule such as \code{\link[=interval_score]{interval_score()}}.
 }
 \examples{
-obs <- c(1, 2, 3)
-gg_coverage(obs, lower = list(`0.8` = c(0, 1, 2)),
-            upper = list(`0.8` = c(2, 3, 4)))
+set.seed(123)
+
+n <- 200
+pred <- seq(0, 10, length.out = n)
+predictive_sd <- rep(1, n)
+obs <- stats::rnorm(n, mean = pred, sd = predictive_sd)
+
+# Reliability curve generated directly from a normal predictive distribution
+gg_coverage(
+  obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+# Selected prediction intervals can also be supplied directly
+lower <- list(
+  `0.50` = pred + stats::qnorm(0.25) * predictive_sd,
+  `0.90` = pred + stats::qnorm(0.05) * predictive_sd
+)
+
+upper <- list(
+  `0.50` = pred + stats::qnorm(0.75) * predictive_sd,
+  `0.90` = pred + stats::qnorm(0.95) * predictive_sd
+)
+
+gg_coverage(
+  obs,
+  lower = lower,
+  upper = upper
+)
+
 }
 \references{
-Goovaerts, P. (2001). Geostatistical modelling of uncertainty in
-soil science. \emph{Geoderma}, 103, 3-26. \url{doi:10.1016/S0016-7061(01)00067-2}
+Deutsch, C. V. (1997). Direct assessment of local accuracy and precision.
+In E. Y. Baafi and N. A. Schofield (Eds.), \emph{Geostatistics Wollongong '96},
+pp. 115-125.
+
+Goovaerts, P. (2001). Geostatistical modelling of uncertainty in soil
+science. \emph{Geoderma}, 103, 3-26.
+\url{doi:10.1016/S0016-7061(01)00067-2}
+
+Wadoux, A. M. J.-C., Brus, D. J. and Heuvelink, G. B. M. (2018).
+Accounting for non-stationary variance in geostatistical mapping of soil
+properties. \emph{Geoderma}, 324, 138-147.
 
 Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
 predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
 \url{doi:10.1016/j.geoderma.2023.116585}
+}
+\seealso{
+\code{\link[=picp]{picp()}}, \code{\link[=coverage_error]{coverage_error()}}, \code{\link[=accuracy_plot_metrics]{accuracy_plot_metrics()}},
+\code{\link[=gg_qcp]{gg_qcp()}}, \code{\link[=gg_pit]{gg_pit()}}, \code{\link[=interval_width]{interval_width()}}, \code{\link[=interval_score]{interval_score()}}
 }

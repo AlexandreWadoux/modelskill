@@ -14,30 +14,87 @@ ccc(obs, pred, na.rm = TRUE)
 \item{na.rm}{Logical; remove incomplete pairs?}
 }
 \value{
-One numeric value.
+One numeric value between -1 and 1, with 1 indicating perfect
+agreement.
 }
 \description{
-Lin's concordance correlation coefficient (CCC) combines Pearson correlation
-with agreement in location and scale.
+Lin's concordance correlation coefficient (CCC; \eqn{\rho_c}) measures
+agreement between observations and predictions by combining Pearson
+correlation with differences in location and scale. Unlike Pearson
+correlation alone, CCC evaluates how closely paired values approach the
+line of equality.
 }
 \details{
-\deqn{\rho_c=\frac{2\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})}
-{\sum_{i=1}^{n}(obs_i-\bar{obs})^2+
-\sum_{i=1}^{n}(pred_i-\bar{pred})^2+n(\bar{obs}-\bar{pred})^2}.}
+\deqn{
+\rho_c =
+\frac{
+2\sum_{i=1}^{n}(obs_i-\bar{obs})(pred_i-\bar{pred})
+}{
+\sum_{i=1}^{n}(obs_i-\bar{obs})^2+
+\sum_{i=1}^{n}(pred_i-\bar{pred})^2+
+n(\bar{obs}-\bar{pred})^2
+}.
+}
 
-CCC ranges from -1 to one and equals one for perfect agreement. Values near
-zero indicate little concordance; negative values indicate discordant linear
-association. Unlike Pearson correlation, CCC is reduced by mean and scale
-differences. Population variances (divisor n) are used, matching the
-established package convention. The package returns \code{NA} with a warning for
-constant observations or fewer than two pairs, and zero for constant predictions
-with varying observations. Missing-value handling follows \code{\link[=bias]{bias()}}.
+CCC ranges from -1 to 1, with 1 indicating perfect agreement. Values
+decrease as observations and predictions differ in linear association,
+mean, or scale. Negative values indicate negative concordance.
+
+CCC can also be expressed as
+
+\deqn{\rho_c = r C_b,}
+
+where \eqn{r} is the Pearson correlation coefficient and \eqn{C_b} is a
+bias-correction factor that accounts for departures from the line of
+equality. Consequently, CCC incorporates both association and agreement
+into a single statistic.
+
+When CCC is used to evaluate predictive models, its value is most
+informative when considered together with complementary statistics.
+Different combinations of correlation, mean bias, and scale differences
+can produce similar CCC values, so the coefficient alone does not identify
+which component is responsible for disagreement between observations and
+predictions. In addition, CCC depends partly on the variability of the
+reference observations. Direct comparison of CCC values obtained from
+substantially different datasets or target populations should therefore
+be made with caution.
+
+For prediction-model evaluation, CCC can usefully be reported alongside
+measures describing individual aspects of predictive performance, such as
+\code{\link[=bias]{bias()}}, \code{\link[=mae]{mae()}}, \code{\link[=rmse]{rmse()}}, \code{\link[=correlation]{correlation()}}, or \code{\link[=R2]{R2()}}. This allows the
+overall concordance indicated by CCC to be interpreted together with the
+magnitude and sources of prediction error.
+
+Population variances (divisor \eqn{n}) are used, matching the package
+convention. The function returns \code{NA} with a warning when fewer than two
+valid observation-prediction pairs remain or when the observations have
+zero variance. It returns zero for constant predictions when observations
+vary. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
-ccc(1:3, c(1, 3, 2))
+obs <- c(1, 2, 3, 4, 5)
+
+# Perfect agreement
+ccc(obs, obs)
+
+# Systematic bias reduces concordance
+ccc(obs, obs + 1)
+
+# Compare with Pearson correlation
+correlation(obs, obs + 1)
+ccc(obs, obs + 1)
+
 }
 \references{
-Lin, L. I.-K. (1989). A concordance correlation coefficient to
-evaluate reproducibility. \emph{Biometrics}, 45, 255-268.
+Lin, L. I.-K. (1989). A concordance correlation coefficient to evaluate
+reproducibility. \emph{Biometrics}, 45, 255-268.
 \url{doi:10.2307/2532051}
+
+Wadoux, A. M. J.-C. and Minasny, B. (2024). Some limitations of the
+concordance correlation coefficient to characterise model accuracy.
+\emph{Ecological Informatics}, 83, 102820.
+\url{doi:10.1016/j.ecoinf.2024.102820}
+}
+\seealso{
+\code{\link[=correlation]{correlation()}}, \code{\link[=bias]{bias()}}, \code{\link[=mae]{mae()}}, \code{\link[=rmse]{rmse()}}, \code{\link[=R2]{R2()}}
 }

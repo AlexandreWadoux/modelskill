@@ -2,7 +2,7 @@
 % Please edit documentation in R/metrics-prediction.R
 \name{R2}
 \alias{R2}
-\title{Coefficient of determination / efficiency R-squared}
+\title{Model-efficiency R-squared}
 \usage{
 R2(obs, pred, na.rm = TRUE)
 }
@@ -14,18 +14,84 @@ R2(obs, pred, na.rm = TRUE)
 \item{na.rm}{Logical; remove incomplete pairs?}
 }
 \value{
-One numeric value.
+One numeric value. The optimum is 1; values may be negative and are
+not bounded below.
 }
 \description{
-Alias for \code{\link[=nse]{nse()}} and \code{mec()}. This uppercase \code{R2()} is the model-efficiency
-coefficient; lowercase \code{r2()} remains squared Pearson correlation. Its
-interpretation and references are given in \code{\link[=nse]{nse()}}. It returns \code{NA} with a
-warning under the same undefined conditions as \code{\link[=nse]{nse()}}.
+\code{R2()} is the model-efficiency coefficient and is identical to \code{\link[=nse]{nse()}} and
+\code{\link[=mec]{mec()}} in this package. It compares the squared prediction error with the
+squared deviation of the observations from their mean:
 }
 \details{
-\deqn{R^2=1-\frac{\sum_{i=1}^{n}(obs_i-pred_i)^2}
-{\sum_{i=1}^{n}(obs_i-\bar{obs})^2}.}
+\deqn{
+R^2 =
+1 -
+\frac{
+\sum_{i=1}^{n}(obs_i-pred_i)^2
+}{
+\sum_{i=1}^{n}(obs_i-\bar{obs})^2
+}.
+}
+
+The statistic has a direct benchmark interpretation. A value of 1 indicates
+perfect agreement between observations and predictions. A value of 0 means
+that predicting the observed mean for every observation performs equally
+well according to squared error. Negative values indicate that the observed
+mean provides a better prediction than the model.
+
+Uppercase \code{R2()} must not be confused with lowercase \code{\link[=r2]{r2()}}, which is the
+squared Pearson correlation coefficient. Squared Pearson correlation
+measures the strength of linear association and is insensitive to additive
+and proportional differences between observations and predictions. It can
+therefore equal one even for strongly biased predictions. In contrast,
+\code{R2()} is sensitive to deviations from the line of equality and therefore
+measures predictive performance rather than linear association alone.
+
+Because \code{R2()} is based on squared errors, individual large prediction
+errors can have a disproportionate influence on its value. It should
+therefore generally be interpreted together with complementary measures
+such as \code{\link[=bias]{bias()}}, \code{\link[=mae]{mae()}}, \code{\link[=rmse]{rmse()}}, and \code{\link[=r2]{r2()}} rather than as a standalone
+measure of predictive performance.
+
+\code{R2()} returns \code{NA} with a warning when fewer than two valid observation-
+prediction pairs remain or when the observations have zero variance.
+Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \examples{
-R2(1:3, c(1, 3, 2))
+obs <- c(1, 2, 3, 4, 5)
+
+# Perfect predictions
+R2(obs, obs)
+
+# Additive bias: r2 remains 1, whereas R2 decreases
+pred <- obs + 1
+r2(obs, pred)
+R2(obs, pred)
+
+# Predictions can perform worse than using the observed mean
+R2(obs, rev(obs))
+
+}
+\references{
+Wadoux, A. M. J.-C., Walvoort, D. J. J. and Brus, D. J. (2022).
+An integrated approach for the evaluation of quantitative soil maps through
+Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
+\url{doi:10.1016/j.geoderma.2021.115332}
+
+Janssen, P. H. M. and Heuberger, P. S. C. (1995). Calibration of
+process-oriented models. \emph{Ecological Modelling}, 83, 55-66.
+\url{doi:10.1016/0304-3800(95)00084-9}
+
+Nash, J. E. and Sutcliffe, J. V. (1970). River flow forecasting through
+conceptual models part I: A discussion of principles. \emph{Journal of
+Hydrology}, 10, 282-290.
+\url{doi:10.1016/0022-1694(70)90255-6}
+
+Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of
+goodness-of-fit measures in hydrologic and hydroclimatic model validation.
+\emph{Water Resources Research}, 35(1), 233-241.
+\url{doi:10.1029/1998WR900018}
+}
+\seealso{
+\code{\link[=r2]{r2()}}, \code{\link[=nse]{nse()}}, \code{\link[=mec]{mec()}}, \code{\link[=bias]{bias()}}, \code{\link[=mae]{mae()}}, \code{\link[=rmse]{rmse()}}
 }

@@ -24,11 +24,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Alexandre M.J.-C. Wadoux \email{alexandre.wadoux@yahoo.fr} [copyright holder]
+\strong{Maintainer}: Alexandre M.J.-C. Wadoux \email{alexandre.wadoux@yahoo.fr} (\href{https://orcid.org/0000-0001-7325-9716}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Alexandre M.J.-C. Wadoux \email{alexandre.wadoux@yahoo.fr} [copyright holder]
+  \item Alexandre M.J.-C. Wadoux \email{alexandre.wadoux@yahoo.fr} (\href{https://orcid.org/0000-0001-7325-9716}{ORCID}) [copyright holder]
 }
 
 }
