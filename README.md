@@ -7,8 +7,6 @@ output: github_document
 [![pkgdown](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 
-<img src="man/figures/logo.png" align="right" width="16%" alt="modelskill logo" />
-
 ### Assessing and Visualising Continuous Prediction Model Performance
 
 ## About
@@ -24,8 +22,6 @@ It can be used with predictions from machine-learning, statistical, geostatistic
 - **summary diagrams and diagnostic plots**, including solar, target, Taylor, coverage, PIT, and quantile-calibration plots.
 
 All plotting functions return standard `ggplot2` objects and can therefore be customised with the usual `ggplot2` syntax.
-
-<br clear="right"/>
 
 ---
 
