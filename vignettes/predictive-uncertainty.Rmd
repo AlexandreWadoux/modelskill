@@ -380,10 +380,10 @@ been called an **accuracy plot** [@goovaerts2001], although **reliability**
 
 The reliability or accuracy plot can be interpreted visually, but departures
 from the ideal 1:1 line can also be summarized numerically. Accuracy plots were
-introduced for the assessment of local uncertainty by Deutsch (1997) and were
+introduced for the assessment of local uncertainty by @deutsch1997 and were
 subsequently used for geostatistical uncertainty evaluation in soil science by
-Goovaerts (2001). The same framework, including numerical summaries of
-departure from the 1:1 line, was used by Wadoux, Brus, and Heuvelink (2018).
+@goovaerts2001. The same framework, including numerical summaries of
+departure from the 1:1 line, was used by @wadoux2018.
 
 For a nominal central prediction-interval level \(p\), let
 \(\mathrm{PICP}(p)\) denote the empirical proportion of validation observations
@@ -516,9 +516,9 @@ over a sufficiently dense range of nominal interval levels. With only one or a
 few interval levels, a single coverage error is usually easier to interpret than
 an integrated area.
 
-The interpretation above follows the accuracy-plot framework of Deutsch (1997)
-and Goovaerts (2001), with the absolute-deviation and directional summaries
-described and applied in Wadoux, Brus, and Heuvelink (2018).
+The interpretation above follows the accuracy-plot framework of [@deutsch1997;
+@goovaerts2001], with the absolute-deviation and directional summaries
+described and applied in @wadoux2018.
 
 ### 5.4 Why PICP alone is not enough
 
