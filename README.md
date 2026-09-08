@@ -1,9 +1,6 @@
 ---
 output: github_document
 ---
-
-<!-- README.md is generated from README.Rmd. Please edit this file. -->
-
 # modelskill
 
 [![R-CMD-check](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml)
