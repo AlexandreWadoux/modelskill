@@ -2,6 +2,7 @@
 title: "Prediction performance metrics"
 author: "Alexandre M.J.-C. Wadoux"
 output: rmarkdown::html_vignette
+bibliography: references.bib
 link-citations: true
 vignette: >
   %\VignetteIndexEntry{Prediction performance metrics}
@@ -438,20 +439,20 @@ kge(
 
 | Metric / function | Equation | Ideal | Simple interpretation | Reference |
 |:--|:--|:--|:--|:--|
-| **MdAE** [`mdae()`](../reference/mdae.html) | \(\mathrm{median}_i\lvert o_i-p_i\rvert\) | 0 | Typical absolute error; relatively robust to large errors. | Hyndman & Koehler (2006) |
-| **RPD** [`rpd()`](../reference/rpd.html) | \(s_o/\mathrm{RMSE}\) | Larger | Error relative to observed standard deviation. | Bellon-Maurel et al. (2010) |
-| **RPIQ** [`rpiq()`](../reference/rpiq.html) | \(\mathrm{IQR}(o)/\mathrm{RMSE}\) | Larger | Error relative to the observed interquartile range. | Bellon-Maurel et al. (2010) |
-| **SEP** [`sep()`](../reference/sep.html) | \(\sqrt{\frac{1}{n-1}\sum_i[(o_i-p_i)-\mathrm{ME}]^2}\) | 0 | Sample SD of prediction errors after removing bias. | Bellon-Maurel et al. (2010) |
-| **RER** [`rer()`](../reference/rer.html) | \(\frac{\max(o)-\min(o)}{\mathrm{RMSE}}\) | Larger | Error relative to observed range; sensitive to extreme values. | Bellon-Maurel et al. (2010) |
+| **MdAE** [`mdae()`](../reference/mdae.html) | \(\mathrm{median}_i\lvert o_i-p_i\rvert\) | 0 | Typical absolute error; relatively robust to large errors. | [@hyndman2006] |
+| **RPD** [`rpd()`](../reference/rpd.html) | \(s_o/\mathrm{RMSE}\) | Larger | Error relative to observed standard deviation. | [@bellonmaurel2010] |
+| **RPIQ** [`rpiq()`](../reference/rpiq.html) | \(\mathrm{IQR}(o)/\mathrm{RMSE}\) | Larger | Error relative to the observed interquartile range. | [@bellonmaurel2010] |
+| **SEP** [`sep()`](../reference/sep.html) | \(\sqrt{\frac{1}{n-1}\sum_i[(o_i-p_i)-\mathrm{ME}]^2}\) | 0 | Sample SD of prediction errors after removing bias. | [@bellonmaurel2010] |
+| **RER** [`rer()`](../reference/rer.html) | \(\frac{\max(o)-\min(o)}{\mathrm{RMSE}}\) | Larger | Error relative to observed range; sensitive to extreme values. | [@bellonmaurel2010] |
 | **MAPE** [`mape()`](../reference/mape.html) | \(\frac{1}{n}\sum_i\left\lvert\frac{o_i-p_i}{o_i}\right\rvert\) | 0 | Mean absolute relative error. Undefined when an observation is zero. | Hyndman & Koehler (2006) |
 | **MPE** [`mpe()`](../reference/mpe.html) | \(\frac{100}{n}\sum_i\frac{o_i-p_i}{o_i}\) | 0 | Signed relative bias in percent. Undefined when an observation is zero. | Hyndman & Koehler (2006) |
 | **sMAPE** [`smape()`](../reference/smape.html) | \(\frac{1}{n}\sum_i\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}\) | 0 | Symmetric relative absolute error. | Hyndman & Koehler (2006) |
-| **MSLE** [`msle()`](../reference/msle.html) | \(\frac{1}{n}\sum_i[\log(1+o_i)-\log(1+p_i)]^2\) | 0 | Squared error on the log1p scale. Requires non-negative values. | Hodson (2022) |
-| **RMSLE** [`rmsle()`](../reference/rmsle.html) | \(\sqrt{\mathrm{MSLE}}\) | 0 | Root mean squared error on the log1p scale. | Hodson (2022) |
+| **MSLE** [`msle()`](../reference/msle.html) | \(\frac{1}{n}\sum_i[\log(1+o_i)-\log(1+p_i)]^2\) | 0 | Squared error on the log1p scale. Requires non-negative values. | [@hodson2022] |
+| **RMSLE** [`rmsle()`](../reference/rmsle.html) | \(\sqrt{\mathrm{MSLE}}\) | 0 | Root mean squared error on the log1p scale. | [@hodson2022] |
 | **RAE** [`rae()`](../reference/rae.html) | \(\frac{\sum_i\lvert o_i-p_i\rvert}{\sum_i\lvert o_i-\bar{o}\rvert}\) | 0 | Absolute error relative to predicting the observed mean; 1 is the benchmark. | Hyndman & Koehler (2006) |
 | **RRMSE** [`rrmse()`](../reference/rrmse.html) | \(100\,\mathrm{RMSE}/\lvert\bar{o}\rvert\) | 0 | RMSE as a percentage of the absolute observed mean. | Willmott et al. (1985) |
 | **Willmott's \(d\)** [`willmott_d()`](../reference/willmott_d.html) | \(1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(\lvert p_i-\bar{o}\rvert+\lvert o_i-\bar{o}\rvert)^2}\) | 1 | Index of agreement; sensitive to large errors. | Willmott et al. (1985) |
-| **KGE** [`kge()`](../reference/kge.html) | \(1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar{p}/\bar{o}-1)^2}\) | 1 | Combines correlation, variability ratio, and mean ratio. | Gupta et al. (2009) |
+| **KGE** [`kge()`](../reference/kge.html) | \(1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar{p}/\bar{o}-1)^2}\) | 1 | Combines correlation, variability ratio, and mean ratio. | [@gupta2009] |
 
 For `MAPE` and `sMAPE`, `modelskill` returns a fraction; multiply by 100 if a
 percentage is required. `MPE` and `RRMSE` are returned directly as percentages.

@@ -2,6 +2,7 @@
 title: "Summary diagrams and diagnostic plots"
 author: "Alexandre M.J.-C. Wadoux"
 output: rmarkdown::html_vignette
+bibliography: references.bib
 link-citations: true
 vignette: >
   %\VignetteIndexEntry{Summary diagrams and diagnostic plots}
@@ -309,7 +310,7 @@ without displaying the correlation regions.
 
 # 4. Target diagram
 
-The **target diagram** was developed by Jolliff et al. (2009) as a compact
+The **target diagram** was developed by @jolliff2009 as a compact
 representation of bias and centred root mean square difference.
 
 Like the solar diagram, it is based on
