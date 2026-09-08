@@ -226,7 +226,7 @@ gg_target <- function(
       ][37],
       rmse_reference$y[37]
     ),
-    label = c("r >= 0.9", "r >= 0.7", "RMSE* = 1")
+    label = c("0.9", "0.7", "1")
   )
 
   ticks <- subset(
