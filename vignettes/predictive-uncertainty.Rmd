@@ -378,8 +378,27 @@ been called an **accuracy plot** [@goovaerts2001], although **reliability**
 
 #### 5.3.1 Numerical summaries of the reliability plot
 
+The reliability or accuracy plot can be interpreted visually, but departures
+from the ideal 1:1 line can also be summarized numerically. Accuracy plots were
+introduced for the assessment of local uncertainty by Deutsch (1997) and were
+subsequently used for geostatistical uncertainty evaluation in soil science by
+Goovaerts (2001). The same framework, including numerical summaries of
+departure from the 1:1 line, was used by Wadoux, Brus, and Heuvelink (2018).
+
+For a nominal central prediction-interval level \(p\), let
+\(\mathrm{PICP}(p)\) denote the empirical proportion of validation observations
+contained in the corresponding prediction intervals. If predictive uncertainty
+is well calibrated,
+
+\[
+\mathrm{PICP}(p) \approx p
+\]
+
+over the range of evaluated probabilities. The empirical coverage curve should
+therefore follow the 1:1 line.
+
 [`accuracy_plot_metrics()`](../reference/accuracy_plot_metrics.html) summarizes
-the departures visible in `gg_coverage()`:
+the magnitude and direction of departures from this line:
 
 ```{r}
 accuracy_plot_metrics(
@@ -387,10 +406,9 @@ accuracy_plot_metrics(
   pred = pred,
   predictive_sd = predictive_sd
 )
-
 ```
 
-and for underestimated uncertainty:
+For the deliberately underestimated predictive uncertainty:
 
 ```{r}
 accuracy_plot_metrics(
@@ -398,19 +416,109 @@ accuracy_plot_metrics(
   pred = pred,
   predictive_sd = sd_too_small
 )
-
 ```
 
-The output contains:
+The principal summary is `absolute_deviation`, which corresponds to the total
+area between the empirical coverage curve and the ideal 1:1 line:
 
-- `absolute_deviation`: total area between the reliability curve and the
-  1:1 line;
-- `over_uncertainty`: area above the line;
-- `under_uncertainty`: area below the line;
-- `over_percent` and `under_percent`: relative contributions to the total
-  deviation.
+\[
+A =
+\int_0^1
+\left|
+\mathrm{PICP}(p)-p
+\right|
+\,dp.
+\]
 
-The area measures are zero under perfect calibration.
+A value of \(A=0\) indicates perfect calibration. Increasing values indicate
+greater overall disagreement between nominal and empirical coverage across the
+evaluated interval levels. This measure summarizes the magnitude of
+miscalibration but does not, by itself, indicate whether predictive uncertainty
+is predominantly overestimated or underestimated.
+
+The total deviation can therefore be separated into the area above the 1:1
+line,
+
+\[
+A_{\mathrm{over}} =
+\int_0^1
+\max\left\{
+\mathrm{PICP}(p)-p,0
+\right\}
+\,dp,
+\]
+
+and the area below the line,
+
+\[
+A_{\mathrm{under}} =
+\int_0^1
+\max\left\{
+p-\mathrm{PICP}(p),0
+\right\}
+\,dp.
+\]
+
+These quantities are returned as:
+
+- `absolute_deviation`: the total area \(A\) between the empirical coverage
+  curve and the 1:1 line. Smaller values indicate better overall calibration,
+  with zero being ideal;
+- `over_uncertainty`: the area \(A_{\mathrm{over}}\) above the 1:1 line. In
+  this region empirical coverage is greater than nominal coverage, indicating
+  over-coverage and, in general, predictive uncertainty that is too large;
+- `under_uncertainty`: the area \(A_{\mathrm{under}}\) below the 1:1 line. In
+  this region empirical coverage is smaller than nominal coverage, indicating
+  under-coverage and, in general, predictive uncertainty that is too small;
+- `over_percent`: the percentage of the total absolute deviation occurring
+  above the 1:1 line;
+- `under_percent`: the percentage of the total absolute deviation occurring
+  below the 1:1 line.
+
+The last two quantities correspond to the relative contributions of
+overestimation and underestimation to the total calibration error:
+
+\[
+P_{\mathrm{over}} =
+\frac{A_{\mathrm{over}}}{A},
+\qquad
+P_{\mathrm{under}} =
+\frac{A_{\mathrm{under}}}{A}.
+\]
+
+`accuracy_plot_metrics()` reports these quantities as percentages. When
+`absolute_deviation` is greater than zero,
+
+\[
+\mathrm{over\_percent} + \mathrm{under\_percent} = 100.
+\]
+
+These percentages should not be interpreted as percentages of observations.
+They describe how the total *area of miscalibration* is partitioned above and
+below the 1:1 line.
+
+For example, a large `under_percent` indicates that most of the departure from
+ideal calibration results from empirical coverage being lower than nominal
+coverage. The prediction intervals are therefore generally too narrow, and
+predictive uncertainty is underestimated. Conversely, a large `over_percent`
+indicates that most of the departure results from empirical coverage exceeding
+nominal coverage, which is generally associated with prediction intervals that
+are too wide and predictive uncertainty that is overestimated.
+
+These summaries quantify **calibration**, not **sharpness**. A predictive model
+may achieve good coverage while producing unnecessarily wide prediction
+intervals. Calibration summaries should therefore be interpreted together with
+measures of interval width or proper scoring rules when comparing probabilistic
+predictions.
+
+The area summaries are most informative when the reliability curve is evaluated
+over a sufficiently dense range of nominal interval levels. With only one or a
+few interval levels, a single coverage error is usually easier to interpret than
+an integrated area.
+
+The interpretation above follows the accuracy-plot framework of Deutsch (1997)
+and Goovaerts (2001), with the absolute-deviation and directional summaries
+described and applied in Wadoux, Brus, and Heuvelink (2018).
 
 ### 5.4 Why PICP alone is not enough
 
