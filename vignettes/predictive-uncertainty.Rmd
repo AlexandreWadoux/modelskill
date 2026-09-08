@@ -2,6 +2,7 @@
 title: "Predictive-uncertainty evaluation"
 author: "Alexandre M.J.-C. Wadoux"
 output: rmarkdown::html_vignette
+bibliography: references.bib
 link-citations: true
 vignette: >
   %\VignetteIndexEntry{Predictive-uncertainty evaluation}
@@ -43,7 +44,7 @@ Sharpness should always be interpreted conditional on adequate calibration. Very
 narrow intervals are not useful when observations frequently fall outside them.
 The general objective is therefore to obtain predictive distributions that are
 as sharp as possible while remaining well calibrated
-(Schmidinger and Heuvelink, 2023; Gneiting and Raftery, 2007).
+[@schmidinger2023; @gneitingraftery2007].
 
 As with point-prediction validation, these diagnostics should be calculated
 using independent validation data or an appropriate resampling strategy.
@@ -74,21 +75,21 @@ The main `modelskill` functions used below are:
 
 | Function | Description | Reference |
 | :-- | :-- | :-- |
-| [`picp()`](../reference/picp.html)                                   | Calculates the prediction interval coverage probability, that is, the proportion of observations falling within a prediction interval. | Goovaerts (2001); Schmidinger and Heuvelink (2023)            |
-| [`coverage_error()`](../reference/coverage_error.html)               | Calculates the difference between empirical and nominal prediction interval coverage.                                                  | Schmidinger and Heuvelink (2023)                              |
-| [`interval_width()`](../reference/interval_width.html) | Calculates the average width of prediction intervals and therefore summarizes their sharpness. | Schmidinger and Heuvelink (2023) |
-| [`interval_score()`](../reference/interval_score.html)               | Calculates a proper scoring rule that combines prediction interval width with penalties for observations outside the interval.         | Gneiting and Raftery (2007)                                   |
-| [`uncertainty_metrics()`](../reference/uncertainty_metrics.html)     | Calculates PICP, coverage error, interval width, and interval score together.                                                          | Gneiting and Raftery (2007); Schmidinger and Heuvelink (2023) |
-| [`gg_coverage()`](../reference/gg_coverage.html)                     | Produces a reliability plot comparing nominal prediction interval coverage with empirical coverage across several interval levels.     | Goovaerts (2001); Schmidinger and Heuvelink (2023)            |
-| [`accuracy_plot_metrics()`](../reference/accuracy_plot_metrics.html) | Summarizes deviations between the empirical coverage curve and the ideal 1:1 reliability line.                                         | Goovaerts (2001); Schmidinger and Heuvelink (2023)            |
-| [`qcp()`](../reference/qcp.html)                                     | Calculates quantile coverage probability, the proportion of observations below each predicted quantile.                                | Schmidinger and Heuvelink (2023)                              |
-| [`gg_qcp()`](../reference/gg_qcp.html)                               | Produces a quantile calibration plot comparing nominal quantile probabilities with empirical quantile coverage.                        | Schmidinger and Heuvelink (2023)                              |
-| [`pit()`](../reference/pit.html) | Validates PIT values supplied as predictive CDF values evaluated at the observations. | Gneiting et al. (2007); Schmidinger and Heuvelink (2023) |
-| [`gg_pit()`](../reference/gg_pit.html)                               | Produces a PIT histogram for assessing the calibration of complete predictive distributions.                                           | Gneiting and Raftery (2007); Schmidinger and Heuvelink (2023) |
-| [`crps()`](../reference/crps.html)                                   | Calculates the continuous ranked probability score, a proper score that evaluates the full predictive distribution.                    | Hersbach (2000); Gneiting and Raftery (2007)                  |
-| [`median_crps()`](../reference/median_crps.html)                     | Calculates the median case-wise CRPS, providing a robust summary of typical probabilistic prediction performance.                      | Gneiting and Raftery (2007)                                   |
-| [`crps_decomposition()`](../reference/crps_decomposition.html)       | Decomposes CRPS into reliability and potential CRPS components when predictive samples are available.                                  | Hersbach (2000); Schmidinger and Heuvelink (2023)             |
-| [`log_score()`](../reference/log_score.html)                         | Calculates the logarithmic score from predictive density values evaluated at the observations.                                         | Gneiting and Raftery (2007)                                   |
+| [`picp()`](../reference/picp.html)                                   | Calculates the prediction interval coverage probability, that is, the proportion of observations falling within a prediction interval. | [@goovaerts2001; @schmidinger2023]            |
+| [`coverage_error()`](../reference/coverage_error.html)               | Calculates the difference between empirical and nominal prediction interval coverage.                                                  | [@schmidinger2023]                              |
+| [`interval_width()`](../reference/interval_width.html) | Calculates the average width of prediction intervals and therefore summarizes their sharpness. | [@schmidinger2023] |
+| [`interval_score()`](../reference/interval_score.html)               | Calculates a proper scoring rule that combines prediction interval width with penalties for observations outside the interval.         | [@gneitingraftery2007]                                   |
+| [`uncertainty_metrics()`](../reference/uncertainty_metrics.html)     | Calculates PICP, coverage error, interval width, and interval score together.                                                          | [@gneitingraftery2007; @schmidinger2023] |
+| [`gg_coverage()`](../reference/gg_coverage.html)                     | Produces a reliability plot comparing nominal prediction interval coverage with empirical coverage across several interval levels.     | [@goovaerts2001; @schmidinger2023]            |
+| [`accuracy_plot_metrics()`](../reference/accuracy_plot_metrics.html) | Summarizes deviations between the empirical coverage curve and the ideal 1:1 reliability line.                                         | [@goovaerts2001; @schmidinger2023]            |
+| [`qcp()`](../reference/qcp.html)                                     | Calculates quantile coverage probability, the proportion of observations below each predicted quantile.                                | [@schmidinger2023]                              |
+| [`gg_qcp()`](../reference/gg_qcp.html)                               | Produces a quantile calibration plot comparing nominal quantile probabilities with empirical quantile coverage.                        | [@schmidinger2023]                              |
+| [`pit()`](../reference/pit.html) | Validates PIT values supplied as predictive CDF values evaluated at the observations. | [@gneiting2007; @schmidinger2023] |
+| [`gg_pit()`](../reference/gg_pit.html)                               | Produces a PIT histogram for assessing the calibration of complete predictive distributions.                                           | [@gneitingraftery2007; @schmidinger2023] |
+| [`crps()`](../reference/crps.html)                                   | Calculates the continuous ranked probability score, a proper score that evaluates the full predictive distribution.                    | [@hersbach2000; @gneitingraftery2007]                  |
+| [`median_crps()`](../reference/median_crps.html)                     | Calculates the median case-wise CRPS, providing a robust summary of typical probabilistic prediction performance.                      | [@gneitingraftery2007]                                   |
+| [`crps_decomposition()`](../reference/crps_decomposition.html)       | Decomposes CRPS into reliability and potential CRPS components when predictive samples are available.                                  | [@hersbach2000; @schmidinger2023]             |
+| [`log_score()`](../reference/log_score.html)                         | Calculates the logarithmic score from predictive density values evaluated at the observations.                                         | [@gneitingraftery2007]                                   |
 
 The appropriate functions depend on the available model output. For example,
 `picp()`, `coverage_error()`, `interval_width()`, and `interval_score()` require
@@ -372,7 +373,7 @@ gg_coverage(
 ```
 
 In geostatistical uncertainty validation this display has traditionally also
-been called an **accuracy plot** (Goovaerts, 2001), although **reliability**
+been called an **accuracy plot** [@goovaerts2001], although **reliability**
 **plot** is the more general terminology used for probabilistic predictions.
 
 #### 5.3.1 Numerical summaries of the reliability plot
@@ -424,7 +425,7 @@ A model could instead have approximately 10% below the lower boundary and
 almost none above the upper boundary while still obtaining approximately 90%
 total coverage.
 
-Schmidinger and Heuvelink (2023) showed that this limitation can occur in
+@schmidinger2023 showed that this limitation can occur in
 practice and recommended complementing PICP with quantile-based calibration or
 PIT diagnostics.
 
@@ -618,7 +619,7 @@ gg_pit(pit_biased)
 ```
 
 PIT and QCP convey closely related calibration information but emphasize
-different aspects visually. Schmidinger and Heuvelink (2023) recommend them as
+different aspects visually. @schmidinger2023 recommend them as
 useful complements to PICP, particularly because they can expose calibration
 problems that central interval coverage alone may hide.
 
@@ -633,7 +634,7 @@ single numerical criterion that rewards both calibration and sharpness.
 
 A proper scoring rule does not reward a model for deliberately reporting a
 predictive distribution different from the distribution it actually represents
-(Gneiting and Raftery, 2007).
+[@gneitingraftery2007].
 
 #### 5.7.1 Continuous ranked probability score
 
@@ -1005,7 +1006,7 @@ The output contains:
 The reliability component is non-negative and has an ideal value of zero.
 It provides a numerical summary of distributional calibration.
 
-Schmidinger and Heuvelink (2023) showed that RELI summarizes patterns also
+@schmidinger2023 showed that RELI summarizes patterns also
 visible in PICP, QCP, and PIT diagnostics, whereas the total CRPS additionally
 reflects sharpness and predictive performance.
 
@@ -1160,28 +1161,8 @@ complementary diagnostics.
    Different metrics emphasize different aspects of probabilistic prediction
    quality and can therefore lead to different model rankings.
 
-Schmidinger and Heuvelink (2023) demonstrated this explicitly for probabilistic
+@schmidinger2023 demonstrated this explicitly for probabilistic
 digital soil mapping: PICP could hide one-sided bias, whereas QCP and PIT
 revealed it, and scoring rules provided additional information when comparing
 competing probabilistic models.
 
-## 10. References
-
-- Gneiting, T., Balabdaoui, F., and Raftery, A. E. (2007). Probabilistic
-  forecasts, calibration and sharpness. *Journal of the Royal Statistical*
-  *Society: Series B*, 69, 243-268.
-  [https://doi.org/10.1111/j.1467-9868.2007.00587.x](https://doi.org/10.1111/j.1467-9868.2007.00587.x)
-- Gneiting, T. and Raftery, A. E. (2007). Strictly proper scoring rules,
-  prediction, and estimation. *Journal of the American Statistical*
-  *Association*, 102, 359-378.
-  [https://doi.org/10.1198/016214506000001437](https://doi.org/10.1198/016214506000001437)
-- Goovaerts, P. (2001). Geostatistical modelling of uncertainty in soil
-  science. *Geoderma*, 103, 3-26.
-  <https://doi.org/10.1016/S0016-7061(01)00067-2>
-- Hersbach, H. (2000). Decomposition of the continuous ranked probability
-  score for ensemble prediction systems. *Weather and Forecasting*, 15,
-  559-570.
-  <https://doi.org/10.1175/1520-0434(2000)015%3C0559:DOTCRP%3E2.0.CO;2>
-- Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
-  predictions in digital soil mapping. *Geoderma*, 437, 116585.
-  [https://doi.org/10.1016/j.geoderma.2023.116585](https://doi.org/10.1016/j.geoderma.2023.116585)
