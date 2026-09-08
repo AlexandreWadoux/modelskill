@@ -9,26 +9,67 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
-```
-
-Continuous predictions can come from machine learning, statistical models, or
-physical models. `modelskill` evaluates the paired predictions and observations,
-not the algorithm that produced them. Use an independent validation set or an
-appropriate resampling scheme.
-
-```{r data}
-library(modelskill)
-set.seed(123)
-obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
-models <- list(
-  Good = obs + rnorm(100, sd = 0.5),
-  Biased = obs + 1,
-  Noisy = obs + rnorm(100, sd = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
 )
 ```
 
-## Start with observed versus predicted values
+## Why use several prediction metrics?
+
+Continuous predictions can come from machine learning, statistical models,
+geostatistics, or process-based models. `modelskill` evaluates the agreement
+between paired observations and predictions, independently of the model used to
+produce them.
+
+Prediction performance has several components. A model may have small average
+error but substantial bias, reproduce the observed pattern while systematically
+overpredicting, or have good overall accuracy while failing to reproduce the
+observed variability.
+
+For this reason, model evaluation should normally use several complementary
+metrics rather than a single number.
+
+Validation metrics should be calculated from independent validation data or an
+appropriate resampling procedure.
+
+## Example data
+
+We create three deliberately different prediction models.
+
+```{r data}
+library(modelskill)
+
+set.seed(123)
+
+n <- 100
+
+obs <- seq(0, 10, length.out = n) +
+  rnorm(n, sd = 1)
+
+models <- list(
+  Good = obs + rnorm(n, sd = 0.5),
+
+  # Constant positive offset
+  Biased = obs + 1,
+
+  # Larger random errors
+  Noisy = obs + rnorm(n, sd = 2)
+)
+```
+
+The models have simple characteristics:
+
+* `Good` has relatively small random errors;
+* `Biased` systematically overpredicts by one unit;
+* `Noisy` has larger random errors.
+
+## Start by looking at the predictions
+
+Before calculating summary statistics, it is useful to inspect observed versus
+predicted values.
 
 ```{r scatter}
 plot_data <- data.frame(
@@ -36,170 +77,615 @@ plot_data <- data.frame(
   predicted = unlist(models, use.names = FALSE),
   model = rep(names(models), each = length(obs))
 )
-ggplot2::ggplot(plot_data, ggplot2::aes(observed, predicted, colour = model)) +
-  ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
-  ggplot2::geom_point(alpha = 0.7, size = 1.5) +
-  ggplot2::coord_equal() + ggplot2::theme_classic() +
-  ggplot2::labs(x = "Observed", y = "Predicted", colour = "Model")
+
+ggplot2::ggplot(
+  plot_data,
+  ggplot2::aes(
+    x = observed,
+    y = predicted,
+    colour = model
+  )
+) +
+  ggplot2::geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed"
+  ) +
+  ggplot2::geom_point(
+    alpha = 0.7,
+    size = 1.5
+  ) +
+  ggplot2::coord_equal() +
+  ggplot2::theme_classic() +
+  ggplot2::labs(
+    x = "Observed",
+    y = "Predicted",
+    colour = "Model"
+  )
 ```
 
-The equality line represents perfect predictions. The `Good` model stays close
-to it, `Biased` is shifted upward, and `Noisy` is more dispersed.
+The dashed 1:1 line represents perfect agreement. `Good` remains relatively
+close to this line, `Biased` is systematically shifted upward, and `Noisy` is
+more dispersed.
 
-## Categories of prediction performance metrics
+# Calculate individual metrics
 
-Each category answers a different question. The table is a practical starting
-point for choosing a complementary set of metrics rather than reducing model
-performance to a single number.
+Every prediction metric in `modelskill` can be calculated separately. This is
+useful when only a few specific aspects of performance are required.
 
-| Category | `modelskill` metrics | Main question |
-|:--|:--|:--|
-| **Error magnitude** | [`rmse()`](../reference/rmse.html), [`mae()`](../reference/mae.html), [`mse()`](../reference/mse.html), [`mdae()`](../reference/mdae.html) | How large are prediction errors? |
-| **Bias** | [`bias()`](../reference/bias.html), [`mpe()`](../reference/mpe.html) | Are predictions systematically high or low? |
-| **Association** | [`correlation()`](../reference/correlation.html), [`r2()`](../reference/r2.html) | Do predictions reproduce variation in observations? |
-| **Agreement** | [`ccc()`](../reference/ccc.html), [`willmott_d()`](../reference/willmott_d.html) | How closely do predictions agree with observations? |
-| **Efficiency / composite skill** | [`nse()`](../reference/nse.html) ([`mec()`](../reference/mec.html) and [`R2()`](../reference/efficiency_r2.html) aliases), [`kge()`](../reference/kge.html) | How well do predictions perform against a benchmark or across multiple performance components? |
-| **Scaled / relative error** | [`nrmse()`](../reference/nrmse.html), [`rrmse()`](../reference/rrmse.html), [`rae()`](../reference/rae.html), [`rpd()`](../reference/rpd.html), [`rpiq()`](../reference/rpiq.html), [`rer()`](../reference/rer.html) | How large is error relative to variation or magnitude of observations? |
-| **Specialised losses** | [`mape()`](../reference/mape.html), [`smape()`](../reference/smape.html), [`msle()`](../reference/msle.html), [`rmsle()`](../reference/rmsle.html), [`pinball_loss()`](../reference/pinball_loss.html) | How does performance look under relative, transformed, or quantile-specific loss? |
+All individual functions use the same basic argument order:
 
-This is a practical classification: several metrics are mathematically related,
-so they should not be treated as statistically independent evidence.
+```r
+metric(obs, pred)
+```
 
-> **Do not confuse `r2()` with `R2()`.** Lowercase `r2()` is squared Pearson
-> correlation. Uppercase `R2()` is the model-efficiency coefficient; `R2()`,
-> `nse()`, and `mec()` are aliases in this package. They answer different
-> scientific questions.
+where `obs` is the vector of observations and `pred` is the corresponding
+prediction vector.
 
-MPE and RRMSE are expressed as percentages. Both are undefined when the
-observed value or observed mean used as their denominator is zero, respectively.
+## RMSE: overall error magnitude
 
-## Calculate complementary metrics
+The **root mean squared error (RMSE)** measures the overall magnitude of
+prediction errors:
+
+\[
+\mathrm{RMSE}
+=
+\sqrt{
+\frac{1}{n}
+\sum_{i=1}^{n}
+(obs_i-pred_i)^2
+}.
+\]
+
+Calculate RMSE for the `Good` model:
+
+```{r rmse-good}
+rmse(
+  obs,
+  models$Good
+)
+```
+
+and compare it with the `Noisy` model:
+
+```{r rmse-compare}
+rmse(
+  obs,
+  models$Noisy
+)
+```
+
+[`rmse()`](../reference/rmse.html) is non-negative and has the same units as
+the response variable. Zero indicates perfect predictions and smaller values
+indicate smaller errors.
+
+Because errors are squared before averaging, relatively large errors have more
+influence on RMSE. It is therefore useful to interpret RMSE together with a
+less outlier-sensitive statistic such as [`mae()`](../reference/mae.html).
+
+```{r rmse-mae}
+rmse(obs, models$Noisy)
+mae(obs, models$Noisy)
+```
+
+## Bias: systematic overprediction or underprediction
+
+`modelskill` defines prediction error as
+
+\[
+e_i = obs_i-pred_i.
+\]
+
+The [`bias()`](../reference/bias.html) function calculates the mean signed
+error:
+
+\[
+\mathrm{ME}
+=
+\frac{1}{n}
+\sum_{i=1}^{n}
+(obs_i-pred_i).
+\]
+
+For the deliberately biased model:
+
+```{r bias-example}
+bias(
+  obs,
+  models$Biased
+)
+```
+
+Because `Biased = obs + 1`, its mean error is -1.
+
+Under the `modelskill` convention:
+
+* **negative bias** means overprediction;
+* **positive bias** means underprediction;
+* **zero bias** means no average systematic error.
+
+A bias close to zero does not necessarily mean that predictions are accurate.
+Positive and negative errors can cancel. Bias should therefore be interpreted
+with an unsigned error metric such as MAE or RMSE.
+
+# A particularly important distinction: `r2()` versus `R2()`
+
+`modelskill` contains two statistics whose names differ only by capitalization,
+but they measure different things.
+
+### Lowercase `r2()`
+
+[`r2()`](../reference/r2.html) is **squared Pearson correlation**:
+
+\[
+r^2
+=
+\frac{
+\left[
+\sum_{i=1}^{n}
+(obs_i-\bar{obs})(pred_i-\bar{pred})
+\right]^2
+}{
+\sum_{i=1}^{n}(obs_i-\bar{obs})^2
+\sum_{i=1}^{n}(pred_i-\bar{pred})^2
+}.
+\]
+
+It measures the strength of linear association.
+
+### Uppercase `R2()`
+
+[`R2()`](../reference/efficiency_r2.html) is the **model-efficiency
+coefficient**:
+
+\[
+R^2
+=
+1-
+\frac{
+\sum_{i=1}^{n}(obs_i-pred_i)^2
+}{
+\sum_{i=1}^{n}(obs_i-\bar{obs})^2
+}.
+\]
+
+It compares the model with using the observed mean as a constant prediction.
+
+This distinction becomes obvious with the `Biased` model:
+
+```{r r2-versus-R2}
+r2(
+  obs,
+  models$Biased
+)
+
+R2(
+  obs,
+  models$Biased
+)
+```
+
+The biased predictions are exactly one unit above the observations. Their
+linear association is therefore perfect, so lowercase `r2()` is 1.
+
+However, the predictions are not perfectly accurate. Uppercase `R2()` detects
+their prediction error and is therefore below 1.
+
+This illustrates why correlation and squared correlation should not be used
+alone as measures of prediction accuracy.
+
+> **Remember:** lowercase `r2()` is squared Pearson correlation. Uppercase
+> `R2()` is model efficiency.
+
+In `modelskill`, uppercase `R2()`,
+[`nse()`](../reference/nse.html), and
+[`mec()`](../reference/mec.html) are aliases for exactly the same statistic:
+
+```{r efficiency-aliases}
+c(
+  R2 = R2(obs, models$Good),
+  NSE = nse(obs, models$Good),
+  MEC = mec(obs, models$Good)
+)
+```
+
+For this statistic:
+
+* **1** is perfect prediction;
+* **0** means that predicting the observed mean performs equally well;
+* **negative values** mean that predicting the observed mean would perform
+  better.
+
+## Correlation is not agreement
+
+The same issue can be illustrated by comparing Pearson correlation with
+Lin's concordance correlation coefficient.
+
+```{r correlation-versus-ccc}
+correlation(
+  obs,
+  models$Biased
+)
+
+ccc(
+  obs,
+  models$Biased
+)
+```
+
+[`correlation()`](../reference/correlation.html) measures linear association.
+It is insensitive to a constant shift.
+
+[`ccc()`](../reference/ccc.html) measures concordance and is reduced when
+predictions differ from observations in their mean or variability. It therefore
+measures agreement more directly than Pearson correlation.
+
+# Compare several models at once
+
+When several models are being evaluated, [`model_metrics()`](../reference/model_metrics.html)
+calculates the main prediction metrics together.
 
 ```{r metrics}
-model_metrics(models, obs)
+model_metrics(
+  models,
+  obs,
+  digits = 3
+)
 ```
 
-No single metric is sufficient. Mean error (ME) describes signed systematic
-error under the package convention `obs - pred`; negative ME indicates
-overprediction. MAE and RMSE describe error magnitude in response units; RMSE
-gives greater weight to large errors. Pearson correlation describes pattern
-association, not agreement in level.
+The default output contains complementary information about:
 
-`nse()`, `mec()`, and uppercase `R2()` are aliases for the same
-mean-benchmark efficiency coefficient. Lowercase `r2()` is squared Pearson
-correlation and must not be interpreted as the efficiency coefficient.
-Concordance (`ccc()`) combines correlation with level and spread agreement.
+* systematic error;
+* average error magnitude;
+* centred error;
+* association;
+* model efficiency;
+* variability;
+* concordance.
 
-For specialised workflows, request robust, relative, percentage, agreement,
-and KGE metrics explicitly:
+For the example data, no single column should be used to identify the "best"
+model without considering what aspect of prediction quality matters for the
+application.
+
+# Categories of prediction performance metrics
+
+The following classification is intended as a practical guide. Some metrics
+are mathematically related and should not be interpreted as independent
+evidence.
+
+| Category | `modelskill` functions | Main question |
+|:--|:--|:--|
+| **Systematic error** | [`bias()`](../reference/bias.html), [`mpe()`](../reference/mpe.html) | Are predictions systematically too high or too low? |
+| **Error magnitude** | [`mae()`](../reference/mae.html), [`mdae()`](../reference/mdae.html), [`mse()`](../reference/mse.html), [`rmse()`](../reference/rmse.html) | How large are the prediction errors? |
+| **Centred error and spread** | [`crmse()`](../reference/crmse.html), [`sep()`](../reference/sep.html), [`sd_ratio()`](../reference/sd_ratio.html) | How much disagreement remains after bias is removed, and is variability reproduced? |
+| **Association** | [`correlation()`](../reference/correlation.html), [`r2()`](../reference/r2.html) | Do predictions reproduce the observed pattern? |
+| **Agreement** | [`ccc()`](../reference/ccc.html), [`willmott_d()`](../reference/willmott_d.html) | How closely do predicted values agree with observations? |
+| **Efficiency and benchmark performance** | [`R2()`](../reference/efficiency_r2.html), [`nse()`](../reference/nse.html), [`mec()`](../reference/mec.html), [`rae()`](../reference/rae.html), [`kge()`](../reference/kge.html) | How well does the model perform relative to a benchmark or multiple performance components? |
+| **Scaled and relative error** | [`nrmse()`](../reference/nrmse.html), [`rrmse()`](../reference/rrmse.html), [`rpd()`](../reference/rpd.html), [`rpiq()`](../reference/rpiq.html), [`rer()`](../reference/rer.html) | How large is error relative to the scale or variability of the observations? |
+| **Relative and transformed losses** | [`mape()`](../reference/mape.html), [`smape()`](../reference/smape.html), [`msle()`](../reference/msle.html), [`rmsle()`](../reference/rmsle.html) | How large is error on a relative or logarithmic scale? |
+| **Quantile loss** | [`pinball_loss()`](../reference/pinball_loss.html) | How accurate is a prediction for a specified quantile? |
+
+There is no universally best metric. The appropriate combination depends on
+the scientific objective and the consequences of different types of prediction
+error.
+
+# Core metrics
+
+The default output of `model_metrics()` contains the principal metrics used for
+continuous prediction evaluation.
+
+For the retained observation-prediction pairs, let \(o_i\) denote observations,
+\(p_i\) predictions, and \(n\) the number of pairs. Let \(\bar{o}\) and
+\(\bar{p}\) denote their means.
+
+| Metric / function | Equation | Ideal | Simple interpretation | Reference |
+|:--|:--|:--|:--|:--|
+| **ME / bias** [`bias()`](../reference/bias.html) | \(\mathrm{ME}=\frac{1}{n}\sum_i(o_i-p_i)\) | 0 | Average signed error. Negative = overprediction; positive = underprediction. | Legates & McCabe (1999) |
+| **MAE** [`mae()`](../reference/mae.html) | \(\mathrm{MAE}=\frac{1}{n}\sum_i\lvert o_i-p_i\rvert\) | 0 | Average absolute error in response units. | Willmott & Matsuura (2005) |
+| **MSE** [`mse()`](../reference/mse.html) | \(\mathrm{MSE}=\frac{1}{n}\sum_i(o_i-p_i)^2\) | 0 | Average squared error; gives more weight to large errors. | Hodson (2022) |
+| **RMSE** [`rmse()`](../reference/rmse.html) | \(\mathrm{RMSE}=\sqrt{\frac{1}{n}\sum_i(o_i-p_i)^2}\) | 0 | Overall error magnitude in response units; sensitive to large errors. | Hodson (2022) |
+| **NRMSE** [`nrmse()`](../reference/nrmse.html) | \(\mathrm{NRMSE}=\mathrm{RMSE}/s_o\) | 0 | RMSE relative to the observed standard deviation. | Taylor (2001) |
+| **cRMSE** [`crmse()`](../reference/crmse.html) | \(\mathrm{cRMSE}=\sqrt{\frac{1}{n}\sum_i[(o_i-p_i)-\mathrm{ME}]^2}\) | 0 | Error remaining after mean bias is removed. | Taylor (2001) |
+| **Pearson correlation** [`correlation()`](../reference/correlation.html) | \(r=\frac{\sum_i(o_i-\bar{o})(p_i-\bar{p})}{\sqrt{\sum_i(o_i-\bar{o})^2\sum_i(p_i-\bar{p})^2}}\) | 1 | Strength and direction of linear association; not agreement. | Legates & McCabe (1999) |
+| **Squared Pearson correlation** [`r2()`](../reference/r2.html) | \(r^2\) | 1 | Strength of linear association without its sign; not agreement. | Legates & McCabe (1999) |
+| **Model efficiency \(R^2\)** [`R2()`](../reference/efficiency_r2.html) | \(1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(o_i-\bar{o})^2}\) | 1 | 0 = observed-mean benchmark; negative = worse than that benchmark. | Nash & Sutcliffe (1970); Janssen & Heuberger (1995) |
+| **SD ratio** [`sd_ratio()`](../reference/sd_ratio.html) | \(s_p/s_o\) | 1 | Below 1 = too little variability; above 1 = too much variability. | Taylor (2001) |
+| **CCC** [`ccc()`](../reference/ccc.html) | \(\frac{2c_{op}}{v_o+v_p+(\bar{o}-\bar{p})^2}\) | 1 | Agreement in correlation, mean, and variability. | Lin (1989) |
+| **Bias correction factor \(C_b\)** [`model_metrics()`](../reference/model_metrics.html) | \(\frac{2\sqrt{v_ov_p}}{v_o+v_p+(\bar{o}-\bar{p})^2}\) | 1 | Agreement in mean and variability, without correlation. | Lin (1989) |
+
+Here \(s_o\) and \(s_p\) are the sample standard deviations of observations and
+predictions. For CCC, \(v_o\), \(v_p\), and \(c_{op}\) are the corresponding
+population variances and covariance used by the package.
+
+The ranges and special cases of each metric are described in its linked
+reference page.
+
+# Extended metrics
+
+Additional metrics are available when a more specialised evaluation is
+required.
 
 ```{r extended}
-model_metrics(models, obs, extended = TRUE)
+model_metrics(
+  models,
+  obs,
+  extended = TRUE,
+  digits = 3
+)
 ```
 
-## Equations, interpretation, and references
+The extended output adds robust error measures, scale-normalised metrics,
+percentage errors, agreement measures, and KGE.
 
-For the retained pairs, let $o_i$ be observations, $p_i$ predictions,
-$e_i=o_i-p_i$, $b=\overline e$, and $n$ the number of pairs.
-$\bar o$ and $\bar p$ are the observation and prediction means.
-The sample standard deviations are
-$s_o=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}(o_i-\bar o)^2}$ and
-$s_p=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}(p_i-\bar p)^2}$.
-For concordance, the population moments are
-$v_o=\frac{1}{n}\sum_{i=1}^{n}(o_i-\bar o)^2$,
-$v_p=\frac{1}{n}\sum_{i=1}^{n}(p_i-\bar p)^2$, and
-$c_{op}=\frac{1}{n}\sum_{i=1}^{n}(o_i-\bar o)(p_i-\bar p)$.
-Write $A=\sum_i\lvert o_i-\bar o\rvert$ and
-$D=\sum_i(\lvert p_i-\bar o\rvert+\lvert o_i-\bar o\rvert)^2$.
-All sums below run over retained pairs. Undefined cases return `NA`.
-The listed ranges apply when the metric is defined; there are no universal
-cutoffs for acceptable accuracy across applications.
+These metrics should be selected because they answer a relevant scientific
+question, not simply because they are available.
 
-### Core output
+For example, the median absolute error is less affected by a few unusually
+large errors than RMSE:
 
-The statistic name below matches the left-hand side of its equation; the
-output column name is shown in parentheses. Pearson's $r$ is returned in
-the `correlation` column.
+```{r mdae-example}
+mdae(
+  obs,
+  models$Noisy
+)
+```
 
-| Statistic (output column) | Equation | Range, ideal, and interpretation | Reference |
-|:--|:--|:--|:--|
-| ME (`bias`) | $\mathrm{ME}=\frac{1}{n}\sum_{i=1}^{n}(o_i-p_i)$ | Real; 0 ideal. Positive: underprediction; errors can cancel. Response units. | Legates & McCabe (1999) |
-| MAE (`mae`) | $\mathrm{MAE}=\frac{1}{n}\sum_{i=1}^{n}\lvert o_i-p_i\rvert$ | Nonnegative; 0 ideal. Average absolute error, response units. | Willmott & Matsuura (2005) |
-| MSE (`mse`) | $\mathrm{MSE}=\frac{1}{n}\sum_{i=1}^{n}(o_i-p_i)^2$ | Nonnegative; 0 ideal. Squared response units. | Hodson (2022) |
-| RMSE (`rmse`) | $\mathrm{RMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(o_i-p_i)^2}$ | Nonnegative; 0 ideal. Response units; sensitive to large errors. | Hodson (2022) |
-| NRMSE (`nrmse`) | $\mathrm{NRMSE}=\frac{\mathrm{RMSE}}{s_o}$ | Nonnegative; 0 ideal. 1 means RMSE equals sample observation SD; NA for constant observations. | Taylor (2001); package normalization |
-| cRMSE (`crmse`) | $\mathrm{cRMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}[(o_i-p_i)-\mathrm{ME}]^2}$ | Nonnegative; 0 ideal. Removes constant bias; response units. | Taylor (2001) |
-| Pearson's $r$ (`correlation`) | $r=\frac{\sum_{i=1}^{n}(o_i-\bar o)(p_i-\bar p)}{\sqrt{\sum_{i=1}^{n}(o_i-\bar o)^2\sum_{i=1}^{n}(p_i-\bar p)^2}}$ | [-1,1]; 1 indicates increasing linear association, not necessarily agreement. NA for either constant vector. | Legates & McCabe (1999) |
-| Squared Pearson's $r$, $r^2$ (`r2`) | $r^2=\frac{[\sum_{i=1}^{n}(o_i-\bar o)(p_i-\bar p)]^2}{\sum_{i=1}^{n}(o_i-\bar o)^2\sum_{i=1}^{n}(p_i-\bar p)^2}$ | [0,1]; squared association, loses the sign of correlation. | Legates & McCabe (1999) |
-| $R^2$ / NSE / MEC (`R2`) | $R^2=1-\frac{\sum_{i=1}^{n}(o_i-p_i)^2}{\sum_{i=1}^{n}(o_i-\bar o)^2}$ | At most 1; 1 ideal, 0 observed-mean benchmark, negative worse. NA for constant observations. | Nash & Sutcliffe (1970); Janssen & Heuberger (1995) |
-| SD ratio (`sd_ratio`) | $\mathrm{SD\ ratio}=\frac{s_p}{s_o}$ | Nonnegative; 1 equal spread, below 1 smoother, above 1 more variable. | Taylor (2001) |
-| CCC (`ccc`) | $\mathrm{CCC}=\frac{2c_{op}}{v_o+v_p+(\bar o-\bar p)^2}$ | [-1,1]; 1 ideal agreement. Package returns NA for constant observations and 0 for constant predictions with varying observations. | Lin (1989) |
-| $C_b$ (`Cb`) | $C_b=\frac{2\sqrt{v_ov_p}}{v_o+v_p+(\bar o-\bar p)^2}$ | [0,1]; 1 equal means and SDs, irrespective of correlation. Same constant-input policy as CCC. | Lin (1989) |
+Kling-Gupta efficiency combines correlation, variability, and mean agreement:
 
-### Extended output (`extended = TRUE`)
+```{r kge-example}
+kge(
+  obs,
+  models$Good
+)
+```
 
-Here $Q_{0.25}(o)$ and $Q_{0.75}(o)$ are the observation quartiles, so
-$\mathrm{IQR}(o)=Q_{0.75}(o)-Q_{0.25}(o)$. The logarithm is natural.
-ME and RMSE are defined in the core table above, and $r$ is Pearson's $r$.
+## Extended metric reference
 
-| Statistic | Package function | Equation | Range, ideal, and interpretation | Reference / convention |
+| Metric / function | Equation | Ideal | Simple interpretation | Reference |
 |:--|:--|:--|:--|:--|
-| MdAE | [`mdae()`](../reference/mdae.html) | $\mathrm{MdAE}=\mathrm{median}_{i=1,\ldots,n}(\lvert o_i-p_i\rvert)$ | Nonnegative; 0 ideal. Robust typical error, response units. | Hyndman & Koehler (2006) |
-| RPD | [`rpd()`](../reference/rpd.html) | $\mathrm{RPD}=\frac{s_o}{\mathrm{RMSE}}$ | Nonnegative; larger is better. NA at perfect prediction. | Bellon-Maurel et al. (2010) |
-| RPIQ | [`rpiq()`](../reference/rpiq.html) | $\mathrm{RPIQ}=\frac{Q_{0.75}(o)-Q_{0.25}(o)}{\mathrm{RMSE}}$ | Nonnegative; larger is better. Type-7 quartiles; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
-| SEP | [`sep()`](../reference/sep.html) | $\mathrm{SEP}=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}[(o_i-p_i)-\mathrm{ME}]^2}$ | Nonnegative; 0 ideal. Bias removed; at least two pairs. | Bellon-Maurel et al. (2010) |
-| RER | [`rer()`](../reference/rer.html) | $\mathrm{RER}=\frac{\max_i o_i-\min_i o_i}{\mathrm{RMSE}}$ | Nonnegative; larger is better; sensitive to extremes; NA when RMSE=0. | Bellon-Maurel et al. (2010) |
-| MAPE | [`mape()`](../reference/mape.html) | $\mathrm{MAPE}=\frac{1}{n}\sum_{i=1}^{n}\left\lvert\frac{o_i-p_i}{o_i}\right\rvert$ | Nonnegative fraction; 0 ideal. Multiply by 100 for percent; NA for any zero observation. | Hyndman & Koehler (2006) |
-| MPE | [`mpe()`](../reference/mpe.html) | $\mathrm{MPE}=\frac{100}{n}\sum_{i=1}^{n}\frac{o_i-p_i}{o_i}$ | Unbounded percent; 0 ideal. Positive means underprediction only for positive observations; NA at zero. | Hyndman & Koehler (2006); obs-minus-pred sign |
-| sMAPE | [`smape()`](../reference/smape.html) | $\mathrm{sMAPE}=\frac{1}{n}\sum_{i=1}^{n}\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}$ | [0,2] fraction; 0 ideal. Both-zero pair contributes 0; multiply by 100 for percent. | Hyndman & Koehler (2006); absolute-denominator variant |
-| MSLE | [`msle()`](../reference/msle.html) | $\mathrm{MSLE}=\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2$ | Nonnegative; 0 ideal. NA for negative inputs; target units affect log1p. | Hodson (2022), transformed errors; package log1p convention |
-| RMSLE | [`rmsle()`](../reference/rmsle.html) | $\mathrm{RMSLE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}[\log(1+o_i)-\log(1+p_i)]^2}$ | Nonnegative; 0 ideal. Same domain as MSLE. | Hodson (2022); package log1p convention |
-| RAE | [`rae()`](../reference/rae.html) | $\mathrm{RAE}=\frac{\sum_{i=1}^{n}\lvert o_i-p_i\rvert}{\sum_{i=1}^{n}\lvert o_i-\bar o\rvert}$ | Nonnegative; 0 ideal, 1 observed-mean absolute-error benchmark; NA if A=0. | Hyndman & Koehler (2006); mean benchmark |
-| RRMSE | [`rrmse()`](../reference/rrmse.html) | $\mathrm{RRMSE}=100\frac{\mathrm{RMSE}}{\lvert\bar o\rvert}$ | Nonnegative percent; 0 ideal; NA at zero mean, unstable near zero. | Willmott et al. (1985), RMSE; package absolute-mean normalization |
-| Willmott's $d$ | [`willmott_d()`](../reference/willmott_d.html) | $d=1-\frac{\sum_{i=1}^{n}(o_i-p_i)^2}{\sum_{i=1}^{n}(\lvert p_i-\bar o\rvert+\lvert o_i-\bar o\rvert)^2}$ | [0,1]; 1 ideal. NA if D=0 (identical constant vectors); sensitive to large errors. | Willmott et al. (1985) |
-| KGE | [`kge()`](../reference/kge.html) | $\mathrm{KGE}=1-\sqrt{(r-1)^2+\left(\frac{s_p}{s_o}-1\right)^2+\left(\frac{\bar p}{\bar o}-1\right)^2}$ | At most 1; 1 ideal. Zero is not NSE's benchmark. NA for zero observation mean or either constant vector. | Gupta et al. (2009) |
+| **MdAE** [`mdae()`](../reference/mdae.html) | \(\mathrm{median}_i\lvert o_i-p_i\rvert\) | 0 | Typical absolute error; relatively robust to large errors. | Hyndman & Koehler (2006) |
+| **RPD** [`rpd()`](../reference/rpd.html) | \(s_o/\mathrm{RMSE}\) | Larger | Error relative to observed standard deviation. | Bellon-Maurel et al. (2010) |
+| **RPIQ** [`rpiq()`](../reference/rpiq.html) | \(\mathrm{IQR}(o)/\mathrm{RMSE}\) | Larger | Error relative to the observed interquartile range. | Bellon-Maurel et al. (2010) |
+| **SEP** [`sep()`](../reference/sep.html) | \(\sqrt{\frac{1}{n-1}\sum_i[(o_i-p_i)-\mathrm{ME}]^2}\) | 0 | Sample SD of prediction errors after removing bias. | Bellon-Maurel et al. (2010) |
+| **RER** [`rer()`](../reference/rer.html) | \(\frac{\max(o)-\min(o)}{\mathrm{RMSE}}\) | Larger | Error relative to observed range; sensitive to extreme values. | Bellon-Maurel et al. (2010) |
+| **MAPE** [`mape()`](../reference/mape.html) | \(\frac{1}{n}\sum_i\left\lvert\frac{o_i-p_i}{o_i}\right\rvert\) | 0 | Mean absolute relative error. Undefined when an observation is zero. | Hyndman & Koehler (2006) |
+| **MPE** [`mpe()`](../reference/mpe.html) | \(\frac{100}{n}\sum_i\frac{o_i-p_i}{o_i}\) | 0 | Signed relative bias in percent. Undefined when an observation is zero. | Hyndman & Koehler (2006) |
+| **sMAPE** [`smape()`](../reference/smape.html) | \(\frac{1}{n}\sum_i\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}\) | 0 | Symmetric relative absolute error. | Hyndman & Koehler (2006) |
+| **MSLE** [`msle()`](../reference/msle.html) | \(\frac{1}{n}\sum_i[\log(1+o_i)-\log(1+p_i)]^2\) | 0 | Squared error on the log1p scale. Requires non-negative values. | Hodson (2022) |
+| **RMSLE** [`rmsle()`](../reference/rmsle.html) | \(\sqrt{\mathrm{MSLE}}\) | 0 | Root mean squared error on the log1p scale. | Hodson (2022) |
+| **RAE** [`rae()`](../reference/rae.html) | \(\frac{\sum_i\lvert o_i-p_i\rvert}{\sum_i\lvert o_i-\bar{o}\rvert}\) | 0 | Absolute error relative to predicting the observed mean; 1 is the benchmark. | Hyndman & Koehler (2006) |
+| **RRMSE** [`rrmse()`](../reference/rrmse.html) | \(100\,\mathrm{RMSE}/\lvert\bar{o}\rvert\) | 0 | RMSE as a percentage of the absolute observed mean. | Willmott et al. (1985) |
+| **Willmott's \(d\)** [`willmott_d()`](../reference/willmott_d.html) | \(1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(\lvert p_i-\bar{o}\rvert+\lvert o_i-\bar{o}\rvert)^2}\) | 1 | Index of agreement; sensitive to large errors. | Willmott et al. (1985) |
+| **KGE** [`kge()`](../reference/kge.html) | \(1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar{p}/\bar{o}-1)^2}\) | 1 | Combines correlation, variability ratio, and mean ratio. | Gupta et al. (2009) |
 
-### Redundancy and comparison conventions
+For `MAPE` and `sMAPE`, `modelskill` returns a fraction; multiply by 100 if a
+percentage is required. `MPE` and `RRMSE` are returned directly as percentages.
 
-Each statistic now appears once: use `bias`, `mae`, `rmse`, `correlation`,
-`R2`, and `ccc` instead of the former duplicate columns `ME`, `MAE`, `RMSE`,
-`r`, `nse`/`NSE`/`MEC`, and `rhoC`. Standalone `nse()` and `mec()` remain
-aliases for `R2()`. `Cb` is retained because it measures a separate component.
-KGE is included in extended output. Quantile loss is requested separately
-with `pinball_loss()`, since it requires a scientifically chosen quantile.
+Percentage-based metrics require particular care when observations or their
+mean are zero or close to zero.
 
-Related metrics are not independent evidence: MSE is RMSE squared, RPD is
-the reciprocal of NRMSE when defined, and SEP equals cRMSE times
-$\sqrt{n/(n-1)}$. These have different units or established interpretations
-and remain available. With identical pairs,
-$R^2=1-n\,\mathrm{NRMSE}^2/(n-1)$ and
-$\mathrm{RMSE}^2=b^2+\mathrm{cRMSE}^2$.
+# Quantile predictions
 
-Missing pairs are removed separately for each model by default; use a shared
-complete validation set for fair comparisons. With `na.rm = FALSE`, missing
-pairs produce missing metrics. Core correlation, efficiency, SD ratio, CCC,
-and Cb require at least two pairs and varying observations. Percentage errors
-need a meaningful zero and are unstable with small denominators. In particular,
-the existing MAPE/sMAPE fraction scale is preserved, unlike MPE/RRMSE's percent
-scale.
+[`pinball_loss()`](../reference/pinball_loss.html) is not included in
+`model_metrics(extended = TRUE)` because it requires a specific quantile level.
 
-### References
+For a quantile prediction \(q_\tau\), the loss depends on the requested
+probability \(\tau\).
 
-* Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of goodness-of-fit measures in hydrologic and hydroclimatic model validation. *Water Resources Research*, 35, 233-241. <https://doi.org/10.1029/1998WR900018>
-* Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean absolute error (MAE) over the root mean square error (RMSE) in assessing average model performance. *Climate Research*, 30, 79-82. <https://doi.org/10.3354/cr030079>
-* Hodson, T. O. (2022). Root-mean-square error (RMSE) or mean absolute error (MAE): when to use them or not. *Geoscientific Model Development*, 15, 5481-5487. <https://doi.org/10.5194/gmd-15-5481-2022>
-* Taylor, K. E. (2001). Summarizing multiple aspects of model performance in a single diagram. *Journal of Geophysical Research*, 106, 7183-7192. <https://doi.org/10.1029/2000JD900719>
-* Nash, J. E. and Sutcliffe, J. V. (1970). River flow forecasting through conceptual models part I. *Journal of Hydrology*, 10, 282-290. <https://doi.org/10.1016/0022-1694(70)90255-6>
-* Janssen, P. H. M. and Heuberger, P. S. C. (1995). Calibration of process-oriented models. *Ecological Modelling*, 83, 55-66. <https://doi.org/10.1016/0304-3800(95)00084-9>
-* Lin, L. I.-K. (1989). A concordance correlation coefficient to evaluate reproducibility. *Biometrics*, 45, 255-268. <https://doi.org/10.2307/2532051>
-* Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger, J.-M., and McBratney, A. (2010). Critical review of chemometric indicators commonly used for assessing the quality of the prediction of soil attributes by NIR spectroscopy. *Trends in Analytical Chemistry*, 29, 1073-1081. <https://doi.org/10.1016/j.trac.2010.05.006>
-* Hyndman, R. J. and Koehler, A. B. (2006). Another look at measures of forecast accuracy. *International Journal of Forecasting*, 22, 679-688. <https://doi.org/10.1016/j.ijforecast.2006.03.001>
-* Willmott, C. J., Ackleson, S. G., Davis, R. E., Feddema, J. J., Klink, K. M., Legates, D. R., O'Donnell, J., and Rowe, C. M. (1985). Statistics for the evaluation and comparison of models. *Journal of Geophysical Research*, 90, 8995-9005. <https://doi.org/10.1029/JC090iC05p08995>
-* Gupta, H. V., Kling, H., Yilmaz, K. K., and Martinez, G. F. (2009). Decomposition of the mean squared error and NSE performance criteria. *Journal of Hydrology*, 377, 80-91. <https://doi.org/10.1016/j.jhydrol.2009.08.003>
+For example, at the median:
 
-## Next steps
+```{r pinball-median}
+pinball_loss(
+  obs,
+  models$Good,
+  level = 0.5
+)
+```
 
-Use the [uncertainty-validation article](predictive-uncertainty.html) when
-models provide intervals or predictive distributions, and the
-[summary-diagrams article](summary-diagrams.html) for graphical comparison of
-multiple models.
+At `level = 0.5`, pinball loss is one-half of MAE.
+
+For a 90th-percentile prediction:
+
+```{r pinball-90, eval=FALSE}
+pinball_loss(
+  obs,
+  predicted_q90,
+  level = 0.90
+)
+```
+
+The quantile level should be chosen according to the prediction being
+evaluated.
+
+# How should metrics be combined?
+
+A useful general-purpose evaluation of continuous predictions should usually
+contain metrics from different categories.
+
+For example:
+
+```{r complementary-set}
+data.frame(
+  bias = bias(obs, models$Good),
+  mae = mae(obs, models$Good),
+  rmse = rmse(obs, models$Good),
+  correlation = correlation(obs, models$Good),
+  R2 = R2(obs, models$Good),
+  ccc = ccc(obs, models$Good)
+)
+```
+
+This combination answers several distinct questions:
+
+* `bias()` — is there systematic overprediction or underprediction?
+* `mae()` — what is the typical absolute error?
+* `rmse()` — what is the squared-error-weighted error magnitude?
+* `correlation()` — is the observed pattern reproduced?
+* `R2()` — does the model outperform the observed-mean benchmark?
+* `ccc()` — how closely do predicted values agree with observations overall?
+
+The precise set should depend on the application. There is no universal
+threshold at which RMSE, correlation, CCC, KGE, or another metric automatically
+becomes "good".
+
+# Related and redundant metrics
+
+Several available statistics are mathematically related.
+
+For example:
+
+\[
+\mathrm{MSE}=\mathrm{RMSE}^2,
+\]
+
+and, when defined,
+
+\[
+\mathrm{RPD}
+=
+\frac{1}{\mathrm{NRMSE}}.
+\]
+
+SEP and cRMSE also contain essentially the same centred error information but
+use different divisors.
+
+Similarly, `R2()`, `nse()`, and `mec()` are three names for exactly the same
+statistic in `modelskill`.
+
+These functions remain available because different scientific communities use
+different conventions, but reporting several mathematically equivalent metrics
+does not provide independent evidence about model performance.
+
+# Missing values and special cases
+
+By default, `modelskill` removes incomplete observation-prediction pairs
+separately for each model.
+
+For example:
+
+```{r missing-values}
+obs_missing <- obs
+pred_missing <- models$Good
+
+pred_missing[c(5, 20)] <- NA
+
+rmse(
+  obs_missing,
+  pred_missing
+)
+```
+
+For fair comparison among several models, it is generally preferable that all
+models are evaluated on the same validation observations.
+
+Some metrics are undefined in particular situations:
+
+* Pearson correlation and `r2()` are undefined for constant vectors;
+* `R2()` / NSE / MEC are undefined when the observations are constant;
+* percentage metrics can be undefined or unstable when their denominators are
+  zero or close to zero;
+* MSLE and RMSLE require non-negative observations and predictions;
+* KGE requires variation in both observations and predictions and a non-zero
+  observed mean.
+
+The individual function documentation describes these cases in detail.
+
+# Practical recommendations
+
+For most prediction-validation analyses:
+
+1. **Inspect observations versus predictions first.**  
+   Summary metrics can hide structure visible in the raw comparison.
+
+2. **Report error magnitude.**  
+   MAE and/or RMSE provide interpretable error measures in response units.
+
+3. **Report systematic error.**  
+   Bias indicates whether predictions are systematically too high or too low.
+
+4. **Separate association from accuracy.**  
+   Correlation and lowercase `r2()` measure association and can remain high
+   despite substantial prediction bias.
+
+5. **Use an agreement or efficiency measure when useful.**  
+   CCC measures agreement, while uppercase `R2()` / NSE / MEC compares model
+   performance with the observed-mean benchmark.
+
+6. **Use specialised metrics only when their interpretation fits the problem.**  
+   Percentage errors, RPD, RPIQ, KGE, and quantile loss can be useful, but
+   should not automatically be reported for every application.
+
+7. **Do not select a model from one metric alone.**  
+   Different metrics describe different aspects of prediction quality.
+
+# References
+
+* Bellon-Maurel, V., Fernandez-Ahumada, E., Palagos, B., Roger, J.-M., and
+  McBratney, A. (2010). Critical review of chemometric indicators commonly
+  used for assessing the quality of the prediction of soil attributes by NIR
+  spectroscopy. *Trends in Analytical Chemistry*, 29, 1073-1081.
+  <https://doi.org/10.1016/j.trac.2010.05.006>
+
+* Gupta, H. V., Kling, H., Yilmaz, K. K., and Martinez, G. F. (2009).
+  Decomposition of the mean squared error and NSE performance criteria:
+  implications for improving hydrological modelling. *Journal of Hydrology*,
+  377, 80-91.
+  <https://doi.org/10.1016/j.jhydrol.2009.08.003>
+
+* Hodson, T. O. (2022). Root-mean-square error (RMSE) or mean absolute error
+  (MAE): when to use them or not. *Geoscientific Model Development*, 15,
+  5481-5487.
+  <https://doi.org/10.5194/gmd-15-5481-2022>
+
+* Hyndman, R. J. and Koehler, A. B. (2006). Another look at measures of
+  forecast accuracy. *International Journal of Forecasting*, 22, 679-688.
+  <https://doi.org/10.1016/j.ijforecast.2006.03.001>
+
+* Janssen, P. H. M. and Heuberger, P. S. C. (1995). Calibration of
+  process-oriented models. *Ecological Modelling*, 83, 55-66.
+  <https://doi.org/10.1016/0304-3800(95)00084-9>
+
+* Koenker, R. and Bassett, G. (1978). Regression quantiles.
+  *Econometrica*, 46, 33-50.
+  <https://doi.org/10.2307/1913643>
+
+* Legates, D. R. and McCabe, G. J. (1999). Evaluating the use of
+  goodness-of-fit measures in hydrologic and hydroclimatic model validation.
+  *Water Resources Research*, 35, 233-241.
+  <https://doi.org/10.1029/1998WR900018>
+
+* Lin, L. I.-K. (1989). A concordance correlation coefficient to evaluate
+  reproducibility. *Biometrics*, 45, 255-268.
+  <https://doi.org/10.2307/2532051>
+
+* Nash, J. E. and Sutcliffe, J. V. (1970). River flow forecasting through
+  conceptual models part I: A discussion of principles.
+  *Journal of Hydrology*, 10, 282-290.
+  <https://doi.org/10.1016/0022-1694(70)90255-6>
+
+* Taylor, K. E. (2001). Summarizing multiple aspects of model performance in a
+  single diagram. *Journal of Geophysical Research*, 106, 7183-7192.
+  <https://doi.org/10.1029/2000JD900719>
+
+* Willmott, C. J., Ackleson, S. G., Davis, R. E., Feddema, J. J., Klink,
+  K. M., Legates, D. R., O'Donnell, J., and Rowe, C. M. (1985). Statistics
+  for the evaluation and comparison of models.
+  *Journal of Geophysical Research*, 90, 8995-9005.
+  <https://doi.org/10.1029/JC090iC05p08995>
+
+* Willmott, C. J. and Matsuura, K. (2005). Advantages of the mean absolute
+  error (MAE) over the root mean square error (RMSE) in assessing average
+  model performance. *Climate Research*, 30, 79-82.
+  <https://doi.org/10.3354/cr030079>
+
+# Next steps
+
+Use the
+[predictive-uncertainty evaluation](predictive-uncertainty.html)
+article when models provide prediction intervals, quantiles, standard
+deviations, or complete predictive distributions.
+
+Use the
+[summary diagrams and diagnostic plots](summary-diagrams.html)
+article to compare several models graphically using solar, target, and Taylor
+diagrams.
