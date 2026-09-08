@@ -112,8 +112,8 @@ Consequently, a **negative mean error indicates overprediction**, whereas a
 
 The **solar diagram** is a summary diagram proposed for the integrated
 evaluation of quantitative maps and predictions by Wadoux, Walvoort, and Brus
-(2022). It is derived from the decomposition of root mean square error into
-mean error and centred error.
+(2022). It provides a compact representation of overall prediction error and
+its decomposition into systematic and centred components.
 
 Let
 
@@ -125,8 +125,8 @@ Let
 (obs_i-pred_i),
 \]
 
-and let SDE denote the standard deviation, or centred component, of the
-prediction errors. Then
+where ME is the mean prediction error, and let SDE denote the centred component
+of the prediction errors. The root mean square error can then be decomposed as
 
 \[
 \mathrm{RMSE}^{2}
@@ -136,8 +136,8 @@ prediction errors. Then
 \mathrm{SDE}^{2}.
 \]
 
-For the diagram these quantities are standardized relative to the variability
-of the observations:
+For the solar diagram, these quantities are standardized relative to the
+variability of the observations:
 
 \[
 \mathrm{ME}^{*}
@@ -153,7 +153,15 @@ and
 \frac{\mathrm{SDE}}{\mathrm{sd}(obs)}.
 \]
 
-The resulting geometric relationship is
+The corresponding standardized RMSE is
+
+\[
+\mathrm{RMSE}^{*}
+=
+\frac{\mathrm{RMSE}}{\mathrm{sd}(obs)},
+\]
+
+which gives the geometric relationship
 
 \[
 \mathrm{RMSE}^{*2}
@@ -163,9 +171,14 @@ The resulting geometric relationship is
 \mathrm{SDE}^{*2}.
 \]
 
-`modelskill` preserves the finite-sample scaling used in the original
-implementation. See [`diagram_stats()`](../reference/diagram_stats.html) for
-the exact computational definitions.
+Consequently, each model can be represented by a single point whose Cartesian
+coordinates are \((\mathrm{ME}^{*}, \mathrm{SDE}^{*})\), while its Euclidean
+distance from the origin is exactly \(\mathrm{RMSE}^{*}\).
+
+`modelskill` uses a common normalization for these quantities so that this
+geometric identity is retained in finite samples. See
+[`diagram_stats()`](../reference/diagram_stats.html) for the exact computational
+definitions.
 
 ## 3.1 Reading a solar diagram
 
@@ -178,7 +191,8 @@ In the solar diagram:
 * the **distance from the origin** represents standardized RMSE,
   \(\mathrm{RMSE}^{*}\).
 
-The origin therefore represents perfect prediction.
+The origin therefore represents perfect prediction: both systematic bias and
+centred prediction error are zero.
 
 Because error is defined as `obs - pred`:
 
@@ -187,6 +201,10 @@ Because error is defined as `obs - pred`:
 * points near the vertical axis have little systematic bias;
 * points high on the diagram have substantial centred error even when their
   mean error is small.
+
+The direction of a point therefore indicates the relative contribution of bias
+and centred error, whereas its distance from the origin indicates the magnitude
+of the total squared-error loss.
 
 The outer reference semicircle corresponds to
 
@@ -204,12 +222,17 @@ related to the model-efficiency coefficient:
 1-\mathrm{RMSE}^{*2}.
 \]
 
-Thus, points inside the circle have positive MEC/NSE/uppercase `R2()`.
+Thus, points inside the circle have positive MEC/NSE/uppercase `R2()`, points
+on the circle have a value of zero, and points outside the circle have negative
+model efficiency.
 
-The pale regions represent **lower bounds on Pearson correlation**, not exact
-correlation values. A point inside the \(r>0.9\) region, for example, must have
-correlation greater than approximately 0.9, but its precise correlation cannot
-be read from the region alone.
+The pale regions provide information about the association between predictions
+and observations. They represent **lower bounds on Pearson correlation**, not
+exact correlation values. A point inside the \(r>0.9\) region, for example,
+must have correlation greater than approximately 0.9, but its precise
+correlation cannot be read from the region alone. These regions are therefore
+best interpreted as additional guidance on pattern agreement rather than as a
+replacement for reporting the correlation coefficient itself.
 
 ## 3.2 Basic solar diagram
 
@@ -217,7 +240,8 @@ be read from the region alone.
 gg_solar(
   models,
   obs,
-  label = TRUE
+  label = TRUE,
+  y.axis_end = 2
 )
 ```
 
@@ -232,8 +256,14 @@ The expected patterns are informative:
 * `Reversed` should perform poorly because its pattern is inconsistent with
   the observations.
 
+Models can therefore have similar overall RMSE while occupying different
+positions in the diagram if the relative contributions of bias and centred
+error differ.
+
 One important advantage of the solar diagram over the Taylor diagram is that
-mean bias contributes directly to position and distance from the optimum.
+mean bias contributes directly to position and distance from the optimum. The
+diagram therefore combines information on systematic error, centred error, and
+overall prediction performance in a single geometric representation.
 
 ## 3.3 Colour models instead of writing labels
 
@@ -244,7 +274,8 @@ For several models, direct labels may become crowded. Use
 gg_solar(
   models,
   obs,
-  colour_by = "model"
+  colour_by = "model",
+  y.axis_end = 2
 )
 ```
 
@@ -253,13 +284,19 @@ By default, however, point colour represents model efficiency:
 ```{r solar-efficiency}
 gg_solar(
   models,
-  obs
+  obs,
+  y.axis_end = 2
 )
 ```
 
 The default efficiency colour is uppercase \(R^2\), which in `modelskill` is
-equivalent to NSE and MEC. This should not be confused with lowercase
-[`r2()`](../reference/r2.html), which is squared Pearson correlation.
+equivalent to NSE and MEC. Higher values indicate better squared-error
+performance, with \(R^2 = 1\) corresponding to perfect prediction and
+\(R^2 = 0\) corresponding to the performance of predicting the observed mean.
+
+This should not be confused with lowercase
+[`r2()`](../reference/r2.html), which is squared Pearson correlation and
+therefore measures association rather than model efficiency.
 
 Other available colour mappings are:
 
@@ -267,20 +304,27 @@ Other available colour mappings are:
 gg_solar(
   models,
   obs,
-  colour_by = "correlation"
+  colour_by = "correlation",
+  y.axis_end = 2
 )
 
 gg_solar(
   models,
   obs,
-  colour_by = "r2"
+  colour_by = "r2",
+  y.axis_end = 2
 )
 ```
+
+Here, `colour_by = "correlation"` uses Pearson correlation, whereas
+`colour_by = "r2"` uses squared Pearson correlation.
 
 ## 3.4 Control the reference geometry
 
 The manually drawn reference axes can be adjusted with `x.axis_begin`,
-`x.axis_end`, `y.axis_end`, and `by`.
+`x.axis_end`, `y.axis_end`, and `by`. This is useful when one or more models
+fall outside the default plotting range or when a common plotting extent is
+required across several figures.
 
 ```{r solar-axes}
 gg_solar(
@@ -301,51 +345,13 @@ gg_solar(
   models,
   obs,
   colour_by = "model",
+  y.axis_end = 2,
   reference = FALSE
 )
 ```
 
 This can be useful when the main objective is to compare model positions
 without displaying the correlation regions.
-
-# 4. Target diagram
-
-The **target diagram** was developed by @jolliff2009 as a compact
-representation of bias and centred root mean square difference.
-
-Like the solar diagram, it is based on
-
-\[
-\mathrm{RMSE}^{*2}
-=
-\mathrm{ME}^{*2}
-+
-\mathrm{SDE}^{*2}.
-\]
-
-The important difference is that the target diagram gives the centred-error
-component a sign according to the relative variability of predictions and
-observations:
-
-\[
-\mathrm{signed\ SDE}^{*}
-=
-\mathrm{sign}
-\left[
-\mathrm{sd}(pred)-\mathrm{sd}(obs)
-\right]
-\mathrm{SDE}^{*}.
-\]
-
-Consequently:
-
-* a **negative signed SDE\*** indicates prediction variability smaller than
-  observation variability;
-* a **positive signed SDE\*** indicates prediction variability equal to or
-  greater than observation variability.
-
-This makes the target diagram useful when it is important to distinguish
-predictions that are too smooth from predictions that are too variable.
 
 ## 4.1 Reading a target diagram
 
