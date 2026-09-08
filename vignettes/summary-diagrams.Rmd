@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Why use summary diagrams?
+## 1. Why use summary diagrams?
 
 The performance of a quantitative prediction cannot usually be described
 adequately by a single statistic. Bias, overall prediction error, correlation,
@@ -43,7 +43,7 @@ mean bias. The solar and target diagrams include bias explicitly.
 The numerical quantities underlying all three diagrams can be obtained with
 [`diagram_stats()`](../reference/diagram_stats.html).
 
-## Example data
+## 2. Example data
 
 We create five deliberately different prediction models so that the graphical
 interpretation of the diagrams is clear.
@@ -106,7 +106,7 @@ e_i = obs_i-pred_i.
 Consequently, a **negative mean error indicates overprediction**, whereas a
 **positive mean error indicates underprediction**.
 
-# Solar diagram
+# 3. Solar diagram
 
 The **solar diagram** is a summary diagram proposed for the integrated
 evaluation of quantitative maps and predictions by Wadoux, Walvoort, and Brus
@@ -165,7 +165,7 @@ The resulting geometric relationship is
 implementation. See [`diagram_stats()`](../reference/diagram_stats.html) for
 the exact computational definitions.
 
-## Reading a solar diagram
+## 3.1 Reading a solar diagram
 
 In the solar diagram:
 
@@ -209,7 +209,7 @@ correlation values. A point inside the \(r>0.9\) region, for example, must have
 correlation greater than approximately 0.9, but its precise correlation cannot
 be read from the region alone.
 
-## Basic solar diagram
+## 3.2 Basic solar diagram
 
 ```{r solar-basic}
 gg_solar(
@@ -233,7 +233,7 @@ The expected patterns are informative:
 One important advantage of the solar diagram over the Taylor diagram is that
 mean bias contributes directly to position and distance from the optimum.
 
-## Colour models instead of writing labels
+## 3.3 Colour models instead of writing labels
 
 For several models, direct labels may become crowded. Use
 `colour_by = "model"` to identify models through a legend:
@@ -275,7 +275,7 @@ gg_solar(
 )
 ```
 
-## Control the reference geometry
+## 3.4 Control the reference geometry
 
 The manually drawn reference axes can be adjusted with `x.axis_begin`,
 `x.axis_end`, `y.axis_end`, and `by`.
@@ -306,7 +306,7 @@ gg_solar(
 This can be useful when the main objective is to compare model positions
 without displaying the correlation regions.
 
-# Target diagram
+# 4. Target diagram
 
 The **target diagram** was developed by Jolliff et al. (2009) as a compact
 representation of bias and centred root mean square difference.
@@ -345,7 +345,7 @@ Consequently:
 This makes the target diagram useful when it is important to distinguish
 predictions that are too smooth from predictions that are too variable.
 
-## Reading a target diagram
+## 4.1 Reading a target diagram
 
 The distance from the origin remains standardized RMSE:
 
@@ -376,7 +376,7 @@ the diagram. The target diagram should therefore be interpreted in terms of
 its components rather than simply by comparing the apparent separation between
 points.
 
-### Note on the `modelskill` coordinate convention
+### 4.1.1 Note on the `modelskill` coordinate convention
 
 Internally, [`gg_target()`](../reference/gg_target.html) plots **signed SDE\***
 on the horizontal coordinate and **ME\*** on the vertical coordinate. The
@@ -384,7 +384,7 @@ current graphical implementation retains the historical axis-title orientation
 of the package. When interpreting model positions, the coordinate definitions
 given here and in the function documentation are authoritative.
 
-## Basic target diagram
+## 4.2 Basic target diagram
 
 ```{r target-basic}
 gg_target(
@@ -403,7 +403,7 @@ For the example models:
 * `Noisy` should fall on the side associated with excessive prediction
   variability.
 
-## Colour models with a legend
+## 4.3 Colour models with a legend
 
 ```{r target-model-colours}
 gg_target(
@@ -432,7 +432,7 @@ gg_target(
 )
 ```
 
-## Change the displayed range
+## 4.4 Change the displayed range
 
 `axis_begin`, `axis_end`, and `by` control the manually drawn target-diagram
 axes:
@@ -459,7 +459,7 @@ gg_target(
 )
 ```
 
-# Taylor diagram
+# 5. Taylor diagram
 
 The **Taylor diagram** was introduced by Taylor (2001) to summarize several
 aspects of pattern agreement between predictions and observations.
@@ -501,7 +501,7 @@ Again, `modelskill` retains the finite-sample convention of the original
 implementation; [`diagram_stats()`](../reference/diagram_stats.html) documents
 the exact scaling used by the package.
 
-## The reference point
+## 5.1 The reference point
 
 Perfect predictions have
 
@@ -526,7 +526,7 @@ A point inside the unit-radius arc has less variation than the observations and
 therefore represents a smoother prediction. A point outside that arc has
 greater variation.
 
-## Full Taylor diagram
+## 5.2 Full Taylor diagram
 
 By default, `gg_taylor()` displays correlations from -1 to 1:
 
@@ -545,7 +545,7 @@ The `Reversed` model in the example should appear on the negative-correlation
 side of the diagram because its pattern is approximately reversed relative to
 the observations.
 
-## Half Taylor diagram
+## 5.3 Half Taylor diagram
 
 In many prediction problems only positive correlations are of practical
 interest. Set `half = TRUE` to show only correlations from 0 to 1:
@@ -565,7 +565,7 @@ Models with negative correlation are omitted from the half diagram. Thus the
 The half diagram is often easier to read when all relevant models are
 positively correlated.
 
-## Labels or legend
+## 5.4 Labels or legend
 
 Use `label = TRUE` when the number of models is small:
 
@@ -592,7 +592,7 @@ gg_taylor(
 For `gg_taylor()`, `label = TRUE` and `legend = TRUE` are alternative ways of
 identifying models and should not be requested simultaneously.
 
-## Centred RMSD contours
+## 5.5 Centred RMSD contours
 
 The curved contours around the reference point represent standardized centred
 RMSD or SDE.
@@ -635,7 +635,7 @@ gg_taylor(
 )
 ```
 
-## A limitation of the Taylor diagram
+## 5.6 A limitation of the Taylor diagram
 
 The Taylor diagram deliberately works with centred quantities and therefore
 does **not** show mean error.
@@ -665,7 +665,7 @@ This is one reason the Taylor diagram should be interpreted together with bias
 statistics or with a diagram that explicitly includes mean error, such as the
 solar or target diagram.
 
-# Which diagram should I use?
+# 6. Which diagram should I use?
 
 The three diagrams are complementary rather than competing alternatives.
 
@@ -695,12 +695,12 @@ No diagram should replace the underlying numerical metrics. Summary diagrams
 are most useful when they help interpret several complementary statistics
 together.
 
-# Customising the diagrams with ggplot2
+# 7. Customising the diagrams with ggplot2
 
 All three plotting functions return ordinary `ggplot2` objects. This means that
 standard ggplot additions can be applied after the diagram has been created.
 
-## Add titles and change the theme
+## 7.1 Add titles and change the theme
 
 ```{r customise-title}
 p <- gg_solar(
@@ -717,7 +717,7 @@ p +
   ggplot2::theme_minimal()
 ```
 
-## Move the legend
+## 7.2 Move the legend
 
 ```{r customise-legend}
 gg_solar(
@@ -732,7 +732,7 @@ gg_solar(
 
 The same approach works for the target and Taylor diagrams.
 
-## Change the model colour palette
+## 7.3 Change the model colour palette
 
 For the Taylor diagram, models are mapped to the `colour` aesthetic when
 `legend = TRUE`:
@@ -770,7 +770,7 @@ gg_target(
 
 Adding a new scale replaces the default scale defined by the diagram function.
 
-## Change the target axis titles
+## 7.4 Change the target axis titles
 
 Because a `gg_target()` result is a normal ggplot object, the displayed labels
 can be replaced without changing the underlying coordinates.
@@ -791,7 +791,7 @@ gg_target(
   )
 ```
 
-## Zoom without changing the statistics
+## 7.5 Zoom without changing the statistics
 
 The axis arguments of `gg_solar()` and `gg_target()` define their manually drawn
 reference geometry rather than clipping the data.
@@ -815,7 +815,7 @@ Equal x and y scaling should be retained for solar and target diagrams because
 their interpretation depends on geometric distances and circular reference
 lines.
 
-## Change point and label sizes
+## 7.6 Change point and label sizes
 
 Core diagram elements that have direct function arguments should generally be
 changed through those arguments rather than by adding ggplot layers:
@@ -843,7 +843,7 @@ gg_taylor(
 )
 ```
 
-# Practical recommendations
+# 8. Practical recommendations
 
 When using summary diagrams:
 
@@ -874,7 +874,7 @@ bias, low total error but excessive smoothing, or similar RMSE to another model
 for very different reasons. Summary diagrams help distinguish these situations
 without relying on a single performance statistic.
 
-# References
+# 9. References
 
 * Jolliff, J. K., Kindle, J. C., Shulman, I., Penta, B., Friedrichs,
   M. A. M., Helber, R., and Arnone, R. A. (2009). Summary diagrams for
