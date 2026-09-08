@@ -111,8 +111,7 @@ Consequently, a **negative mean error indicates overprediction**, whereas a
 # 3. Solar diagram
 
 The **solar diagram** is a summary diagram proposed for the integrated
-evaluation of quantitative maps and predictions by Wadoux, Walvoort, and Brus
-(2022). It provides a compact representation of overall prediction error and
+evaluation of quantitative maps and predictions by @wadoux2022. It provides a compact representation of overall prediction error and
 its decomposition into systematic and centred components.
 
 Let
@@ -353,6 +352,11 @@ gg_solar(
 This can be useful when the main objective is to compare model positions
 without displaying the correlation regions.
 
+# 4. Target diagram
+
+The **target diagram** was introduced by @jolliff2009 as a compact summary of
+bias, centred error, and prediction variability.
+
 ## 4.1 Reading a target diagram
 
 The distance from the origin remains standardized RMSE:
@@ -469,7 +473,7 @@ gg_target(
 
 # 5. Taylor diagram
 
-The **Taylor diagram** was introduced by Taylor (2001) to summarize several
+The **Taylor diagram** was introduced by @taylor2001 to summarize several
 aspects of pattern agreement between predictions and observations.
 
 It simultaneously represents:
@@ -882,20 +886,3 @@ bias, low total error but excessive smoothing, or similar RMSE to another model
 for very different reasons. Summary diagrams help distinguish these situations
 without relying on a single performance statistic.
 
-# 9. References
-
-* Jolliff, J. K., Kindle, J. C., Shulman, I., Penta, B., Friedrichs,
-  M. A. M., Helber, R., and Arnone, R. A. (2009). Summary diagrams for
-  coupled hydrodynamic-ecosystem model skill assessment.
-  *Journal of Marine Systems*, 76, 64-82.
-  <https://doi.org/10.1016/j.jmarsys.2008.05.014>
-
-* Taylor, K. E. (2001). Summarizing multiple aspects of model performance in
-  a single diagram. *Journal of Geophysical Research: Atmospheres*,
-  106(D7), 7183-7192.
-  <https://doi.org/10.1029/2000JD900719>
-
-* Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022).
-  An integrated approach for the evaluation of quantitative soil maps through
-  Taylor and solar diagrams. *Geoderma*, 405, 115332.
-  <https://doi.org/10.1016/j.geoderma.2021.115332>
