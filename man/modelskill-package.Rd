@@ -4,15 +4,39 @@
 \name{modelskill-package}
 \alias{modelskill}
 \alias{modelskill-package}
-\title{Quantitative model skill indices and diagrams}
+\title{Quantitative prediction-model evaluation and uncertainty diagnostics}
 \description{
-Compare numeric predictions against paired observations with
-\code{\link[=model_metrics]{model_metrics()}} and individual metrics such as \code{\link[=rmse]{rmse()}} and \code{\link[=ccc]{ccc()}}.
-Validate predictive uncertainty using \code{\link[=uncertainty_metrics]{uncertainty_metrics()}}, \code{\link[=qcp]{qcp()}},
-\code{\link[=pit]{pit()}}, and \code{\link[=crps]{crps()}}. Visualize interval and quantile calibration with
-\code{\link[=gg_coverage]{gg_coverage()}} and \code{\link[=gg_qcp]{gg_qcp()}}. Complementary graphical
-diagnostics include \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}} and \code{\link[=gg_target]{gg_target()}}. All plots
-return ordinary ggplot objects. No spatial data class is required.
+\code{modelskill} provides tools for evaluating continuous predictions and their
+quantified predictive uncertainty. Point-prediction performance can be
+summarized across one or more models with \code{\link[=model_metrics]{model_metrics()}} or evaluated
+using individual statistics such as \code{\link[=bias]{bias()}}, \code{\link[=rmse]{rmse()}}, \code{\link[=correlation]{correlation()}},
+\code{\link[=r2]{r2()}}, \link[=r2]{R2()}, and \code{\link[=ccc]{ccc()}}.
+}
+\details{
+Predictive uncertainty can be evaluated from prediction intervals,
+predictive quantiles, predictive means and standard deviations, or complete
+predictive distributions. Interval-based diagnostics include \code{\link[=picp]{picp()}},
+\code{\link[=coverage_error]{coverage_error()}}, \code{\link[=interval_width]{interval_width()}}, \code{\link[=interval_score]{interval_score()}}, and
+\code{\link[=uncertainty_metrics]{uncertainty_metrics()}}. Calibration across multiple interval levels can be
+examined with \code{\link[=gg_coverage]{gg_coverage()}} and summarized numerically with
+\code{\link[=accuracy_plot_metrics]{accuracy_plot_metrics()}}.
+
+Distributional calibration can be assessed using quantile coverage
+probability with \code{\link[=qcp]{qcp()}} and \code{\link[=gg_qcp]{gg_qcp()}}, or the probability integral
+transform with \code{\link[=pit]{pit()}} and \code{\link[=gg_pit]{gg_pit()}}. \code{\link[=pit]{pit()}} can use predictive CDF values
+evaluated at the observations or calculate PIT values directly from
+predictive means and standard deviations under a normal-distribution
+assumption. Proper scoring rules and distributional summaries include
+\code{\link[=crps]{crps()}}, \code{\link[=median_crps]{median_crps()}}, \code{\link[=crps_decomposition]{crps_decomposition()}}, and \code{\link[=log_score]{log_score()}}.
+
+Complementary graphical summaries of point-prediction performance are
+provided by \code{\link[=gg_taylor]{gg_taylor()}}, \code{\link[=gg_solar]{gg_solar()}}, and \code{\link[=gg_target]{gg_target()}}, with their
+underlying statistics available through \code{\link[=diagram_stats]{diagram_stats()}}.
+
+All plotting functions return ordinary \code{ggplot2} objects and can therefore
+be extended using standard \code{ggplot2} layers, scales, labels, and themes.
+The package operates on ordinary numeric vectors, matrices, data frames, and
+lists; no spatial data class is required.
 }
 \seealso{
 Useful links:

@@ -2,36 +2,129 @@
 % Please edit documentation in R/metrics-uncertainty.R
 \name{pit}
 \alias{pit}
-\title{Probability integral transform values}
+\title{Probability integral transform}
 \usage{
-pit(cdf_at_obs, na.rm = TRUE)
+pit(
+  cdf_at_obs = NULL,
+  obs = NULL,
+  pred = NULL,
+  predictive_sd = NULL,
+  na.rm = TRUE
+)
 }
 \arguments{
-\item{cdf_at_obs}{Numeric vector of predictive CDF values evaluated at the
-corresponding observations.}
+\item{cdf_at_obs}{Optional numeric vector containing predictive CDF values
+evaluated at the corresponding observations. Values must lie between zero
+and one. Do not supply this together with \code{obs}, \code{pred}, or
+\code{predictive_sd}.}
 
-\item{na.rm}{Logical; remove missing values?}
+\item{obs}{Optional numeric vector of observations. Must be supplied together
+with \code{pred} and \code{predictive_sd}.}
+
+\item{pred}{Optional numeric vector of predictive means. Used with \code{obs} and
+\code{predictive_sd} to calculate PIT values assuming normal predictive
+distributions.}
+
+\item{predictive_sd}{Optional numeric vector of predictive standard
+deviations. Values must be finite and strictly positive.}
+
+\item{na.rm}{Logical; remove incomplete values or observation-prediction
+combinations? The default is \code{TRUE}.}
 }
 \value{
-Numeric PIT values.
+Numeric vector of PIT values between zero and one.
 }
 \description{
-Validates already evaluated predictive-CDF values, \code{cdf_at_obs = F_i(y_i)}.
-For calibrated continuous predictive distributions, PIT values are uniform
-on zero to one. Plot them with \code{\link[=gg_pit]{gg_pit()}}.
+Calculates probability integral transform (PIT) values for continuous
+predictive distributions. PIT values can either be supplied directly as
+predictive cumulative distribution function (CDF) values evaluated at the
+observations, or calculated from predictive means and standard deviations
+under a normal predictive-distribution assumption.
 }
 \details{
-\deqn{u_i = F_i(obs_i)}
+For observation \eqn{obs_i} and predictive cumulative distribution function
+\eqn{F_i}, the PIT value is
 
-PIT values have no individually preferred value. Across cases, a uniform
-distribution indicates calibration; systematic departures in \code{\link[=gg_pit]{gg_pit()}} can
-reveal bias or incorrect predictive dispersion.
+\deqn{
+u_i = F_i(obs_i).
+}
+
+For calibrated continuous predictive distributions, PIT values evaluated
+over independent validation observations should be approximately uniformly
+distributed between zero and one. Individual PIT values do not have a
+preferred value; calibration is assessed from their distribution across
+observations, for example with \code{\link[=gg_pit]{gg_pit()}}.
+
+When \code{cdf_at_obs} is supplied, the values are returned after validation.
+This mode can be used with any continuous predictive distribution provided
+its CDF has already been evaluated at each corresponding observation.
+
+Alternatively, \code{obs}, \code{pred}, and \code{predictive_sd} can be supplied together.
+In this case, normal predictive distributions are assumed and PIT values are
+calculated as
+
+\deqn{
+u_i =
+\Phi\left(
+\frac{obs_i-pred_i}{\sigma_i}
+\right),
+}
+
+where \eqn{\Phi} is the standard normal CDF and \eqn{\sigma_i} is the
+predictive standard deviation.
+
+A uniform PIT distribution is consistent with probabilistic calibration.
+Systematic departures from uniformity can indicate misspecification of the
+predictive distributions. For example, U-shaped PIT histograms are commonly
+associated with underdispersed predictive distributions, hump-shaped
+histograms with overdispersed distributions, and asymmetric PIT histograms
+with systematic bias. These patterns are diagnostic rather than unique and
+should be interpreted together with other validation measures.
+
+PIT uniformity assesses the predictive distributions collectively and does
+not by itself establish that every aspect of conditional calibration is
+correct. Calibration should therefore generally be evaluated using
+complementary diagnostics such as \code{\link[=gg_qcp]{gg_qcp()}}, \code{\link[=gg_coverage]{gg_coverage()}}, and proper
+scoring rules.
+
+The usual uniformity interpretation applies directly to continuous
+predictive distributions. For discrete distributions or finite predictive
+ensembles, ordinary PIT values are discrete; randomized PIT or rank-based
+diagnostics are more appropriate.
 }
 \examples{
-pit(stats::pnorm(c(-1, 0, 1)))
+# PIT values from CDF values calculated elsewhere
+cdf_values <- stats::pnorm(c(-1, 0, 1))
+pit(cdf_values)
+
+# Calculate PIT directly for normal predictive distributions
+set.seed(123)
+
+n <- 500
+pred <- seq(0, 10, length.out = n)
+predictive_sd <- rep(1, n)
+obs <- stats::rnorm(n, mean = pred, sd = predictive_sd)
+
+pit_values <- pit(
+  obs = obs,
+  pred = pred,
+  predictive_sd = predictive_sd
+)
+
+gg_pit(pit_values)
+
 }
 \references{
-Gneiting, T., Balabdaoui, F. and Raftery, A. E. (2007).
-Probabilistic forecasts, calibration and sharpness. \emph{JRSS B}, 69, 243-268.
+Gneiting, T., Balabdaoui, F. and Raftery, A. E. (2007). Probabilistic
+forecasts, calibration and sharpness. \emph{Journal of the Royal Statistical
+Society: Series B}, 69, 243-268.
 \url{doi:10.1111/j.1467-9868.2007.00587.x}
+
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
+\url{doi:10.1016/j.geoderma.2023.116585}
+}
+\seealso{
+\code{\link[=gg_pit]{gg_pit()}}, \code{\link[=qcp]{qcp()}}, \code{\link[=gg_qcp]{gg_qcp()}}, \code{\link[=picp]{picp()}}, \code{\link[=gg_coverage]{gg_coverage()}},
+\code{\link[=crps]{crps()}}
 }

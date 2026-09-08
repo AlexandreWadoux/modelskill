@@ -4,21 +4,89 @@
 \alias{gg_pit}
 \title{Plot a probability integral transform histogram}
 \usage{
-gg_pit(pit_values, bins = 10)
+gg_pit(pit_values, bins = 10, na.rm = TRUE)
 }
 \arguments{
-\item{pit_values}{Numeric PIT values, typically calculated by \code{\link[=pit]{pit()}}.}
+\item{pit_values}{Numeric vector of PIT values between zero and one,
+typically calculated with \code{\link[=pit]{pit()}}.}
 
-\item{bins}{Positive integer number of histogram bins.}
+\item{bins}{Positive integer number of equal-width histogram bins.}
+
+\item{na.rm}{Logical; remove missing PIT values? The default is \code{TRUE}.}
 }
 \value{
-A \code{ggplot2} object.
+A \code{ggplot2} object showing the empirical PIT density. Under uniform
+calibration the expected density is one.
 }
 \description{
-Displays PIT values. For calibrated continuous predictive distributions the
-histogram should be approximately uniform; the dashed line is the expected
-bin proportion under uniformity.
+Produces a probability integral transform (PIT) histogram for assessing the
+calibration of continuous predictive distributions.
+}
+\details{
+For observation \eqn{y_i} with predictive cumulative distribution function
+\eqn{F_i}, the PIT value is
+
+\deqn{
+u_i = F_i(y_i).
+}
+
+If the predictive distributions are calibrated and continuous, the PIT values
+should be approximately uniformly distributed between zero and one. The
+dashed horizontal line shows the density expected under a uniform
+distribution.
+
+Departures from uniformity can indicate systematic miscalibration. Common
+patterns include:
+
+\itemize{
+\item a U-shaped histogram, with excess values near zero and one, which is
+commonly associated with predictive distributions that are too narrow
+(underdispersed);
+\item a hump-shaped histogram, with excess values near 0.5, which is
+commonly associated with predictive distributions that are too wide
+(overdispersed);
+\item an excess of PIT values near zero, which can occur when predictions
+are systematically too high relative to the observations;
+\item an excess of PIT values near one, which can occur when predictions
+are systematically too low relative to the observations.
+}
+
+These patterns are diagnostic rather than unique: different forms of
+misspecification can produce similar PIT histograms. The PIT should therefore
+be interpreted together with other calibration and performance diagnostics.
+
+PIT histograms assess the calibration of the complete predictive
+distribution. This differs from \code{\link[=gg_coverage]{gg_coverage()}}, which evaluates central
+prediction-interval coverage, and \code{\link[=gg_qcp]{gg_qcp()}}, which evaluates calibration of
+individual predictive quantiles.
+
+The number of histogram bins affects the appearance of the diagnostic.
+Too few bins may conceal departures from uniformity, whereas too many bins
+can make sampling variability appear as structure, particularly for small
+validation datasets.
 }
 \examples{
-gg_pit(stats::runif(100))
+set.seed(123)
+
+# Approximately calibrated PIT values
+values <- stats::runif(500)
+
+gg_pit(values)
+
+# Use more bins
+gg_pit(values, bins = 20)
+
+}
+\references{
+Gneiting, T., Balabdaoui, F. and Raftery, A. E. (2007). Probabilistic
+forecasts, calibration and sharpness. \emph{Journal of the Royal Statistical
+Society: Series B}, 69, 243-268.
+\url{doi:10.1111/j.1467-9868.2007.00587.x}
+
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
+\url{doi:10.1016/j.geoderma.2023.116585}
+}
+\seealso{
+\code{\link[=pit]{pit()}}, \code{\link[=gg_qcp]{gg_qcp()}}, \code{\link[=gg_coverage]{gg_coverage()}}
 }

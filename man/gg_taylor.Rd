@@ -35,9 +35,9 @@ The standard ggplot2 discrete colour palette is used by default.}
 
 \item{label_size}{Numeric text size for model labels.}
 
-\item{na.rm}{Logical; remove incomplete pairs separately for each model?
-If FALSE, missing pairs cause an error because coordinates cannot be
-plotted. The default is TRUE.}
+\item{na.rm}{Logical; remove incomplete observation-prediction pairs
+separately for each model? If \code{FALSE}, missing pairs cause an error because
+diagram coordinates cannot be calculated. The default is \code{TRUE}.}
 
 \item{half}{Logical; if \code{TRUE}, draw only the positive-correlation portion
 of the Taylor diagram (r = 0 to r = 1). If \code{FALSE}, draw the full Taylor

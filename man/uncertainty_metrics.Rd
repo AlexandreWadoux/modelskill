@@ -2,7 +2,7 @@
 % Please edit documentation in R/uncertainty_metrics.R
 \name{uncertainty_metrics}
 \alias{uncertainty_metrics}
-\title{Summarize predictive uncertainty validation}
+\title{Summarize prediction-interval validation}
 \usage{
 uncertainty_metrics(
   obs,
@@ -15,21 +15,92 @@ uncertainty_metrics(
 \arguments{
 \item{obs}{Numeric observation vector.}
 
-\item{lower, upper}{Numeric prediction-interval bounds, supplied together.}
+\item{lower, upper}{Numeric vectors containing the lower and upper
+prediction-interval bounds. Both must be supplied and have the same length
+as \code{obs}.}
 
-\item{level}{Nominal central interval coverage in interval mode.}
+\item{level}{Nominal central prediction-interval coverage probability,
+strictly between zero and one. The default is \code{0.95}.}
 
-\item{na.rm}{Logical; remove incomplete paired inputs?}
+\item{na.rm}{Logical; remove incomplete observation/interval combinations?
+The default is \code{TRUE}.}
 }
 \value{
-A one-row base data frame. Interval mode returns \code{picp},
-\code{picp_error}, \code{interval_width}, and \code{interval_score}.
+A one-row base data frame containing:
+\describe{
+\item{picp}{Empirical prediction interval coverage probability.}
+\item{picp_error}{Difference between empirical and nominal coverage,
+calculated as \code{picp - level}.}
+\item{interval_width}{Mean prediction-interval width.}
+\item{interval_score}{Mean interval score at the specified nominal
+coverage level.}
+}
 }
 \description{
-Calculates prediction-interval diagnostics. Supply both \code{lower} and \code{upper}
-for a central prediction interval. For quantile and full-distribution
-diagnostics, see \code{\link[=qcp]{qcp()}}, \code{\link[=pit]{pit()}}, \code{\link[=crps]{crps()}}, and \code{\link[=crps_decomposition]{crps_decomposition()}}.
+Calculates a set of complementary diagnostics for evaluating central
+prediction intervals. The function combines empirical coverage, departure
+from nominal coverage, interval width, and the interval score in a single
+one-row summary.
+}
+\details{
+Both \code{lower} and \code{upper} prediction-interval bounds must be supplied. For a
+nominal interval level \eqn{p}, a well-calibrated uncertainty model should
+have empirical prediction interval coverage probability (PICP) close to
+\eqn{p}.
+
+The returned diagnostics describe complementary aspects of prediction-
+interval performance:
+
+\itemize{
+\item \code{picp} is the proportion of observations contained within the
+prediction intervals;
+\item \code{picp_error} is empirical minus nominal coverage. Values below zero
+indicate under-coverage, whereas values above zero indicate over-coverage;
+\item \code{interval_width} is the mean width of the prediction intervals and
+summarizes their sharpness. Smaller values indicate narrower intervals,
+but are desirable only when calibration remains adequate;
+\item \code{interval_score} is a proper scoring rule that rewards narrow
+intervals while penalizing observations falling below or above them.
+Smaller values indicate better performance when comparing predictions on
+the same response scale and at the same nominal interval level.
+}
+
+These quantities should be interpreted together. Coverage alone does not
+reward sharp predictions, while interval width alone does not assess whether
+the intervals contain observations at the stated frequency. The interval
+score combines both aspects in a single statistic.
+
+This function is intentionally restricted to prediction intervals. For
+calibration across multiple interval levels, use \code{\link[=gg_coverage]{gg_coverage()}} and
+\code{\link[=accuracy_plot_metrics]{accuracy_plot_metrics()}}. For predictive quantiles, use \code{\link[=qcp]{qcp()}} and
+\code{\link[=gg_qcp]{gg_qcp()}}. For complete predictive distributions, use \code{\link[=pit]{pit()}}, \code{\link[=gg_pit]{gg_pit()}},
+\code{\link[=crps]{crps()}}, or \code{\link[=crps_decomposition]{crps_decomposition()}}.
 }
 \examples{
-uncertainty_metrics(1:3, lower = c(0, 1, 2), upper = c(2, 3, 4), level = .8)
+obs <- c(1, 2, 3, 4, 5)
+lower <- c(0, 1, 2, 3, 4)
+upper <- c(2, 3, 4, 5, 6)
+
+uncertainty_metrics(
+  obs,
+  lower = lower,
+  upper = upper,
+  level = 0.80
+)
+
+}
+\references{
+Gneiting, T. and Raftery, A. E. (2007). Strictly proper scoring rules,
+prediction, and estimation. \emph{Journal of the American Statistical
+Association}, 102, 359-378.
+\url{doi:10.1198/016214506000001437}
+
+Schmidinger, J. and Heuvelink, G. B. M. (2023). Validation of uncertainty
+predictions in digital soil mapping. \emph{Geoderma}, 437, 116585.
+\url{doi:10.1016/j.geoderma.2023.116585}
+}
+\seealso{
+\code{\link[=picp]{picp()}}, \code{\link[=coverage_error]{coverage_error()}}, \code{\link[=interval_width]{interval_width()}},
+\code{\link[=interval_score]{interval_score()}}, \code{\link[=gg_coverage]{gg_coverage()}}, \code{\link[=accuracy_plot_metrics]{accuracy_plot_metrics()}},
+\code{\link[=qcp]{qcp()}}, \code{\link[=pit]{pit()}}, \code{\link[=crps]{crps()}}
 }

@@ -79,7 +79,8 @@
 #' original diagram implementation.
 #'
 #' Constant predictions have undefined Pearson correlation and are returned
-#' with `r = NA`, `sd_ratio = 0`, and `sde = 1`. Their diagram geometry remains
+#' with Pearson correlation set to `NA`, an SD ratio of zero, and SDE equal to
+#' one. Their diagram geometry remains
 #' defined even though their correlation is not.
 #'
 #' Because mean squared error uses divisor \eqn{n}, whereas `nME` and `sde`

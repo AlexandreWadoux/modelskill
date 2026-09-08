@@ -2,7 +2,7 @@
 % Please edit documentation in R/diagram_stats.R
 \name{diagram_stats}
 \alias{diagram_stats}
-\title{Calculate the statistics underlying model-skill diagrams}
+\title{Statistics underlying summary diagrams}
 \usage{
 diagram_stats(mods, obs, na.rm = TRUE)
 }
@@ -13,58 +13,122 @@ names must be unique; missing names are generated.}
 
 \item{obs}{A numeric observation vector.}
 
-\item{na.rm}{Logical; remove incomplete pairs separately for each model?
-If FALSE, missing pairs cause an error because coordinates cannot be
-plotted. The default is TRUE.}
+\item{na.rm}{Logical; remove incomplete observation-prediction pairs
+separately for each model? If \code{FALSE}, missing pairs cause an error because
+diagram coordinates cannot be calculated. The default is \code{TRUE}.}
 }
 \value{
-A data frame with one row per model: \code{model} (identifier), \code{n}
-(complete pair count), \code{r} (correlation), \code{sd_ratio} (prediction SD
-divided by observation SD), \code{mean_error} (observation minus prediction,
-in original units), \code{nME} (mean error divided by sample observation SD),
-\code{sde} (sample error SD divided by sample observation SD), and
-\code{signed_sde} (sde times the sign of the SD difference).
+A data frame with one row per model and the following columns:
+\describe{
+\item{model}{Model identifier.}
+\item{n}{Number of complete observation-prediction pairs.}
+\item{r}{Pearson correlation coefficient.}
+\item{sd_ratio}{Ratio of prediction to observation standard deviation.}
+\item{mean_error}{Mean error, calculated as observation minus prediction,
+in the original response units.}
+\item{nME}{Normalized mean error (ME*), obtained by dividing mean error by
+the sample standard deviation of the observations.}
+\item{sde}{Standardized standard deviation of the error (SDE*), obtained by
+dividing the sample standard deviation of the errors by the sample standard
+deviation of the observations.}
+\item{signed_sde}{SDE* multiplied by the sign of the difference between
+prediction and observation standard deviations.}
+}
 }
 \description{
-Computes a shared numerical representation for Taylor, solar and target
-diagrams without constructing a plot.
+Computes the statistics used as coordinates in Taylor, solar, and target
+diagrams without constructing a plot. This is useful for inspecting the
+numerical quantities represented by the diagrams or for constructing custom
+visualizations.
 }
 \details{
-At least two complete pairs and non-zero observation standard
-deviation are required for every model. Inputs are paired by position.
-Constant predictions have r = NA. Their SD ratio is zero and sde is one.
-Plot functions can therefore draw them without reporting a defined
-correlation. Correlation-coloured points are grey when r is NA.
+Inputs are paired by position. At least two complete pairs and non-zero
+observation standard deviation are required for every model.
 
-Let \code{s_p} and \code{s_o} denote sample standard deviations of predictions and
-observations, respectively. The standard-deviation ratio is
-\deqn{\sigma^* = \frac{s_p}{s_o}.}
-Mean error is calculated with divisor \code{n}, and its diagram coordinate is
-\deqn{\mathrm{nME} = \frac{\overline{obs-pred}}{s_o}
-\sqrt{\frac{n-1}{n}}.}
-The standardized centred error is evaluated directly from centred errors to
-avoid cancellation near perfect agreement:
-\deqn{\mathrm{SDE}^* = \frac{\sqrt{n^{-1}\sum_{i=1}^n
-[(obs_i-pred_i)-\overline{obs-pred}]^2}}{s_o}.}
-Thus, with sample SDs (divisor \code{n - 1}),
-\deqn{\mathrm{SDE}^* = \sqrt{\frac{n-1}{n}
-[1 + \sigma^{*2} - 2\sigma^*r]}.}
-This finite-sample convention preserves the original research code. It
-differs by the factor \code{sqrt((n - 1) / n)} from the population-moment form
-often shown for Taylor diagrams. Consequently \code{nME^2 + sde^2} is not
-exactly \code{RMSE^2 / sd(obs)^2} for finite samples.
+Let
 
-Equal prediction and observation SDs receive a positive sign in signed_sde,
-as in the original code. Positive nME means underprediction.
+\deqn{e_i = obs_i - pred_i}
+
+denote the prediction error, and let \eqn{s_p} and \eqn{s_o} denote the
+sample standard deviations of predictions and observations, respectively.
+
+The standard-deviation ratio is
+
+\deqn{
+\sigma^* = \frac{s_p}{s_o}.
+}
+
+The normalized mean error is
+
+\deqn{
+\mathrm{ME}^* =
+\frac{\bar{e}}{s_o}.
+}
+
+Positive ME* indicates underprediction and negative ME* indicates
+overprediction under the package convention \code{obs - pred}.
+
+Let \eqn{s_e} denote the sample standard deviation of the errors. The
+standardized error standard deviation is
+
+\deqn{
+\mathrm{SDE}^* =
+\frac{s_e}{s_o}.
+}
+
+Using the relationship between the variances of observations, predictions,
+and their errors, this is equivalently
+
+\deqn{
+\mathrm{SDE}^* =
+\sqrt{
+1 + \sigma^{*2} - 2\sigma^*r
+}.
+}
+
+The sign used for \code{signed_sde} indicates whether the prediction standard
+deviation is smaller or larger than the observation standard deviation:
+negative when \eqn{s_p < s_o} and positive when \eqn{s_p \geq s_o}.
+Equal standard deviations therefore receive a positive sign, following the
+original diagram implementation.
+
+Constant predictions have undefined Pearson correlation and are returned
+with Pearson correlation set to \code{NA}, an SD ratio of zero, and SDE equal to
+one. Their diagram geometry remains
+defined even though their correlation is not.
+
+Because mean squared error uses divisor \eqn{n}, whereas \code{nME} and \code{sde}
+use sample standard deviations with divisor \eqn{n - 1}, their exact
+finite-sample relationship with RMSE is
+
+\deqn{
+\frac{\mathrm{RMSE}^2}{s_o^2}
+=
+\mathrm{ME}^{*2}
++
+\frac{n-1}{n}\mathrm{SDE}^{*2}.
+}
+
+Consequently, \eqn{\mathrm{ME}^{*2}+\mathrm{SDE}^{*2}} is not exactly
+equal to squared RMSE normalized by the sample observation standard deviation
+for finite samples. The difference becomes negligible as \eqn{n} increases.
 }
 \examples{
 obs <- c(1, 2, 3, 4, 5)
-diagram_stats(list(accurate = obs, biased = obs + 1), obs)
+
+mods <- list(
+  perfect = obs,
+  biased = obs + 1,
+  noisy = c(1, 3, 2, 5, 4)
+)
+
+diagram_stats(mods, obs)
+
 }
 \references{
-Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J.
-(2022). An integrated approach for the evaluation of quantitative soil
-maps through Taylor and solar diagrams. Geoderma, 405, 115332.
+Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022).
+An integrated approach for the evaluation of quantitative soil maps through
+Taylor and solar diagrams. \emph{Geoderma}, 405, 115332.
 \url{doi:10.1016/j.geoderma.2021.115332}
 }
 \seealso{

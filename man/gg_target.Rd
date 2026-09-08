@@ -54,9 +54,9 @@ Defaults to 1.5.}
 
 \item{label_size}{Numeric size of model labels.}
 
-\item{na.rm}{Logical; remove incomplete pairs separately for each model?
-If FALSE, missing pairs cause an error because coordinates cannot be
-plotted. The default is TRUE.}
+\item{na.rm}{Logical; remove incomplete observation-prediction pairs
+separately for each model? If \code{FALSE}, missing pairs cause an error because
+diagram coordinates cannot be calculated. The default is \code{TRUE}.}
 
 \item{legend}{Logical; show the point-colour legend?}
 
