@@ -60,8 +60,10 @@ diagram coordinates cannot be calculated. The default is \code{TRUE}.}
 
 \item{legend}{Logical; show the point-colour legend?}
 
-\item{reference}{Logical; draw the original RMSD reference circles and
-their labels?}
+\item{reference}{Logical; draw the target-diagram reference circles and
+their labels? The dashed inner circles indicate regions implying minimum
+Pearson correlation levels, whereas the solid unit circle represents the
+RMSE* = 1 reference.}
 }
 \value{
 A \code{ggplot2} object that can be extended with ordinary ggplot2 layers,
@@ -71,8 +73,9 @@ scales, labels, themes, and coordinates.
 Creates a target diagram comparing quantitative prediction models with an
 observation vector. The horizontal coordinate is the signed standardized
 unbiased root mean square difference and the vertical coordinate is
-normalized mean error. Concentric circles provide reference thresholds
-associated with correlation levels.
+normalized mean error. The dashed inner circles delimit regions implying
+minimum Pearson correlation levels, whereas the solid unit circle provides
+an RMSE* reference.
 }
 \details{
 The default geometry follows Wadoux, Walvoort, and Brus (2022). By default,
@@ -113,15 +116,19 @@ difference. The signed SDE coordinate distinguishes predictions with less
 variation than observations from predictions with greater variation; the
 mean-error coordinate distinguishes overprediction (negative ME*) from
 underprediction (positive ME*) under the \code{obs - pred} convention. The
-distance to the origin is standardized RMSE, so points near the origin are
-preferred.
+distance to the origin is RMSE normalized by the population-moment
+observation standard deviation, so points near the origin are preferred.
 
-The circular contours are RMSE* references. A point near the origin is both
-close in mean and in spread/pattern; a point displaced along the mean-error
-direction is chiefly biased; and a point displaced along the signed-SDE
-direction chiefly differs in variability or pattern. The displayed titles
-intentionally retain the original implementation's visual orientation; use
-the coordinate definitions above when interpreting position.
+The reference circles have two distinct interpretations. The dashed inner
+circles correspond to correlation lower-bound regions, with radius
+\eqn{\sqrt{1-r^2}} for the displayed Pearson correlation threshold. The
+solid unit circle instead represents the RMSE* = 1 reference. A point near
+the origin is both close in mean and in spread/pattern; a point displaced
+along the mean-error direction is chiefly biased; and a point displaced
+along the signed-SDE direction chiefly differs in variability or pattern.
+The displayed titles intentionally retain the original implementation's
+visual orientation; use the coordinate definitions above when interpreting
+position.
 }
 
 \section{ggplot2 customization}{
