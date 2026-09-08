@@ -380,8 +380,11 @@ gg_taylor <- function(mods, obs,
   # Correlation labels
   # ----------------------------------------------------------
 
+  # Place every correlation label at the same radial distance from the
+  # outer arc. Angle-dependent justification keeps the nearest edge of
+  # each label visually separated from the arc by a consistent amount.
   correlation_label_radius <-
-    1.055 * std_max
+    1.035 * std_max
 
   rays$label_x <-
     correlation_label_radius *
@@ -391,24 +394,11 @@ gg_taylor <- function(mods, obs,
     correlation_label_radius *
     sin(rays$angle)
 
-  if (isTRUE(half)) {
+  rays$label_hjust <-
+    (1 - cos(rays$angle)) / 2
 
-    rays$label_x[
-      rays$label == 0
-    ] <- 0.025 * std_max
-
-    rays$label_y[
-      rays$label == 0
-    ] <- 1.065 * std_max
-
-    rays$label_x[
-      rays$label == 1
-    ] <- 1.055 * std_max
-
-    rays$label_y[
-      rays$label == 1
-    ] <- 0
-  }
+  rays$label_vjust <-
+    (1 - sin(rays$angle)) / 2
 
 
   # ----------------------------------------------------------
@@ -711,7 +701,9 @@ gg_taylor <- function(mods, obs,
       ggplot2::aes(
         x = label_x,
         y = label_y,
-        label = label
+        label = label,
+        hjust = label_hjust,
+        vjust = label_vjust
       ),
       size = 4,
       colour = "black",
@@ -732,8 +724,9 @@ gg_taylor <- function(mods, obs,
     title_angle <-
       pi / 4
 
+    # Keep the correlation title close to the outer arc in the half diagram.
     title_radius <-
-      1.27 *
+      1.17 *
       std_max
 
     p <- p +
