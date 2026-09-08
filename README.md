@@ -198,10 +198,7 @@ See the **[summary-diagram tutorial](https://alexandrewadoux.github.io/modelskil
 
 `modelskill` evaluates quantified predictive uncertainty represented as:
 
-- prediction intervals;
 - predictive means and standard deviations;
-- predicted quantiles;
-- predictive samples or ensemble members;
 - full predictive distributions.
 
 ### Prediction intervals
