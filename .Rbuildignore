@@ -12,4 +12,5 @@
 ^pkgdown$
 ^CITATION\.cff$
 ^_pkgdown\.yml$
+^README\.Rmd$
 ^vignettes/.*\\.html$
