@@ -2,7 +2,7 @@ bibentry(
   bibtype = "Manual",
   title = "modelskill: Assessing and Visualising the Performance of Continuous Prediction Models",
   author = person(
-    given = "A.M.J.-C.",
+    given = "A. M. J.-C.",
     family = "Wadoux"
   ),
   year = "2026",
