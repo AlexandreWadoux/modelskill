@@ -34,9 +34,12 @@ test_that("all columns use the same retained pairs and edge-case policies", {
   o <- c(1, 2, 4, 8); p <- c(2, 2, 3, 6)
   base <- model_metrics(p, o, extended = TRUE)
   expect_equal(model_metrics(c(p, NA), c(o, 0), extended = TRUE), base)
-  missing <- model_metrics(c(p, NA), c(o, 0), extended = TRUE, na.rm = FALSE)
+  expect_warning(missing <- model_metrics(c(p, NA), c(o, 0), extended = TRUE, na.rm = FALSE),
+                 "KGE is undefined because inputs contain missing values")
   expect_true(all(is.na(missing[-1])))
-  expect_true(all(is.na(model_metrics(NA_real_, NA_real_, extended = TRUE)[-1])))
+  expect_warning(empty <- model_metrics(NA_real_, NA_real_, extended = TRUE),
+                 "KGE is undefined because no valid observation-prediction pairs remain")
+  expect_true(all(is.na(empty[-1])))
   expect_warning(expect_true(is.na(willmott_d(rep(2, 3), rep(2, 3)))), "denominator is zero")
   expect_equal(willmott_d(1:3, 3:1), 0)
   expect_equal(mpe(c(1, 2), c(2, 4)), -100)

@@ -1,8 +1,7 @@
 # Very simple modelskill test script
-# In RStudio, set the working directory to the modelskill package folder,
-# then select all of this file and click Run.
+# Install modelskill first, then open this file in RStudio and click Source.
 
-devtools::load_all()
+library(modelskill)
 
 obs <- c(1, 2, 3, 4, 5, 6)
 mods <- list(
@@ -24,7 +23,7 @@ print(p_taylor + ggplot2::labs(title = "My Taylor diagram"))
 # Solar diagram
 p_solar <- gg_solar(
   mods, obs,
-  colorval = results$NSE,
+  colorval = results$R2,
   colorval.name = "NSE",
   label = TRUE,
   x.axis_begin = -1.5,
@@ -37,7 +36,7 @@ print(p_solar)
 # Target diagram
 p_target <- gg_target(
   mods, obs,
-  colorval = results$NSE,
+  colorval = results$R2,
   colorval.name = "NSE",
   label = TRUE,
   axis_begin = -2,

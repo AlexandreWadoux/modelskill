@@ -5,6 +5,7 @@ inst/doc/
 Rplots.pdf
 review/*.rds
 tmp/
+output/
 docs/
 pkgdown/
 vignettes/*.html

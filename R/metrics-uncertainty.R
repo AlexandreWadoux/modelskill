@@ -510,45 +510,41 @@ crps_casewise <- function(obs, distribution = NULL, pred = NULL,
 #' @examples crps_decomposition(c(0, 1), matrix(c(-1, 1, 0, 2), nrow = 2))
 #' @export
 crps_decomposition <- function(obs, distribution, na.rm = TRUE) {
+  check_flag(na.rm, "na.rm")
   x <- prepare_distribution_matrix(obs, distribution, na.rm, min_columns = 2L)
   if (is.null(x) || !length(x$obs)) {
     return(data.frame(crps = NA_real_, reliability = NA_real_, potential_crps = NA_real_))
   }
-  ensemble <- t(apply(x$distribution, 1, sort))
-  members <- ncol(ensemble)
-  alpha <- beta <- matrix(0, nrow(ensemble), members + 1L)
-  h0 <- as.numeric(x$obs <= ensemble[, 1])
-  hn <- as.numeric(x$obs <= ensemble[, members])
-  below <- x$obs < ensemble[, 1]
-  above <- x$obs > ensemble[, members]
-  beta[below, 1] <- ensemble[below, 1] - x$obs[below]
-  alpha[above, members + 1L] <- x$obs[above] - ensemble[above, members]
-  for (j in seq_len(members - 1L)) {
-    width <- ensemble[, j + 1L] - ensemble[, j]
-    alpha[x$obs >= ensemble[, j + 1L], j + 1L] <- width[x$obs >= ensemble[, j + 1L]]
-    beta[x$obs <= ensemble[, j], j + 1L] <- width[x$obs <= ensemble[, j]]
-    inside <- x$obs > ensemble[, j] & x$obs < ensemble[, j + 1L]
-    alpha[inside, j + 1L] <- x$obs[inside] - ensemble[inside, j]
-    beta[inside, j + 1L] <- ensemble[inside, j + 1L] - x$obs[inside]
-  }
-  reliability <- potential <- 0
-  for (j in 0:members) {
-    index <- j + 1L
-    if (j == 0L) {
-      oi <- mean(h0); gi <- if (oi == 0) 0 else mean(beta[, index]) / oi
-    } else if (j == members) {
-      oi <- mean(hn); gi <- if (oi == 1) 0 else mean(alpha[, index]) / (1 - oi)
-    } else {
-      a <- mean(alpha[, index]); b <- mean(beta[, index])
-      gi <- a + b
-      oi <- if (gi == 0) j / members else b / gi
-    }
-    probability <- j / members
-    reliability <- reliability + gi * (oi - probability)^2
-    potential <- potential + gi * oi * (1 - oi)
-  }
-  data.frame(crps = reliability + potential, reliability = reliability,
-             potential_crps = potential)
+  ordered <- x$distribution
+  for (row in seq_len(nrow(ordered))) ordered[row, ] <- sort(ordered[row, ])
+  size <- ncol(ordered)
+  left <- ordered[, -size, drop = FALSE]
+  right <- ordered[, -1L, drop = FALSE]
+
+  # Integrate the two constant indicator values within each CDF step.
+  # Clipping the observation to the bin handles edge ties without case branches.
+  mean_below <- colMeans(pmax(pmin(right, x$obs) - left, 0))
+  mean_above <- colMeans(pmax(right - pmax(left, x$obs), 0))
+  mean_width <- mean_below + mean_above
+  probability <- seq_len(size - 1L) / size
+  active <- mean_width > 0
+  frequency <- mean_above[active] / mean_width[active]
+
+  # The exterior terms simplify algebraically, avoiding division by a tail
+  # frequency that may be zero. Retain the documented inclusive CDF convention.
+  tail_distance <- c(mean(pmax(ordered[, 1L] - x$obs, 0)),
+                     mean(pmax(x$obs - ordered[, size], 0)))
+  tail_frequency <- c(mean(x$obs <= ordered[, 1L]),
+                      mean(x$obs > ordered[, size]))
+  reliability <- sum(mean_width[active] * (frequency - probability[active])^2) +
+    sum(tail_distance * tail_frequency)
+  potential <- sum(mean_below[active] * frequency) +
+    sum(tail_distance * (1 - tail_frequency))
+
+  # Compute the score independently from its decomposition identity.
+  score <- sum(mean_below * probability^2 + mean_above * (1 - probability)^2) +
+    sum(tail_distance)
+  data.frame(crps = score, reliability = reliability, potential_crps = potential)
 }
 
 #' Continuous ranked probability score

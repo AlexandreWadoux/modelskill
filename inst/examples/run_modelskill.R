@@ -1,8 +1,7 @@
 # Run this file from RStudio to test modelskill and display all figures.
-# First set the working directory to the modelskill package folder, then click
-# the Source button in RStudio.
+# Install modelskill first, then click the Source button in RStudio.
 
-devtools::load_all()
+library(modelskill)
 
 set.seed(42)
 observed <- seq(0, 10, length.out = 100) + rnorm(100, 0, 1)
@@ -15,7 +14,7 @@ predictions <- list(
 
 cat("Model-skill indices:\n")
 indices <- model_metrics(predictions, observed)
-print(round(indices, 3))
+print(indices, digits = 3)
 
 cat("\nShowing Taylor diagram...\n")
 taylor_plot <- gg_taylor(predictions, observed, label = TRUE)
@@ -24,7 +23,7 @@ print(taylor_plot)
 cat("Showing solar diagram...\n")
 solar_plot <- gg_solar(
   predictions, observed,
-  colorval = indices$NSE,
+  colorval = indices$R2,
   colorval.name = "NSE",
   label = TRUE,
   x.axis_begin = -1.5,
@@ -37,7 +36,7 @@ print(solar_plot)
 cat("Showing target diagram...\n")
 target_plot <- gg_target(
   predictions, observed,
-  colorval = indices$NSE,
+  colorval = indices$R2,
   colorval.name = "NSE",
   label = TRUE,
   axis_begin = -2,

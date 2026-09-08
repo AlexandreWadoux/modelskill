@@ -1,11 +1,7 @@
 # modelskill quick start
-# Run this file from RStudio after opening the modelskill folder.
+# Install modelskill first, then open this file in RStudio and click Source.
 
-# Install these once if necessary:
-# install.packages(c("devtools", "ggplot2", "ggrepel", "ggthemes",
-#                    "viridis", "testthat"))
-
-devtools::load_all()
+library(modelskill)
 
 set.seed(123)
 obs <- seq(0, 10, length.out = 100) + rnorm(100, sd = 1)
@@ -21,12 +17,12 @@ print(metrics)
 
 taylor <- gg_taylor(mods, obs, label = TRUE)
 solar <- gg_solar(
-  mods, obs, colorval = metrics$NSE, colorval.name = "NSE",
+  mods, obs, colorval = metrics$R2, colorval.name = "NSE",
   label = TRUE, x.axis_begin = -1.5, x.axis_end = 1.5,
   y.axis_end = 2, by = 0.25
 )
 target <- gg_target(
-  mods, obs, colorval = metrics$NSE, colorval.name = "NSE",
+  mods, obs, colorval = metrics$R2, colorval.name = "NSE",
   label = TRUE, axis_begin = -2, axis_end = 2, by = 0.5
 )
 

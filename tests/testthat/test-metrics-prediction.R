@@ -43,9 +43,11 @@ test_that("prediction metrics handle perfect, biased and missing predictions", {
   expect_equal(bias(obs, obs + 2), -2)
   expect_equal(mae(obs, obs + 2), 2)
   expect_equal(mae(c(1, NA, 3), c(1, 2, 2)), mae(c(1, 3), c(1, 2)))
-  expect_true(is.na(mae(c(1, NA, 3), c(1, 2, 2), na.rm = FALSE)))
+  expect_warning(expect_true(is.na(mae(c(1, NA, 3), c(1, 2, 2), na.rm = FALSE))),
+                 "MAE is undefined because inputs contain missing values")
   expect_equal(rmse(c(1, NA, 3), c(1, 2, 2)), rmse(c(1, 3), c(1, 2)))
-  expect_true(is.na(rmse(c(1, NA, 3), c(1, 2, 2), na.rm = FALSE)))
+  expect_warning(expect_true(is.na(rmse(c(1, NA, 3), c(1, 2, 2), na.rm = FALSE))),
+                 "RMSE is undefined because inputs contain missing values")
 })
 
 test_that("prediction metric validation and edge cases are explicit", {

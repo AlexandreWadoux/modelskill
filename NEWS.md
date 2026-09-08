@@ -1,4 +1,15 @@
-# modelskill 0.0.0.9000
+# modelskill 0.1.0
+
+## Submission preparation
+
+* Replace the verification-derived CRPS decomposition routine with a new
+  implementation from the documented mathematical equations. Test the score
+  and components against independent mathematical references, including ties,
+  outliers, missing values and continuous and discrete predictive samples.
+* Correct the build exclusion for locally rendered vignette HTML and update
+  the bundled examples to work with the installed package and current API.
+* Explicitly test expected undefined-metric warnings; retain the warnings in
+  the public functions. Add methodological citations to DESCRIPTION.
 
 ## Scientific-audit corrections
 
