@@ -21,11 +21,11 @@ Mean absolute percentage error (MAPE) averages absolute error relative to
 each observation.
 }
 \details{
-\deqn{\mathrm{MAPE}=\frac{1}{n}\sum_{i=1}^n
+\deqn{\mathrm{MAPE}=\frac{100}{n}\sum_{i=1}^n
 \left|\frac{obs_i-pred_i}{obs_i}\right|.}
 
-MAPE is a non-negative fraction; zero is ideal, and multiplying by 100 gives
-percent. It returns \code{NA} with a warning when any observation is zero and can
+MAPE is a non-negative percentage; zero is ideal. It returns \code{NA} with a
+warning when any observation is zero and can
 disproportionately weight errors near zero. Missing-value handling follows
 \code{\link[=bias]{bias()}}.
 }

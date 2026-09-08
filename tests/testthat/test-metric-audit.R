@@ -12,8 +12,8 @@ test_that("every reported metric agrees with explicit formula references", {
     r2 = r^2, R2 = 1 - 6 / sum((o - mean(o))^2), sd_ratio = sqrt(w/v),
     ccc = 2 * covar / den, Cb = 2 * sqrt(v*w) / den,
     mdae = 1, rpd = sd(o)/sqrt(1.5), rpiq = 3.25/sqrt(1.5),
-    sep = sqrt(5/3), rer = 7/sqrt(1.5), mape = .375, mpe = -12.5,
-    smape = (2/3 + 2/7 + 2/7)/4,
+    sep = sqrt(5/3), rer = 7/sqrt(1.5), mape = 37.5, mpe = -12.5,
+    smape = 100 * (2/3 + 2/7 + 2/7)/4,
     msle = mean((log1p(o)-log1p(p))^2),
     rmsle = sqrt(mean((log1p(o)-log1p(p))^2)), rae = 1/2.25,
     rrmse = 100 * sqrt(1.5)/3.75,
@@ -40,7 +40,7 @@ test_that("all columns use the same retained pairs and edge-case policies", {
   expect_warning(expect_true(is.na(willmott_d(rep(2, 3), rep(2, 3)))), "denominator is zero")
   expect_equal(willmott_d(1:3, 3:1), 0)
   expect_equal(mpe(c(1, 2), c(2, 4)), -100)
-  expect_equal(smape(c(0, 1), c(0, -1)), 1)
+  expect_equal(smape(c(0, 1), c(0, -1)), 100)
   expect_warning(expect_true(is.na(kge(1:3, rep(2, 3)))), "predictions have zero variance")
   for (f in list(mpe, rrmse, willmott_d)) {
     expect_error(f(1:2, 1:3), "same length")

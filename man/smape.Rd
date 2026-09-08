@@ -21,11 +21,11 @@ Symmetric mean absolute percentage error (sMAPE) scales absolute error by
 absolute observation and prediction sizes.
 }
 \details{
-\deqn{\mathrm{sMAPE}=\frac{1}{n}\sum_{i=1}^n
+\deqn{\mathrm{sMAPE}=\frac{100}{n}\sum_{i=1}^n
 \frac{2|obs_i-pred_i|}{|obs_i|+|pred_i|}.}
 
-sMAPE ranges from zero to two; zero is ideal. Multiply by 100 for percent.
-A pair of zeros contributes zero. Missing-value handling follows \code{\link[=bias]{bias()}}.
+sMAPE ranges from zero to 200 percent; zero is ideal. A pair of zeros
+contributes zero. Missing-value handling follows \code{\link[=bias]{bias()}}.
 }
 \references{
 Hyndman and Koehler (2006). See \code{\link[=mdae]{mdae()}}.

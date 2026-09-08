@@ -444,9 +444,9 @@ kge(
 | **RPIQ** [`rpiq()`](../reference/rpiq.html) | \(\mathrm{IQR}(o)/\mathrm{RMSE}\) | Larger | Error relative to the observed interquartile range. | [@bellonmaurel2010] |
 | **SEP** [`sep()`](../reference/sep.html) | \(\sqrt{\frac{1}{n-1}\sum_i[(o_i-p_i)-\mathrm{ME}]^2}\) | 0 | Sample SD of prediction errors after removing bias. | [@bellonmaurel2010] |
 | **RER** [`rer()`](../reference/rer.html) | \(\frac{\max(o)-\min(o)}{\mathrm{RMSE}}\) | Larger | Error relative to observed range; sensitive to extreme values. | [@bellonmaurel2010] |
-| **MAPE** [`mape()`](../reference/mape.html) | \(\frac{1}{n}\sum_i\left\lvert\frac{o_i-p_i}{o_i}\right\rvert\) | 0 | Mean absolute relative error. Undefined when an observation is zero. | [@hyndman2006] |
+| **MAPE** [`mape()`](../reference/mape.html) | \(\frac{100}{n}\sum_i\left\lvert\frac{o_i-p_i}{o_i}\right\rvert\) | 0 | Mean absolute percentage error. Undefined when an observation is zero. | [@hyndman2006] |
 | **MPE** [`mpe()`](../reference/mpe.html) | \(\frac{100}{n}\sum_i\frac{o_i-p_i}{o_i}\) | 0 | Signed relative bias in percent. Undefined when an observation is zero. | [@hyndman2006] |
-| **sMAPE** [`smape()`](../reference/smape.html) | \(\frac{1}{n}\sum_i\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}\) | 0 | Symmetric relative absolute error. | [@hyndman2006] |
+| **sMAPE** [`smape()`](../reference/smape.html) | \(\frac{100}{n}\sum_i\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}\) | 0 | Symmetric absolute percentage error (0--200%). | [@hyndman2006] |
 | **MSLE** [`msle()`](../reference/msle.html) | \(\frac{1}{n}\sum_i[\log(1+o_i)-\log(1+p_i)]^2\) | 0 | Squared error on the log1p scale. Requires non-negative values. | [@hodson2022] |
 | **RMSLE** [`rmsle()`](../reference/rmsle.html) | \(\sqrt{\mathrm{MSLE}}\) | 0 | Root mean squared error on the log1p scale. | [@hodson2022] |
 | **RAE** [`rae()`](../reference/rae.html) | \(\frac{\sum_i\lvert o_i-p_i\rvert}{\sum_i\lvert o_i-\bar{o}\rvert}\) | 0 | Absolute error relative to predicting the observed mean; 1 is the benchmark. | [@hyndman2006] |
@@ -454,8 +454,8 @@ kge(
 | **Willmott's \(d\)** [`willmott_d()`](../reference/willmott_d.html) | \(1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(\lvert p_i-\bar{o}\rvert+\lvert o_i-\bar{o}\rvert)^2}\) | 1 | Index of agreement; sensitive to large errors. | [@willmott1985] |
 | **KGE** [`kge()`](../reference/kge.html) | \(1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar{p}/\bar{o}-1)^2}\) | 1 | Combines correlation, variability ratio, and mean ratio. | [@gupta2009] |
 
-For `MAPE` and `sMAPE`, `modelskill` returns a fraction; multiply by 100 if a
-percentage is required. `MPE` and `RRMSE` are returned directly as percentages.
+`MAPE`, `MPE`, `sMAPE`, and `RRMSE` are returned as percentages. `sMAPE`
+ranges from 0 to 200%; the other percentage metrics are unbounded above.
 
 Percentage-based metrics require particular care when observations or their
 mean are zero or close to zero.

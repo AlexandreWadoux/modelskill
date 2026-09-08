@@ -478,9 +478,9 @@ extended_components <- function(obs, pred, na.rm = TRUE) {
     rpiq = if (root == 0) if (obs_iqr == 0) NA_real_ else Inf else obs_iqr / root,
     sep = if (n < 2) NA_real_ else sqrt(sum((error - mean(error))^2) / (n - 1)),
     rer = if (root == 0) if (obs_range == 0) NA_real_ else Inf else obs_range / root,
-    mape = if (any(x$obs == 0)) NA_real_ else mean(abs(error / x$obs)),
+    mape = if (any(x$obs == 0)) NA_real_ else 100 * mean(abs(error / x$obs)),
     mpe = if (any(x$obs == 0)) NA_real_ else 100 * mean(error / x$obs),
-    smape = mean(ifelse(x$obs == 0 & x$pred == 0, 0, 2 * abs(error) / (abs(x$obs) + abs(x$pred))), na.rm = TRUE),
+    smape = 100 * mean(ifelse(x$obs == 0 & x$pred == 0, 0, 2 * abs(error) / (abs(x$obs) + abs(x$pred))), na.rm = TRUE),
     msle = if (any(x$obs < 0 | x$pred < 0)) NA_real_ else mean((log1p(x$obs) - log1p(x$pred))^2),
     rmsle = NA_real_,
     rae = if (sum(abs(x$obs - mean(x$obs))) == 0) NA_real_ else sum(abs(error)) / sum(abs(x$obs - mean(x$obs))),
@@ -658,11 +658,11 @@ rer <- function(obs, pred, na.rm = TRUE) {
 #' Mean absolute percentage error (MAPE) averages absolute error relative to
 #' each observation.
 #'
-#' \deqn{\mathrm{MAPE}=\frac{1}{n}\sum_{i=1}^n
+#' \deqn{\mathrm{MAPE}=\frac{100}{n}\sum_{i=1}^n
 #' \left|\frac{obs_i-pred_i}{obs_i}\right|.}
 #'
-#' MAPE is a non-negative fraction; zero is ideal, and multiplying by 100 gives
-#' percent. It returns `NA` with a warning when any observation is zero and can
+#' MAPE is a non-negative percentage; zero is ideal. It returns `NA` with a
+#' warning when any observation is zero and can
 #' disproportionately weight errors near zero. Missing-value handling follows
 #' [bias()].
 #' @inheritParams bias
@@ -699,11 +699,11 @@ mpe <- function(obs, pred, na.rm = TRUE) {
 #' Symmetric mean absolute percentage error (sMAPE) scales absolute error by
 #' absolute observation and prediction sizes.
 #'
-#' \deqn{\mathrm{sMAPE}=\frac{1}{n}\sum_{i=1}^n
+#' \deqn{\mathrm{sMAPE}=\frac{100}{n}\sum_{i=1}^n
 #' \frac{2|obs_i-pred_i|}{|obs_i|+|pred_i|}.}
 #'
-#' sMAPE ranges from zero to two; zero is ideal. Multiply by 100 for percent.
-#' A pair of zeros contributes zero. Missing-value handling follows [bias()].
+#' sMAPE ranges from zero to 200 percent; zero is ideal. A pair of zeros
+#' contributes zero. Missing-value handling follows [bias()].
 #' @inheritParams bias
 #' @return One numeric value.
 #' @references Hyndman and Koehler (2006). See [mdae()].

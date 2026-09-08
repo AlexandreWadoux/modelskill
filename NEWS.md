@@ -35,6 +35,9 @@ names and invalid dimensions now error. digits is limited to integers 0 through
 were renamed or reordered.
 ## Prediction metric audit
 
+* **Breaking change:** `mape()` and `smape()` now return percentages, matching
+  `mpe()` and `rrmse()`. Previously, `mape()` and `smape()` returned fractions.
+
 * `model_metrics()` now reports each statistic once. Duplicate ME, MAE, RMSE,
   r, nse/NSE/MEC, and rhoC columns are removed in favour of bias, mae, rmse,
   correlation, R2, and ccc. Standalone efficiency aliases remain available.
