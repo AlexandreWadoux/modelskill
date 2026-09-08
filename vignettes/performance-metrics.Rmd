@@ -19,21 +19,13 @@ knitr::opts_chunk$set(
 
 ## 1. Why use several prediction metrics?
 
-Continuous predictions can come from machine learning, statistical models,
-geostatistics, or process-based models. `modelskill` evaluates the agreement
-between paired observations and predictions, independently of the model used to
-produce them.
+Continuous predictions may be generated using machine-learning algorithms, statistical models, geostatistical methods, or process-based models. `modelskill` provides tools to evaluate the agreement between paired observations and predictions using a range of complementary performance metrics.
 
-Prediction performance has several components. A model may have small average
-error but substantial bias, reproduce the observed pattern while systematically
-overpredicting, or have good overall accuracy while failing to reproduce the
-observed variability.
+Predictive performance is inherently multidimensional. A model may exhibit low overall error while retaining systematic bias, reproduce the observed pattern while consistently over- or underpredicting, or achieve good aggregate accuracy while failing to capture the observed variability.
 
-For this reason, model evaluation should normally use several complementary
-metrics rather than a single number.
+Accordingly, model evaluation should generally rely on a combination of complementary metrics rather than a single summary statistic, so that different aspects of predictive performance can be assessed explicitly.
 
-Validation metrics should be calculated from independent validation data or an
-appropriate resampling procedure.
+Performance metrics should be computed using independent validation data whenever possible, or using an appropriate resampling or cross-validation procedure when an independent validation dataset is not available.
 
 ## 2. Example data
 
