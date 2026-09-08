@@ -287,9 +287,9 @@ gg_taylor(models, obs, label = TRUE)
 ### Graphical model evaluation
 
 <p align="center">
-  <img src="review/solar-approved.png" width="32%" alt="Solar diagram" />
-  <img src="review/target-approved.png" width="32%" alt="Target diagram" />
-  <img src="review/taylor-approved.png" width="32%" alt="Taylor diagram" />
+  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/solar-approved.png" width="32%" alt="Solar diagram" />
+  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/target-approved.png" width="32%" alt="Target diagram" />
+  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/taylor-approved.png" width="32%" alt="Taylor diagram" />
 </p>
 
 The three diagrams provide complementary information:
@@ -310,7 +310,7 @@ gg_taylor(
 ```
 
 <p align="center">
-  <img src="review/taylor-options.png" width="55%" alt="Half Taylor diagram" />
+  <img src="https://raw.githubusercontent.com/AlexandreWadoux/modelskill/main/review/taylor-options.png" width="55%" alt="Half Taylor diagram" />
 </p>
 
 See the **[summary-diagram tutorial](https://alexandrewadoux.github.io/modelskill/articles/summary-diagrams.html)** for interpretation and additional options.
