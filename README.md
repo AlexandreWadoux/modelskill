@@ -5,7 +5,7 @@ output: github_document
 
 [![R-CMD-check](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/AlexandreWadoux/modelskill/blob/main/LICENSE.md)
 
 *Last update: 2026-09-08*
 
@@ -370,4 +370,4 @@ Bug reports and feature requests can be submitted through the
 **Alexandre M.J.-C. Wadoux**  
 Author, maintainer, and copyright holder
 
-`modelskill` is released under the [MIT License](LICENSE.md).
+`modelskill` is released under the [MIT License](https://github.com/AlexandreWadoux/modelskill/blob/main/LICENSE.md).

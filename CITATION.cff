@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use modelskill, please cite it using the metadata below."
 title: "modelskill: Assessing and Visualising the Performance of Prediction Models"
 type: software
-version: 0.1.0
+version: 0.1.1
 authors:
   - family-names: Wadoux
     given-names: A.M.J.-C.
