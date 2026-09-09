@@ -147,15 +147,16 @@ mods <- list(perfect = obs, biased = obs + 1)
 gg_target(mods, obs)
 
 # Give every model a categorical colour and a model-name legend.
-gg_target(mods, obs, colour_by = "model")
+p_models <- gg_target(mods, obs, colour_by = "model")
 
 # Write model names directly beside points.
-gg_target(mods, obs, label = TRUE)
+p_labels <- gg_target(mods, obs, label = TRUE)
 
 # Standard ggplot2 customization.
-gg_target(mods, obs) +
+p_custom <- gg_target(mods, obs) +
   ggplot2::labs(title = "Model performance") +
   ggplot2::theme(legend.position = "bottom")
+# Print p_models, p_labels or p_custom to display a variant.
 }
 \references{
 Wadoux, A. M. J.-C., Walvoort, D. J. J., and Brus, D. J. (2022). An

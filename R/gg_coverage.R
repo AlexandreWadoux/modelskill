@@ -130,12 +130,10 @@
 #'   `0.90` = pred + stats::qnorm(0.95) * predictive_sd
 #' )
 #'
-#' gg_coverage(
-#'   obs,
-#'   lower = lower,
-#'   upper = upper
-#' )
-#' gg_coverage(1:3, distribution = cbind(0:2, 1:3, 2:4), levels = c(0.5, 0.9))
+#' p_intervals <- gg_coverage(obs, lower = lower, upper = upper)
+#' p_samples <- gg_coverage(1:3, distribution = cbind(0:2, 1:3, 2:4),
+#'                          levels = c(0.5, 0.9))
+#' # Print p_intervals or p_samples to display these alternatives.
 #'
 #' @export
 gg_coverage <- function(obs, lower = NULL, upper = NULL, level = NULL,

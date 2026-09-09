@@ -110,15 +110,16 @@
 #' gg_solar(mods, obs)
 #'
 #' # Give every model a categorical colour and a model-name legend.
-#' gg_solar(mods, obs, colour_by = "model")
+#' p_models <- gg_solar(mods, obs, colour_by = "model")
 #'
 #' # Write model names directly beside points.
-#' gg_solar(mods, obs, label = TRUE)
+#' p_labels <- gg_solar(mods, obs, label = TRUE)
 #'
 #' # Standard ggplot2 customization.
-#' gg_solar(mods, obs) +
+#' p_custom <- gg_solar(mods, obs) +
 #'   ggplot2::labs(title = "Model performance") +
 #'   ggplot2::theme(legend.position = "bottom")
+#' # Print p_models, p_labels or p_custom to display a variant.
 #' @export
 gg_solar <- function(
     mods,
