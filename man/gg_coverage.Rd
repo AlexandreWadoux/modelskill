@@ -126,7 +126,7 @@ predictive_sd <- rep(1, n)
 obs <- stats::rnorm(n, mean = pred, sd = predictive_sd)
 
 # Reliability curve generated directly from a normal predictive distribution
-gg_coverage(
+p_normal <- gg_coverage(
   obs,
   pred = pred,
   predictive_sd = predictive_sd
@@ -146,7 +146,7 @@ upper <- list(
 p_intervals <- gg_coverage(obs, lower = lower, upper = upper)
 p_samples <- gg_coverage(1:3, distribution = cbind(0:2, 1:3, 2:4),
                          levels = c(0.5, 0.9))
-# Print p_intervals or p_samples to display these alternatives.
+# Print p_normal, p_intervals or p_samples to display a plot.
 
 }
 \references{

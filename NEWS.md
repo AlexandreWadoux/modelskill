@@ -2,8 +2,8 @@
 
 ## Submission preparation
 
-* Display one plot per solar, target and coverage help example; retain the
-  alternative plots as assigned ggplot objects to reduce example runtime.
+* Avoid repeated plot rendering in solar and target help examples, and create
+  coverage plots as assigned ggplot objects, to reduce example runtime.
 * Accept predictive means and standard deviations (normal distributions), or
   equally weighted predictive samples, directly in interval and calibration
   diagnostics. Preserve explicit bounds and quantiles, use shared complete-row
