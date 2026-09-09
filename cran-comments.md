@@ -20,8 +20,28 @@ network access.
 
 ## Check results
 
-Checks of the new exact source archive are in progress; results will be
-recorded here before upload.
+All four GitHub Actions R CMD check jobs passed for the corrected source
+(603e57b): Windows R release, macOS R release, Linux R release and Linux R-devel.
+CI uses --as-cran --no-manual. Run:
+https://github.com/AlexandreWadoux/modelskill/actions/runs/34325671048
+
+The exact version 0.1.1 archive passed all 2,085 test assertions, with no
+failures, warnings or skips. All 53 documentation URLs in that archive passed
+urlchecker, including both corrected README licence links. The longest example
+took 1.53 seconds in the local check.
+
+The exact source archive passed R CMD check --as-cran --timings locally on
+Windows 11 with R 4.5.3, including vignette rebuilding and PDF/HTML manuals:
+0 errors, 0 warnings, 2 NOTEs:
+
+* New submission.
+* unable to verify current time (the external time verification was unavailable
+  on the local checking machine; this is not a detected future timestamp).
+
+The invalid file URI note is resolved. NOT_CRAN=false and all suggested
+dependencies were required for the check. This exact checked archive is being
+resubmitted without rebuilding. Local R-devel is not installed; Linux R-devel
+was checked through the successful GitHub Actions run linked above.
 
 The previous submitted source (2bf44d7) passed GitHub Actions checks on Windows,
 macOS and Linux (R release), and Linux R-devel. The CRAN pretest of version
