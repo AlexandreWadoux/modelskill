@@ -391,11 +391,11 @@ For the retained observation-prediction pairs, let \(o_i\) denote observations,
 | **NRMSE** [`nrmse()`](../reference/nrmse.html) | \(\mathrm{NRMSE}=\mathrm{RMSE}/s_o\) | 0 | RMSE relative to the observed standard deviation. | [@taylor2001] |
 | **cRMSE** [`crmse()`](../reference/crmse.html) | \(\mathrm{cRMSE}=\sqrt{\frac{1}{n}\sum_i[(o_i-p_i)-\mathrm{ME}]^2}\) | 0 | Error remaining after mean bias is removed. | [@taylor2001] |
 | **Pearson correlation** [`correlation()`](../reference/correlation.html) | \(r=\frac{\sum_i(o_i-\bar{o})(p_i-\bar{p})}{\sqrt{\sum_i(o_i-\bar{o})^2\sum_i(p_i-\bar{p})^2}}\) | 1 | Strength and direction of linear association; not agreement. | [@legates1999] |
-| **Squared Pearson correlation** [`r2()`](../reference/r2.html) | \(r^2\) | 1 | Strength of linear association without its sign; not agreement. | [@legates1999] |
-| **Model efficiency \(R^2\)** [`R2()`](../reference/efficiency_r2.html) | \(1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(o_i-\bar{o})^2}\) | 1 | 1 = perfect; 0 = no better than predicting the observed mean; negative = worse than predicting the observed mean. | [@nash1970; @janssen1995] |
-| **SD ratio** [`sd_ratio()`](../reference/sd_ratio.html) | \(s_p/s_o\) | 1 | Below 1 = too little variability; above 1 = too much variability. | [@taylor2001] |
-| **CCC** [`ccc()`](../reference/ccc.html) | \(\frac{2c_{op}}{v_o+v_p+(\bar{o}-\bar{p})^2}\) | 1 | Agreement in correlation, mean, and variability. | [@lin1989] |
-| **Bias correction factor \(C_b\)** [`model_metrics()`](../reference/model_metrics.html) | \(\frac{2\sqrt{v_ov_p}}{v_o+v_p+(\bar{o}-\bar{p})^2}\) | 1 | Agreement in mean and variability, without correlation. | [@lin1989] |
+| **Squared Pearson correlation** [`r2()`](../reference/r2.html) | \(r^2 = r^2\) | 1 | Strength of linear association without its sign; not agreement. | [@legates1999] |
+| **Model efficiency \(R^2\)** [`R2()`](../reference/efficiency_r2.html) | \(R^2 = 1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(o_i-\bar{o})^2}\) | 1 | 1 = perfect; 0 = no better than predicting the observed mean; negative = worse than predicting the observed mean. | [@nash1970; @janssen1995] |
+| **SD ratio** [`sd_ratio()`](../reference/sd_ratio.html) | \(\mathrm{SD\ ratio} = \frac{s_p}{s_o}\) | 1 | Below 1 = too little variability; above 1 = too much variability. | [@taylor2001] |
+| **CCC** [`ccc()`](../reference/ccc.html) | \(\mathrm{CCC} = \frac{2c_{op}}{v_o+v_p+(\bar{o}-\bar{p})^2}\) | 1 | Agreement in correlation, mean, and variability. | [@lin1989] |
+| **Bias correction factor \(C_b\)** [`model_metrics()`](../reference/model_metrics.html) | \(C_b = \frac{2\sqrt{v_ov_p}}{v_o+v_p+(\bar{o}-\bar{p})^2}\) | 1 | Agreement in mean and variability, without correlation. | [@lin1989] |
 
 Here \(s_o\) and \(s_p\) are the sample standard deviations of observations and
 predictions. For CCC, \(v_o\), \(v_p\), and \(c_{op}\) are the corresponding
@@ -448,20 +448,20 @@ kge(
 
 | Metric / function | Equation | Ideal | Simple interpretation | Reference |
 |:--|:--|:--|:--|:--|
-| **MdAE** [`mdae()`](../reference/mdae.html) | \(\mathrm{median}_i\lvert o_i-p_i\rvert\) | 0 | Typical absolute error; relatively robust to large errors. | [@hyndman2006] |
-| **RPD** [`rpd()`](../reference/rpd.html) | \(s_o/\mathrm{RMSE}\) | Larger | Error relative to observed standard deviation. | [@bellonmaurel2010] |
-| **RPIQ** [`rpiq()`](../reference/rpiq.html) | \(\mathrm{IQR}(o)/\mathrm{RMSE}\) | Larger | Error relative to the observed interquartile range. | [@bellonmaurel2010] |
-| **SEP** [`sep()`](../reference/sep.html) | \(\sqrt{\frac{1}{n-1}\sum_i[(o_i-p_i)-\mathrm{ME}]^2}\) | 0 | Sample SD of prediction errors after removing bias. | [@bellonmaurel2010] |
-| **RER** [`rer()`](../reference/rer.html) | \(\frac{\max(o)-\min(o)}{\mathrm{RMSE}}\) | Larger | Error relative to observed range; sensitive to extreme values. | [@bellonmaurel2010] |
-| **MAPE** [`mape()`](../reference/mape.html) | \(\frac{100}{n}\sum_i\left\lvert\frac{o_i-p_i}{o_i}\right\rvert\) | 0 | Mean absolute percentage error. Undefined when an observation is zero. | [@hyndman2006] |
-| **MPE** [`mpe()`](../reference/mpe.html) | \(\frac{100}{n}\sum_i\frac{o_i-p_i}{o_i}\) | 0 | Signed relative bias in percent. Undefined when an observation is zero. | [@hyndman2006] |
-| **sMAPE** [`smape()`](../reference/smape.html) | \(\frac{100}{n}\sum_i\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}\) | 0 | Symmetric absolute percentage error (0--200%). | [@hyndman2006] |
-| **MSLE** [`msle()`](../reference/msle.html) | \(\frac{1}{n}\sum_i[\log(1+o_i)-\log(1+p_i)]^2\) | 0 | Squared error on the log1p scale. Requires non-negative values. | [@hodson2022] |
-| **RMSLE** [`rmsle()`](../reference/rmsle.html) | \(\sqrt{\mathrm{MSLE}}\) | 0 | Root mean squared error on the log1p scale. | [@hodson2022] |
-| **RAE** [`rae()`](../reference/rae.html) | \(\frac{\sum_i\lvert o_i-p_i\rvert}{\sum_i\lvert o_i-\bar{o}\rvert}\) | 0 | Absolute error relative to predicting the observed mean; 1 is the benchmark. | [@hyndman2006] |
-| **RRMSE** [`rrmse()`](../reference/rrmse.html) | \(100\,\mathrm{RMSE}/\lvert\bar{o}\rvert\) | 0 | RMSE as a percentage of the absolute observed mean. | [@willmott1985] |
-| **Willmott's \(d\)** [`willmott_d()`](../reference/willmott_d.html) | \(1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(\lvert p_i-\bar{o}\rvert+\lvert o_i-\bar{o}\rvert)^2}\) | 1 | Index of agreement; sensitive to large errors. | [@willmott1985] |
-| **KGE (2009)** [`kge()`](../reference/kge.html) | \(1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar{p}/\bar{o}-1)^2}\) | 1 | Combines correlation, variability ratio, and mean ratio. | [@gupta2009] |
+| **MdAE** [`mdae()`](../reference/mdae.html) | \(\mathrm{MdAE} = \mathrm{median}_i\lvert o_i-p_i\rvert\) | 0 | Typical absolute error; relatively robust to large errors. | [@hyndman2006] |
+| **RPD** [`rpd()`](../reference/rpd.html) | \(\mathrm{RPD} = s_o/\mathrm{RMSE}\) | Larger | Error relative to observed standard deviation. | [@bellonmaurel2010] |
+| **RPIQ** [`rpiq()`](../reference/rpiq.html) | \(\mathrm{RPIQ} = \mathrm{IQR}(o)/\mathrm{RMSE}\) | Larger | Error relative to the observed interquartile range. | [@bellonmaurel2010] |
+| **SEP** [`sep()`](../reference/sep.html) | \(\mathrm{SEP} = \sqrt{\frac{1}{n-1}\sum_i[(o_i-p_i)-\mathrm{ME}]^2}\) | 0 | Sample SD of prediction errors after removing bias. | [@bellonmaurel2010] |
+| **RER** [`rer()`](../reference/rer.html) | \(\mathrm{RER} = \frac{\max(o)-\min(o)}{\mathrm{RMSE}}\) | Larger | Error relative to observed range; sensitive to extreme values. | [@bellonmaurel2010] |
+| **MAPE** [`mape()`](../reference/mape.html) | \(\mathrm{MAPE} = \frac{100}{n}\sum_i\left\lvert\frac{o_i-p_i}{o_i}\right\rvert\) | 0 | Mean absolute percentage error. Undefined when an observation is zero. | [@hyndman2006] |
+| **MPE** [`mpe()`](../reference/mpe.html) | \(\mathrm{MPE} = \frac{100}{n}\sum_i\frac{o_i-p_i}{o_i}\) | 0 | Signed relative bias in percent. Undefined when an observation is zero. | [@hyndman2006] |
+| **sMAPE** [`smape()`](../reference/smape.html) | \(\mathrm{sMAPE} = \frac{100}{n}\sum_i\frac{2\lvert o_i-p_i\rvert}{\lvert o_i\rvert+\lvert p_i\rvert}\) | 0 | Symmetric absolute percentage error (0--200%). | [@hyndman2006] |
+| **MSLE** [`msle()`](../reference/msle.html) | \(\mathrm{MSLE} = \frac{1}{n}\sum_i[\log(1+o_i)-\log(1+p_i)]^2\) | 0 | Squared error on the log1p scale. Requires non-negative values. | [@hodson2022] |
+| **RMSLE** [`rmsle()`](../reference/rmsle.html) | \(\mathrm{RMSLE} = \sqrt{\mathrm{MSLE}}\) | 0 | Root mean squared error on the log1p scale. | [@hodson2022] |
+| **RAE** [`rae()`](../reference/rae.html) | \(\mathrm{RAE} = \frac{\sum_i\lvert o_i-p_i\rvert}{\sum_i\lvert o_i-\bar{o}\rvert}\) | 0 | Absolute error relative to predicting the observed mean; 1 is the benchmark. | [@hyndman2006] |
+| **RRMSE** [`rrmse()`](../reference/rrmse.html) | \(\mathrm{RRMSE} = 100\,\mathrm{RMSE}/\lvert\bar{o}\rvert\) | 0 | RMSE as a percentage of the absolute observed mean. | [@willmott1985] |
+| **Willmott's \(d\)** [`willmott_d()`](../reference/willmott_d.html) | \(d = 1-\frac{\sum_i(o_i-p_i)^2}{\sum_i(\lvert p_i-\bar{o}\rvert+\lvert o_i-\bar{o}\rvert)^2}\) | 1 | Index of agreement; sensitive to large errors. | [@willmott1985] |
+| **KGE (2009)** [`kge()`](../reference/kge.html) | \(\mathrm{KGE} = 1-\sqrt{(r-1)^2+(s_p/s_o-1)^2+(\bar{p}/\bar{o}-1)^2}\) | 1 | Combines correlation, variability ratio, and mean ratio. | [@gupta2009] |
 
 `MAPE`, `MPE`, `sMAPE`, and `RRMSE` are returned as percentages. `sMAPE`
 ranges from 0 to 200%; the other percentage metrics are unbounded above.
