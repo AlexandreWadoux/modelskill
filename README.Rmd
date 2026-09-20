@@ -4,6 +4,7 @@ output: github_document
 # `modelskill`: Assessing and Visualising the Performance of Prediction Models
 
 [![CRAN version](https://www.r-pkg.org/badges/version/modelskill)](https://CRAN.R-project.org/package=modelskill)
+[![GitHub release downloads](https://img.shields.io/github/downloads/AlexandreWadoux/modelskill/total?label=GitHub%20release%20downloads)](https://github.com/AlexandreWadoux/modelskill/releases)
 [![R-CMD-check](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/AlexandreWadoux/modelskill/blob/main/LICENSE.md)
