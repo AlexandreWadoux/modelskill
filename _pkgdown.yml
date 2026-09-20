@@ -8,6 +8,9 @@ template:
     link-color: "#1B6CA8"
 
 home:
+  links:
+    - text: CRAN package
+      href: https://CRAN.R-project.org/package=modelskill
   sidebar:
     structure: [links, license, citation, authors, dev]
 

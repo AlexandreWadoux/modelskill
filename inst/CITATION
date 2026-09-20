@@ -12,11 +12,12 @@ bibentry(
   ),
   year = year,
   note = vers,
-  url = "https://github.com/AlexandreWadoux/modelskill",
+  doi = "10.32614/CRAN.package.modelskill",
+  url = "https://CRAN.R-project.org/package=modelskill",
   textVersion = paste(
     paste0("Wadoux, A.M.J.-C. (", year, ")."),
     "modelskill: Assessing and Visualising the Performance of Prediction Models.",
     paste0(vers, "."),
-    "https://github.com/AlexandreWadoux/modelskill"
+    "https://doi.org/10.32614/CRAN.package.modelskill"
   )
 )

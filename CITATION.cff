@@ -3,6 +3,8 @@ message: "If you use modelskill, please cite it using the metadata below."
 title: "modelskill: Assessing and Visualising the Performance of Prediction Models"
 type: software
 version: 0.1.1
+date-released: '2026-09-17'
+doi: 10.32614/CRAN.package.modelskill
 authors:
   - family-names: Wadoux
     given-names: A.M.J.-C.

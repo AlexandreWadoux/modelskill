@@ -3,11 +3,12 @@ output: github_document
 ---
 # `modelskill`: Assessing and Visualising the Performance of Prediction Models
 
+[![CRAN version](https://www.r-pkg.org/badges/version/modelskill)](https://CRAN.R-project.org/package=modelskill)
 [![R-CMD-check](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/AlexandreWadoux/modelskill/actions/workflows/pkgdown.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/AlexandreWadoux/modelskill/blob/main/LICENSE.md)
 
-*Last update: 2026-09-08*
+*Last update: 2026-09-21*
 
 **Alexandre M.J.-C. Wadoux**
 
@@ -31,7 +32,7 @@ All plotting functions return standard `ggplot2` objects and can therefore be cu
 
 If you use `modelskill` in your work, please cite the package as:
 
-> Wadoux, A.M.J.-C. (2026). *modelskill: Assessing and Visualising the Performance of Prediction Models*. R package version 0.1.0. <https://github.com/AlexandreWadoux/modelskill>
+> Wadoux, A.M.J.-C. (2026). *modelskill: Assessing and Visualising the Performance of Prediction Models*. R package version 0.1.1. <https://doi.org/10.32614/CRAN.package.modelskill>
 
 **BibTeX**
 
@@ -40,8 +41,9 @@ If you use `modelskill` in your work, please cite the package as:
   title  = {modelskill: Assessing and Visualising the Performance of Prediction Models},
   author = {Wadoux, A.M.J.-C.},
   year   = {2026},
-  note   = {R package version 0.1.0},
-  url    = {https://github.com/AlexandreWadoux/modelskill}
+  note   = {R package version 0.1.1},
+  doi    = {10.32614/CRAN.package.modelskill},
+  url    = {https://CRAN.R-project.org/package=modelskill}
 }
 ```
 
@@ -83,7 +85,13 @@ Full function documentation is available on the **[modelskill website](https://a
 
 ## Installation
 
-Install the development version from GitHub:
+Install the released version from [CRAN](https://CRAN.R-project.org/package=modelskill):
+
+```r
+install.packages("modelskill")
+```
+
+Alternatively, install the development version from GitHub:
 
 ```r
 install.packages("remotes")
@@ -96,7 +104,7 @@ Then load the package:
 library(modelskill)
 ```
 
-> **Development status:** `modelskill` is under active development and has not yet been submitted to CRAN.
+> **CRAN release:** Version 0.1.1 was published on 17 September 2026. GitHub development may include changes not yet available on CRAN.
 
 ---
 

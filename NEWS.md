@@ -1,5 +1,7 @@
 # modelskill 0.1.1
 
+First CRAN release, published on 17 September 2026.
+
 * Replace local README licence links with the full GitHub URL, resolving the
   invalid file URI reported by CRAN for the first submission.
 
